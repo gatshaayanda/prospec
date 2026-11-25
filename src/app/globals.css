@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root{
-  --plug-black:#0B0B0C;
-  --plug-blue:#0866FF;
-  --plug-red:#ED1C24;
+  --plug-black:#171D22;
+  --plug-blue:#00B9C7;
+  --plug-red:#E45E58;
   --plug-white:#FFFFFF;
-  --plug-paper:#F5F5F5;
-  --plug-line:#D9D9D9;
-  --plug-muted:#666666;
+  --plug-paper:#F5F9FA;
+  --plug-line:#D6E2E4;
+  --plug-muted:#9BAEB2;
   --day-monday:#0866FF;
   --day-tuesday:#22C55E;
   --day-wednesday:#ED1C24;
