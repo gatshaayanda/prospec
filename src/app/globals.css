@@ -6790,3 +6790,108 @@ h1 em,
 .serviceDemo .sd-workspace-connection-warning p {
   margin:0;color:#503b2a;font-size:15px;line-height:1.6;
 }
+
+
+/* Prospec Briefcase: operational console hierarchy, not generic dashboard cards. */
+.serviceDemo .sd-admin {
+  --os-ink:#17272c;
+  --os-muted:#52656b;
+  --os-line:#d8e1e2;
+  --os-paper:#f3f6f5;
+  --os-teal:#00b9c7;
+  max-width:1180px;
+  padding:clamp(14px,2.5vw,28px);
+  color:var(--os-ink);
+  background:var(--os-paper);
+  border:1px solid #e0e7e6;
+  border-radius:20px;
+}
+.serviceDemo .sd-os-heading {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:end;
+  gap:18px;
+  margin:0 0 14px;
+  padding:clamp(20px,3vw,32px);
+  border-radius:15px;
+  color:#fff;
+  background:linear-gradient(125deg,#17272c 0%,#263c42 100%);
+  border-bottom:4px solid var(--os-teal);
+}
+.serviceDemo .sd-os-heading .sd-kicker {color:#69e5e8;font-size:11px;letter-spacing:.16em}
+.serviceDemo .sd-os-heading .sd-owner-greeting {display:block;margin:12px 0 5px;color:#c9d8d9;font-size:14px;font-weight:700}
+.serviceDemo .sd-os-heading h1 {margin:0;color:#fff;font-size:clamp(1.9rem,4vw,3rem);line-height:1.04;letter-spacing:-.045em}
+.serviceDemo .sd-os-heading h1 em {color:#63e0e4;font-style:normal}
+.serviceDemo .sd-os-heading p {display:flex;flex-wrap:wrap;gap:5px 10px;margin:10px 0 0;color:#d4e1e2;font-size:14px;line-height:1.4}
+.serviceDemo .sd-os-heading p strong {color:#fff}
+.serviceDemo .sd-os-status {align-self:start;white-space:nowrap;padding:8px 11px;border:1px solid #63777b;border-radius:7px;background:#34494e;color:#fff;font-size:11px;font-weight:900;letter-spacing:.06em}
+.serviceDemo .sd-division-rail {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:0 0 12px;border:1px solid var(--os-line);border-radius:11px;background:#fff;overflow:hidden}
+.serviceDemo .sd-division-rail article {display:grid;align-content:center;gap:4px;min-width:0;padding:12px 14px;border:0;border-right:1px solid var(--os-line);border-radius:0;background:#fff}
+.serviceDemo .sd-division-rail article:last-child {border-right:0}
+.serviceDemo .sd-division-rail strong {color:#087e87;font-size:11px;letter-spacing:.07em}
+.serviceDemo .sd-division-rail span {color:#344b50;font-size:13px;line-height:1.35}
+.serviceDemo .sd-workspace-connection-warning {display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:4px 12px;margin:0 0 12px;padding:12px 15px;border:1px solid #e3c18c;border-left:4px solid #bd7a24;border-radius:9px;background:#fff8ed}
+.serviceDemo .sd-workspace-connection-warning strong {grid-row:1 / span 2;color:#5b3b16;font-size:13px}
+.serviceDemo .sd-workspace-connection-warning p {margin:0;color:#624d32;font-size:13px;line-height:1.45}
+.serviceDemo .sd-owner-shift-details {margin:0 0 10px;border:1px solid var(--os-line);border-radius:10px;background:#fff;box-shadow:none}
+.serviceDemo .sd-owner-shift-title {min-height:56px;padding:10px 14px}
+.serviceDemo .sd-owner-shift-title .sd-kicker {color:#65787d;font-size:10px}
+.serviceDemo .sd-owner-shift-title strong {color:var(--os-ink);font-size:14px}
+.serviceDemo .sd-availability-control {display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 12px;padding:13px 15px;border:1px solid var(--os-line);border-radius:10px;background:#fff}
+.serviceDemo .sd-availability-control>div:first-child {display:grid;gap:2px}
+.serviceDemo .sd-availability-control .sd-kicker {color:#65787d;font-size:10px}
+.serviceDemo .sd-availability-control strong {color:var(--os-ink);font-size:15px}
+.serviceDemo .sd-availability-control small {color:var(--os-muted);font-size:12px;line-height:1.35}
+.serviceDemo .sd-availability-options {display:flex;gap:6px;flex-wrap:wrap}
+.serviceDemo .sd-availability-options button {min-height:40px;padding:8px 12px;border:1px solid #cbd7d8;border-radius:7px;background:#fff;color:#293e43;font-size:13px;font-weight:800}
+.serviceDemo .sd-availability-options button[aria-pressed=true] {border-color:#087e87;background:#e8f8f7;color:#075e65;box-shadow:inset 0 0 0 1px #087e87}
+.serviceDemo .sd-os-nav {position:sticky;top:8px;z-index:20;display:flex;flex-wrap:nowrap;gap:4px;margin:0 0 16px;padding:5px;border:1px solid #d3dddd;border-radius:10px;background:rgba(255,255,255,.96);box-shadow:0 5px 18px rgba(21,43,48,.08);overflow-x:auto;scrollbar-width:thin}
+.serviceDemo .sd-os-nav button {flex:1 0 auto;min-height:42px;padding:9px 14px;border:1px solid transparent;border-radius:7px;background:transparent;color:#42565b;font-size:13px;font-weight:800;white-space:nowrap}
+.serviceDemo .sd-os-nav button[aria-pressed=true] {border-color:#b7e3e3;background:#e8f8f7;color:#075e65}
+.serviceDemo .sd-admin-head {align-items:center;margin:0 0 14px;padding:0 0 12px;border-bottom:1px solid #cbd7d8}
+.serviceDemo .sd-admin-head h2 {margin:4px 0 0;color:#17272c;font-size:clamp(1.5rem,3vw,2.1rem);font-weight:900;letter-spacing:-.04em}
+.serviceDemo .sd-admin-head .sd-kicker {color:#087e87;font-size:10px}
+.serviceDemo .sd-admin-head-actions .sd-button {min-height:40px;padding:8px 12px;border-radius:7px;font-size:12px}
+.serviceDemo .sd-stats {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:0 0 14px}
+.serviceDemo .sd-stats article {position:relative;min-width:0;padding:15px 16px;border:1px solid #d7e0e0;border-top:3px solid #aebfc1;border-radius:9px;background:#fff;box-shadow:none}
+.serviceDemo .sd-stats article.is-primary {border-top-color:#00aeba;background:#f8ffff}
+.serviceDemo .sd-stats article span {display:block;color:#42585d;font-size:12px;font-weight:800;line-height:1.35}
+.serviceDemo .sd-stats article strong {display:block;margin:8px 0 3px;color:#17272c;font-size:clamp(1.6rem,3vw,2.1rem);font-weight:900;line-height:1;letter-spacing:-.04em}
+.serviceDemo .sd-stats article small {display:block;color:#64777c;font-size:11px;line-height:1.35}
+.serviceDemo .sd-stats article i {top:13px;right:14px;color:#087e87;font-size:15px}
+.serviceDemo .sd-admin-panel {margin:0 0 14px;padding:17px;border:1px solid #d8e1e2;border-radius:10px;background:#fff;box-shadow:none}
+.serviceDemo .sd-admin-panel .sd-panel-head {margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #e3eaea}
+.serviceDemo .sd-admin-panel .sd-panel-head h3 {margin:3px 0 0;color:#1b3035;font-size:17px;font-weight:900}
+.serviceDemo .sd-admin-panel .sd-kicker {color:#087e87;font-size:10px}
+.serviceDemo .sd-admin-panel p,.serviceDemo .sd-admin-panel small {color:#52656b}
+.serviceDemo .sd-admin .sd-local-pill {padding:5px 8px;border-radius:6px;background:#edf3f3;color:#334a50;font-size:10px;font-weight:900}
+.serviceDemo .sd-admin .sd-admin-footer {border-top:1px solid #d8e1e2}
+@media(max-width:760px) {
+ .serviceDemo .sd-admin {padding:10px;border-radius:13px}
+ .serviceDemo .sd-os-heading {grid-template-columns:minmax(0,1fr);gap:12px;padding:18px 16px}
+ .serviceDemo .sd-os-heading h1 {font-size:clamp(1.8rem,8vw,2.45rem)}
+ .serviceDemo .sd-os-status {justify-self:start}
+ .serviceDemo .sd-division-rail {grid-template-columns:repeat(2,minmax(0,1fr))}
+ .serviceDemo .sd-division-rail article {padding:10px;border-bottom:1px solid var(--os-line)}
+ .serviceDemo .sd-division-rail article:nth-child(2) {border-right:0}
+ .serviceDemo .sd-division-rail article:nth-child(3),.serviceDemo .sd-division-rail article:nth-child(4) {border-bottom:0}
+ .serviceDemo .sd-workspace-connection-warning {grid-template-columns:minmax(0,1fr);gap:3px;padding:11px 12px}
+ .serviceDemo .sd-workspace-connection-warning strong {grid-row:auto}
+ .serviceDemo .sd-availability-control {align-items:flex-start;flex-direction:column;padding:12px}
+ .serviceDemo .sd-availability-options {width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+ .serviceDemo .sd-availability-options button {padding:8px 5px;font-size:12px}
+ .serviceDemo .sd-os-nav {top:4px;gap:3px}
+ .serviceDemo .sd-os-nav button {min-height:42px;padding:8px 11px;font-size:12px}
+ .serviceDemo .sd-admin-head {align-items:flex-start;flex-direction:column;gap:10px}
+ .serviceDemo .sd-admin-head-actions {display:grid;width:100%;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .serviceDemo .sd-admin-head-actions .sd-button {min-width:0;padding:8px 6px;font-size:11px}
+ .serviceDemo .sd-stats {grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .serviceDemo .sd-stats article {padding:12px}
+ .serviceDemo .sd-stats article strong {font-size:1.75rem}
+ .serviceDemo .sd-admin-panel {padding:13px}
+}
+@media(max-width:360px) {
+ .serviceDemo .sd-division-rail strong {font-size:10px}
+ .serviceDemo .sd-division-rail span {font-size:12px}
+ .serviceDemo .sd-admin-head-actions {grid-template-columns:1fr}
+}
