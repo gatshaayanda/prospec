@@ -26,9 +26,10 @@ Vision cue: “Annihilate” — a campaign statement, not a claim about custome
 - No low-contrast teal body text on charcoal or white; check real foreground/background pairs.
 
 ## Imagery and composition
-- Use real Prospec work, print products, NFC interactions, sourcing and campaign imagery as approved assets become available.
-- Until supplied media exists, use branded placeholders with the item/division name; do not invent portfolio work, client logos or testimonials.
-- Public flow: brand statement → four division choices → filterable catalogue → enquiry CTA → contact details.
+- Use real Prospec work, print products, NFC interactions, sourcing and campaign imagery when approved assets are published through the owner Briefcase.
+- Until then, use clearly labelled illustrative category imagery. Never imply stock photography is completed Prospec work; never invent client logos or testimonials.
+- Public flow: concise brand statement → compact expandable departments → searchable/filterable catalogue → customer Account request → clear status feedback. Keep public contact details secondary; do not publish phone numbers as primary conversion paths.
+- Catalogue browsing uses progressive disclosure: short scannable cards, two-line description limits and expanded detail only when needed. Department filters remain visible and products from related offerings remain comparable.
 - Account: selected items, request details, next step, updates and receipt/request record. Keep it task-first.
 - Briefcase: compact owner overview, incoming enquiries, quote/status actions, catalogue management and financial records. Data density belongs here, not in the public hero.
 
