@@ -24,7 +24,7 @@ check(page.includes("prospecCatalogue") && page.includes("prospecDivisions") && 
 check(page.includes("Quote on request") && page.includes("service.custom || service.price <= 0"), "unpriced catalogue items must remain requestable without showing P0");
 check(firebaseClient.includes("persistentLocalCache") && firebaseClient.includes("persistentMultipleTabManager"), "Firestore must retain persistent multi-tab offline cache");
 check(page.includes("ensureCustomerAuth()") && page.includes("onSnapshot(enquiriesQuery"), "customer requests must use persistent Firebase identity and live Firestore updates");
-check(page.includes("setDoc(doc(getProspecDb(), \\"prospecEnquiries\\"") && account.includes("arrayUnion(message)"), "customer requests and messages must queue through Firestore offline persistence");
+check(page.includes("setDoc(doc(getProspecDb(), \"prospecEnquiries\"") && account.includes("arrayUnion(message)"), "customer requests and messages must queue through Firestore offline persistence");
 check(firestoreRules.includes("request.auth.uid") && firestoreRules.includes("prospecEnquiries"), "Firestore rules must scope enquiry records to the authenticated customer");
 check(page.includes('fetch("/api/admin/session"') && page.includes("async function submitAdminLogin"), "owner login must use the server session endpoint");
 check(account.includes("Firestore keeps an offline cache") || account.includes("Prospec account"), "customer Account must describe its cloud-backed customer session");
