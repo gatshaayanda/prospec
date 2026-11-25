@@ -1407,8 +1407,18 @@ return <main className="servicePreview serviceDemo" style={{ "--studio-accent": 
     {view === "shop" && <>
       <section className="sd-services sd-wrap sd-digital-store sd-store-collection prospec-storefront" id="services">
         <div className="prospec-catalogue-heading" id="prospec-catalogue">
-          <div><span className="prospec-eyebrow">THE PROSPEC STORE</span><h2>Find it. <em>Request it.</em></h2><p>Browse products and services. Fixed prices are in BWP. Need something custom? Send us a brief.</p></div>
-          <span className="prospec-catalogue-count">{visibleServices.length} of {activeServices.length} items</span>
+          <div className="prospec-catalogue-copy">
+            <span className="prospec-eyebrow">THE PROSPEC STORE · BOTSWANA</span>
+            <h2>Find it. <em>Request it.</em></h2>
+            <p>Explore our products and services. Fixed prices are shown in BWP. Need something custom? Send us a brief.</p>
+            <span className="prospec-catalogue-count">{visibleServices.length} of {activeServices.length} offerings</span>
+          </div>
+          <aside className="prospec-store-signature" aria-label="Prospec Group divisions">
+            <span>PROSPEC GROUP / PITBULLS OF BRANDING</span>
+            <strong>We keep our noses in <em>other people's business.</em></strong>
+            <div><span>PROSPEC AG</span><span>SUPPLIES</span><span>NFC</span><span>AG PRINTING</span></div>
+            <small>MARKETING · SOURCING · DIGITAL IDENTITY · PRINT</small>
+          </aside>
         </div>
         <div className="prospec-store-tools">
           <label className="prospec-store-search"><span aria-hidden="true">⌕</span><input type="search" value={storeSearch} onChange={event=>setStoreSearch(event.target.value)} placeholder="Search products and services" aria-label="Search products and services"/>{storeSearch&&<button type="button" onClick={()=>setStoreSearch("")} aria-label="Clear search">×</button>}</label>
