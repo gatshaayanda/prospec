@@ -42,3 +42,16 @@ The build runs identity, offline and typography regression checks before Next.js
 
 ## Protected foundation behavior
 The compact dismissible PWA install card, retained native beforeinstallprompt event, iOS Safari installation guidance, embedded-browser handoff, service-worker lifecycle, offline shell and update behavior remain protected. Branding and cache identity are adapted; installation mechanics are not rewritten.
+
+
+## Firebase connection
+
+Prospec uses the supplied Firebase project `theworks-f4957`. The web configuration in `src/lib/firebase/client.ts` is public application configuration; it is not a secret.
+
+- Enable **Authentication → Sign-in method → Anonymous** for passwordless persistent customer sessions.
+- Publish `firestore.rules` and `firestore.indexes.json` to the project.
+- Configure `FIREBASE_ADMIN_KEY` as a server-only Vercel environment variable using a service-account JSON key from the same `theworks-f4957` project. Never prefix it with `NEXT_PUBLIC_` or commit the JSON.
+- Keep `ADMIN_PASSWORD` server-only for the owner Briefcase session.
+- Firestore persistence uses IndexedDB with multi-tab support. Customer enquiry and message writes are queued by the SDK while offline and synchronised after reconnection. UploadThing uploads still require connectivity.
+
+Customer identities currently use Firebase Anonymous Auth and persist on the same browser/device. This is not yet a cross-device recoverable email/password account.
