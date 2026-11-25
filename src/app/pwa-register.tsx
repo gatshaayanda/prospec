@@ -220,7 +220,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     if (!prompt) {
       // Never manufacture a replacement prompt. Manual steps are only valid for
       // iOS Safari, where beforeinstallprompt is not available.
-      if (isIosSafari()) {
+      if (isIosSafari() || isAndroidChrome()) {
         setInstallHelpOpen(true);
         setInstallState("native");
       }
@@ -281,9 +281,9 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     <div style={installShellStyle} role="presentation">
       <section className="plugInstallModal" role="dialog" aria-modal="false" aria-labelledby="plug-install-title" aria-describedby="plug-install-message">
         <div className="plugInstallTop"><span className="plugInstallMark">P</span><span className="plugInstallTag">PROSPEC GROUP · PITBULLS OF BRANDING</span><button type="button" className="plugInstallClose" aria-label="Close install guidance" onClick={dismissInstall}>×</button></div>
-        <div className="plugInstallKicker">IPHONE & IPAD</div>
-        <h2 id="plug-install-title">Add to Home Screen.</h2>
-        <p id="plug-install-message">In Safari, tap <b>Share</b>, choose <b>Add to Home Screen</b>, then tap <b>Add</b>. Open the new Home Screen icon to launch the installed app.</p>
+        <div className="plugInstallKicker">{isIosSafari() ? "IPHONE & IPAD" : "ANDROID · CHROME"}</div>
+        <h2 id="plug-install-title">{isIosSafari() ? "Add to Home Screen." : "Install Prospec Group."}</h2>
+        <p id="plug-install-message">{isIosSafari() ? <>In Safari, tap <b>Share</b>, choose <b>Add to Home Screen</b>, then tap <b>Add</b>. Open the new Home Screen icon to launch the installed app.</> : <>In Chrome, open the <b>⋮ menu</b> and choose <b>Install app</b> or <b>Add to Home screen</b> if shown. If neither option appears, Chrome has not yet marked this page as installable. The native Install action will appear here when Chrome makes it available.</>}</p>
         <button type="button" className="plugInstallPrimary" onClick={dismissInstall}>Continue on the website</button>
       </section>
     </div>
@@ -315,7 +315,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
             void install();
             return;
           }
-          if (isIosSafari()) {
+          if (isIosSafari() || isAndroidChrome()) {
             setInstallHelpOpen(true);
             setInstallState("native");
           }
