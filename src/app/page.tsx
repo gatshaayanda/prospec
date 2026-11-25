@@ -1140,7 +1140,8 @@ export default function Home() {
     const order: PreviewOrder = { id, receiptNo: "REQ-" + createdAt.slice(0, 10).replaceAll("-", "") + "-" + id.slice(-5), serviceId: selectedServices[0].id, serviceName: selectedServices.map(service => service.name).join(" + "), serviceItems: selectedServices.map(({id,name,price,custom}) => ({id,name,price,custom:Boolean(custom || price <= 0)})), quoteRequired: selectedServices.some(service => Boolean(service.custom || service.price <= 0)), price: Math.max(0, servicesTotal - discountAmount), ...(discountAmount ? { originalPrice: servicesTotal, discountAmount, discountCode: claim!.code } : {}), dueDate, customerName: customerName.trim(), email: email.trim(), whatsapp: whatsapp.trim(), notificationOptIn, brief: brief.trim(), status: "New request", createdAt, paymentStatus: "Unpaid", paidAmount: 0 };
     try {
       const customer = await ensureCustomerAuth();
-      await setDoc(doc(db, "prospecEnquiries", id), { ...order, customerId: customer.uid }, { merge: false });
+      const { id: _localId, ...enquiryRecord } = order;
+      void setDoc(doc(db, "prospecEnquiries", id), { ...enquiryRecord, customerId: customer.uid }, { merge: false }).catch(() => setCloudSyncStatus("error"));
       setFirebaseCustomerUid(customer.uid);
       setCloudSyncStatus(navigator.onLine ? "synced" : "offline");
     } catch {
