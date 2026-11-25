@@ -16,9 +16,9 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ["business", "productivity"],
     prefer_related_applications: false,
     icons: [
-      { src: "/prospec-icon.svg", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/prospec-icon.svg", sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: "/prospec-icon.svg", sizes: "180x180", type: "image/png", purpose: "any" },
+      { src: "/prospec-icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
+      { src: "/prospec-icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
+      { src: "/prospec-icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
       { src: "/prospec-icon.svg", sizes: "192x192", type: "image/svg+xml", purpose: "any" },
       
       { src: "/prospec-icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }
@@ -29,21 +29,21 @@ export default function manifest(): MetadataRoute.Manifest {
         short_name: "Services",
         description: "Explore Prospec divisions and send an enquiry",
         url: "/",
-        icons: [{ src: "/prospec-icon.svg", sizes: "192x192", type: "image/png" }]
+        icons: [{ src: "/prospec-icon.svg", sizes: "any", type: "image/svg+xml" }]
       },
       {
         name: "My account",
         short_name: "Account",
         description: "Review your Prospec enquiries",
         url: "/?view=account",
-        icons: [{ src: "/prospec-icon.svg", sizes: "192x192", type: "image/png" }]
+        icons: [{ src: "/prospec-icon.svg", sizes: "any", type: "image/svg+xml" }]
       },
       {
         name: "Owner Briefcase",
         short_name: "Admin",
         description: "Open the private owner workspace",
         url: "/#admin",
-        icons: [{ src: "/prospec-icon.svg", sizes: "192x192", type: "image/png" }]
+        icons: [{ src: "/prospec-icon.svg", sizes: "any", type: "image/svg+xml" }]
       }
     ]
   };
