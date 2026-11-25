@@ -1,114 +1,44 @@
-# Iteration 13 — Business OS / Store + Briefcase
+# Prospec Group — Business OS
 
-**Start every new implementation or QA chat at [START-HERE.md](./START-HERE.md).** The [Iteration 13 Portfolio Handoff](./docs/ITERATION13-PORTFOLIO-HANDOFF.md) explains how this repository is used as the shared reference for new and existing portfolio projects. The complete [documentation map](./docs/README.md) shows the shortest task-specific reading path. The mandatory [Change Safety & Regression Prevention Standard](./docs/CHANGE-SAFETY-STANDARD.md) applies to every change and requires the fix and adjacent working behavior to be verified. [AGENTS.md](./AGENTS.md) contains repository rules; [FOUNDATION-BLUEPRINT.md](./FOUNDATION-BLUEPRINT.md) documents architecture; [CLONING.md](./CLONING.md) governs source selection and adaptation; [docs/ADMIN-HUB-APP-FACTORY-SOP.md](./docs/ADMIN-HUB-APP-FACTORY-SOP.md) and [docs/CLONE-RESET-CHECKLIST.md](./docs/CLONE-RESET-CHECKLIST.md) govern new-project execution. [docs/VISUAL-DIRECTION-STANDARD.md](./docs/VISUAL-DIRECTION-STANDARD.md) defines the visual craftsmanship and mobile-first experience standard. Iteration 13 is the maintained Business OS foundation. Pair it with Iteration 14, the Personal OS foundation. Choose between them by product model; use completed client repositories only as visual/interaction references unless explicitly authorized. Existing projects are improved in place.
+Prospec Group is a Botswana 100% youth citizen-owned business group operating through four divisions:
 
-The Sparkle Legacy chat-widget reference and evidence-led proposal live in [CHAT-WIDGET-RESEARCH.md](./CHAT-WIDGET-RESEARCH.md). These files explain what to preserve, where to edit, what is demo-only, and what needs deliberate project-specific replacement.
+- Prospec AG — marketing, advertising, strategy, public relations, branding and content
+- Prospec Supplies — local and international sourcing and procurement brokerage
+- Prospec NFC — NFC and QR digital business cards, including Tap Share & Go
+- Prospec AG Printing — large-format printing, sublimation, heatpress, signage and branded products
 
-The approved foundation baseline and recovery policy are documented in [GOLDEN-BASELINE.md](./GOLDEN-BASELINE.md). A reusable, mobile-first PWA foundation candidate. The homepage demonstrates a compact business-branded Store connected to an owner Briefcase/Business OS. The customer header provides Store and Account; the footer pairs the single icon-only owner Briefcase entry with a separate 🎒 BACKPACK / Personal OS link to Iteration 14. Owners can edit services, announcements and the Store accent theme in the local demo. The interface uses the illustrative 25 GB monthly capacity reference and high-volume customer-day scenario supplied by the product owner; it is not live server metering or a universal capacity guarantee. Firebase configuration, rules and data were intentionally left unchanged.
-## Customer demo
+Brand voice: QWERTY — Quirky, Witty, Enthusiastic, Transcendent and Youthful. Public line: “We keep our noses in other people's business.” Brand persona: “Pitbulls of Branding”.
 
-1. Open the homepage and browse the four example services:
-   - Website — P100
-   - App — P200
-   - Monthly support — P50
-   - Phaser games — P500
-2. Select **Request this service**, enter a name and email, choose a requested timeline date (today or later), and optionally describe the project.
-3. Submit the request. It should take you to **Account** in the header, where the request, requested date, starting price and status are shown.
-4. Return to Store to submit another request or filter account requests by the same email. Each request has a branded request/payment record that can be printed or saved as PDF, even before a payment is recorded. Use the receipt's **Print / Save PDF** action to open the browser's native print dialog, then choose **Save as PDF**; the prototype does not generate or download a server-side PDF.
+## Customer journey
+1. Browse the four divisions and the Prospec catalogue.
+2. Select any priced or unpriced item. Unpriced items are marked “Quote on request” and remain fully requestable.
+3. Continue to the customer Account and submit an enquiry with contact details, requested date and brief.
+4. The enquiry is reviewed by the Prospec team. A listed price is a catalogue price, not proof of stock, a delivery promise or payment.
+5. The customer can review the request preview and status on the same browser profile.
 
-The date is a requested timeline, not a confirmed delivery promise. No payment is taken.
+## Owner Briefcase
+The single 💼 icon in the footer opens the owner access screen. The server validates the one-word access secret using the server-only ADMIN_PASSWORD variable. The owner workspace retains the foundation's catalogue editing, announcements, enquiry queue, status management, money records, receipts, notes and insights.
 
-## Local admin demo
+## Current implementation boundary
+The public storefront and all four division catalogues are configured for Prospec. The inherited prototype's data layer is still browser-local: enquiries, account messages, status changes, notes and owner edits do not yet sync across devices or create a shared remote inbox. The owner login is server-validated, but local preview data is not a production customer database. Do not use this release for live customer records until the supplied Prospec Firebase project is connected and its customer/staff authorization rules and server data paths have been implemented and tested.
 
-Use the **💼 briefcase icon** in the footer to open the one-word local Briefcase demo. The adjacent **🎒 BACKPACK / Personal OS** link opens Iteration 14 in a new tab. There is no separate Login/Admin navigation item. From the owner workspace you can:
+The repository includes Firebase client configuration scaffolding and UploadThing upload routes. No Firebase project ID, credentials, customer authentication flow or Firestore rules have been changed as part of this visual/catalogue adaptation. Uploads require valid UploadThing configuration and internet access.
 
-- Add, edit, hide/show and delete services.
-- Change prices, descriptions, image/video URLs and media type.
-- Publish or clear a storefront announcement.
-- Review each customer and their requests, then move work through New request, Reviewing, Accepted, In progress, Completed or Declined.
-- Record full or partial simulated payments against a request. Download or print a branded receipt / request record from both the customer account and owner job record, including unpaid, partially paid and fully paid states. The receipt uses the current business name and selected Store colour; no money moves.
-- Review the customer directory, payments received, completed value, projected accepted/in-progress value, requested value and completed-unpaid balance.
-- Choose whether a clean lap in the embedded 3D racing warm-up awards P10 or P20 off. The customer enters an email, earns a one-use code on a clean lap, and can redeem it against a Store request. Owners can also assign a promotion directly to a customer email.
-- Switch between Today, Customers & jobs, Money, Store design, My Notes and Insights tabs instead of scrolling through one long owner page.
-- Configure the business details and tax references shown on prototype receipts for the business's own record-keeping setup.
-- Review local operational analytics: browser-recorded Store visits, service selections, Account opens, saved enquiries and a recent activity trail. These counts describe only activity recorded in the current browser profile; they are not shared public-visitor analytics.
-- See the approximate size of the app's `iteration13:` browser-local data separately from the BoardSignal 25 GB Firebase reference ceiling. Firebase is not connected in this prototype, so Firebase reads, writes, bandwidth and storage usage are not measured or displayed as live consumption.
-- Vercel Analytics and Speed Insights are included at application level; Firebase Analytics and private Vercel dashboard data are not connected.
-- See summary counts for requests, statuses, services, customer emails and recorded demo visits.
-- Change the Store's accent colour using vivid presets or a custom colour picker; the chosen colour is used as an accent on neutral, readable surfaces across the Store, Briefcase and receipts.
-- Keep private My Notes in this browser.
-- Review the 25 GB capacity reference as a future Firebase-connected operating ceiling, not as a current usage meter.
-- Review the infrastructure flow showing the current browser-local demo and the planned Vercel Functions → Firestore path (Johannesburg database region; Cape Town is Vercel's listed South African compute region). The interactive payload calculator is an explicitly illustrative 25 GB workload model, not a tested server limit, live telemetry or revenue forecast.
-- Reset the local sample data for another walkthrough.
+## Business contacts
+- Head office: Plot 20643 Unit 1, Block 3 Industrial, Gaborone, Botswana
+- Branch: Tribal Lot 4216 Unit 6B, Supasave Mall, Mogoditshane, Botswana
+- Phone: +267 76 609 311 / +267 72 647 807
+- WhatsApp: +267 71 215 185
+- Email: info@prospecagency.com
 
-This is a prototype control surface, not a secure admin boundary. Do not enter real customer data.
+## Development
 
-## Persistence and offline QA
+    npm install
+    npm run dev
+    npm run lint
+    npm run build
 
-- Orders, service edits, announcements and statuses are stored in this browser's `localStorage`; customer and admin views share the same local data on the same browser profile.
-- Data is not shared with other devices, sent to a business, or synchronized to Firebase.
-- Visit the homepage while online and allow the service worker to finish installing; then reload once while online. Switch the device/browser offline and reload the homepage. Confirm the app shell opens, submit a sample request, and use the footer 💼 Briefcase entry to open the owner demo and change its status. Return to **Account** in the header and confirm the status is reflected.
-- The service worker caches the app shell and offline fallback, uses network-first navigation with a cached-page/home/offline fallback, and keeps private routes and API responses out of the public page cache. Eligible service images from supported hosts may be retained only when a readable response exposes a size within the 4 MB per-image limit (24 image entries maximum). Video streaming, opaque/oversized images and other external assets need internet; service cards should use their local visual placeholder when media is unavailable. Browser storage can be evicted, so this is best-effort offline support—not a guaranteed download or backup.
-- If local storage is blocked or full, the app should show a notice; do not interpret a local save notice as server synchronization.
+The build runs identity, offline and typography regression checks before Next.js build.
 
-## Installation — protected behavior
-
-The existing installation mechanics and placement are intentionally preserved. A compact, dismissible branded card appears inline at the top of the page when installation is genuinely available:
-
-- The browser's retained `beforeinstallprompt` event is invoked from the user's explicit branded install action when available.
-- When a native prompt is unavailable, platform-specific guidance is shown instead of a dead button or fake native prompt.
-- Embedded browsers receive a blocking open-in-browser handoff.
-- `/iphone-install` explains Safari Share → Add to Home Screen and includes the walkthrough link.
-- Service-worker caches use an Iteration 13 namespace and provide an update/refresh action.
-
-The duplicate header install CTA has been removed; the persistent branded install action remains the single install entry point. Do not alter install mechanics when changing icon artwork.
-
-## Interaction feedback
-
-Action buttons provide visible press/focus feedback. Successful local changes and validation/storage failures use a dismissible, screen-reader-announced toast. A success message is shown only after the browser accepts the localStorage write; it does not imply server synchronization.
-
-## Development and verification
-
-```sh
-npm install
-npx tsc --noEmit
-npm run verify:identity
-npm run lint
-npm run build
-```
-
-The GitHub Actions workflow in `.github/workflows/verify.yml` runs `npm ci`, identity verification, lint and build checks on pushes to `main` and pull requests. A green CI run is evidence of code checks; it does not by itself prove a Vercel deployment or device/offline behavior succeeded.
-
-After changing icons, inspect both `public/manifest.webmanifest` and `src/app/manifest.ts`, verify all referenced assets and the manifest actually served by the built app, and test Chrome/Android plus physical iPhone Safari. Firebase configuration and rules are outside this prototype's scope.
-
-
-## Guided customer and admin flow
-
-The floating **Need a hand?** guide is optional and scripted. Customers can choose a service, continue into the existing request form or open Account from the header. In Admin demo, it links directly to service management, announcements, incoming requests and the storefront. It does not send chat messages to a server or use an AI model. Its compact right-side control stays closed until a visitor opens it.
-
-Before cloning/adapting the guide, read [CHAT-WIDGET-RESEARCH.md](./CHAT-WIDGET-RESEARCH.md) and [FOUNDATION-BLUEPRINT.md](./FOUNDATION-BLUEPRINT.md). Keep the main customer journey obvious when the guide is closed.
-
-
-## Customer account workspace
-
-**Account** now demonstrates more than an empty request list:
-- Filter and review request history, requested timeline, discounted or regular price and current status.
-- Submit repeat requests for the same customer, browse new services, and view assigned or earned racing discount codes.
-- Open a conversation attached to a specific request, send a message and share an image, video or PDF attachment while online.
-- See admin/studio replies in the same thread in the Admin demo on this same browser.
-- Use a project-preparation checklist and save a project note for later in this browser. Account sections use consistent Service Studio styling; optional extras are chosen for the actual product context rather than copied from another client.
-- Continue reading saved local state and sending text messages offline after the app shell has been cached. File uploads require internet and are not queued.
-
-**Important limitation:** this remains a local prototype. Requests, messages, replies, statuses, project checklist progress and notes use this browser's storage. They are not sent to a real admin, emailed, or synchronized to another device. UploadThing files are uploaded remotely while online (images up to 4 MB, PDFs up to 4 MB, videos up to 16 MB), but their message metadata is saved in this browser's local thread. Do not use real customer data.
-
-### Reusing the account in another project
-
-Read the customer account adaptation contract in `AGENTS.md` and the account section in `CLONING.md`. Keep the useful capabilities, but replace the theme/game, wording, account extras, status language, file policy and actions with those that fit the actual project. Inspect its authentication, persistence, admin workflow and security rules. A production account requires verified per-customer data access and staff authorization; the demo's localStorage thread is not a real support inbox.
-
-## Share a business example
-
-From the owner Briefcase, use **Generate share link** in the business identity section. The link opens a choice to explore that exact business example or create a separate business. It carries the public-facing setup in the URL (business name, currency, palette, catalogue, each listing's image/video URL and media type, announcement text/image/publication state, availability and public reward settings); customer requests, contact details, messages, payment records, private receipt details, owner notes and activity history are excluded. Uploaded media is hosted separately (for example, by UploadThing), so the recipient's browser loads it from that public media URL; the file itself is not embedded in the link. Keep those media URLs publicly readable and do not delete the uploaded files if the shared example must keep displaying them. Recipients need an internet connection to load remote media; autoplay is attempted muted and inline, but browser/device power or data-saving policies may still require a tap. Each visitor's edits are saved in a separate browser-local workspace and do not change the owner's business. This is a URL-carried local demo, not cloud sharing, cross-device synchronization or production data isolation. Very large setups can exceed the 16,000-character encoded-data limit and will be rejected with an on-screen message.
-
-## Owner shift measurement
-
-A shift starts when the owner successfully opens the Briefcase. Switching between Briefcase tabs does not restart it. Leaving the Briefcase, closing/reloading the page, the 30-minute idle lock, maximum duration or signing out ends the shift. A login by itself is not counted, and a previous shift is never resumed on a later opening.
+## Protected foundation behavior
+The compact dismissible PWA install card, retained native beforeinstallprompt event, iOS Safari installation guidance, embedded-browser handoff, service-worker lifecycle, offline shell and update behavior remain protected. Branding and cache identity are adapted; installation mechanics are not rewritten.
