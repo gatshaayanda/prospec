@@ -1,4 +1,4 @@
-name: Verify Iteration 13
+name: Verify Prospec
 
 on:
   workflow_dispatch:
@@ -28,8 +28,11 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Verify project identity and PWA assets
-        run: npm run verify:identity
+      - name: Prospec identity, offline and typography checks
+        run: |
+          npm run verify:identity
+          npm run verify:offline
+          npm run verify:typography
       - name: Lint
         run: npm run lint
       - name: Production build
