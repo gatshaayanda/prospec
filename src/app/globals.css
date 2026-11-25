@@ -6638,3 +6638,20 @@ h1 em,
  .servicePreview .sd-enquiry-category-items label{grid-template-columns:18px minmax(0,1fr);gap:8px}
  .servicePreview .sd-enquiry-category-items label strong{grid-column:2;text-align:left;font-size:.65rem}
 }
+
+/* Storefront heading contrast and single-store landing composition. */
+.prospec-storefront{padding-top:clamp(20px,4vw,42px)}
+.prospec-catalogue-heading{align-items:flex-start!important;gap:16px}
+.prospec-catalogue-heading>div{min-width:0}
+.prospec-catalogue-heading .prospec-eyebrow{display:inline-block;margin-bottom:8px;color:#00b9c7!important;font-size:.72rem;font-weight:950;letter-spacing:.14em}
+.prospec-catalogue-heading h2{margin:0 0 9px!important;color:#fff!important;-webkit-text-fill-color:#fff!important;font-size:clamp(2rem,5vw,3.35rem)!important;line-height:1.02!important;letter-spacing:-.045em}
+.prospec-catalogue-heading h2 em{color:#00d2d5!important;-webkit-text-fill-color:#00d2d5!important}
+.prospec-catalogue-heading p{margin:0!important;max-width:58ch;color:#e0e9eb!important;-webkit-text-fill-color:#e0e9eb!important;font-size:clamp(.88rem,1.5vw,1rem)!important;line-height:1.55!important}
+.prospec-catalogue-count{flex:0 0 auto;color:#fff!important;background:#26383e;border:1px solid #53666d;border-radius:8px;padding:8px 10px;font-size:.72rem;font-weight:850}
+.prospec-contact-details a{display:none!important}
+@media(max-width:560px){
+ .prospec-catalogue-heading{display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:start!important;gap:10px!important}
+ .prospec-catalogue-heading h2{font-size:clamp(1.85rem,8vw,2.45rem)!important}
+ .prospec-catalogue-heading p{font-size:.88rem!important}
+ .prospec-catalogue-count{font-size:.65rem;padding:7px}
+}
