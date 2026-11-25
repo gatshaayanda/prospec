@@ -27,8 +27,6 @@ The repository includes Firebase client configuration scaffolding and UploadThin
 ## Business contacts
 - Head office: Plot 20643 Unit 1, Block 3 Industrial, Gaborone, Botswana
 - Branch: Tribal Lot 4216 Unit 6B, Supasave Mall, Mogoditshane, Botswana
-- Phone: +267 76 609 311 / +267 72 647 807
-- WhatsApp: +267 71 215 185
 - Email: info@prospecagency.com
 
 ## Development
