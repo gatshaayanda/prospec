@@ -11,7 +11,7 @@ type InstallPromptEvent = Event & {
 };
 type InstallState = "hidden" | "native" | "embedded";
 
-const INSTALL_DISMISSED_KEY = "iteration13:install:dismissed-at";
+const INSTALL_DISMISSED_KEY = "prospec:install:dismissed-at";
 const INSTALL_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
 
 function environment() {
@@ -301,7 +301,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     {!environment().standalone && installState !== "embedded" && (canInstall || canShowManualInstall) && !installCardDismissed && !(installState === "native" && installHelpOpen) && (
       <aside className="i13-install-card" aria-label="Install Prospec Group">
         <div className="i13-install-brand">
-          <span className="i13-install-mark" aria-hidden="true">13</span>
+          <span className="i13-install-mark" aria-hidden="true">P</span>
           <span><strong>PROSPEC GROUP</strong><small>PITBULLS OF BRANDING</small></span>
         </div>
         <button className="i13-install-close" type="button" aria-label="Dismiss install prompt" onClick={() => setInstallCardDismissed(true)}>×</button>
