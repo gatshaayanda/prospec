@@ -1462,7 +1462,7 @@ return <main className="servicePreview" style={{ "--studio-accent": themeColor, 
       </section>
       <section className="prospec-contact prospec-contact-refined sd-wrap" aria-labelledby="prospec-contact-title">
         <div><span className="prospec-eyebrow">YOUR NEXT MOVE</span><h2 id="prospec-contact-title">Got a brief? <em>Bring it.</em></h2><p>Choose an offering or send a general request. Your Prospec Account keeps the conversation and updates together.</p><button type="button" onClick={()=>{setView("account");setNotice("Tell Prospec what you need and we’ll route your enquiry to the right division.");}}>Start your request <span aria-hidden="true">↗</span></button></div>
-        <div className="prospec-contact-details"><strong>Rooted in Botswana. Ready beyond.</strong><span>Prospec Group serves customers from its Botswana base, with local and international sourcing and services.</span><strong>Head office</strong><span>Plot 20643 Unit 1, Block 3 Industrial, Gaborone, Botswana</span><a href="mailto:info@prospecagency.com">info@prospecagency.com</a><a href="https://www.facebook.com/468612199989878/" target="_blank" rel="noreferrer">Follow Prospec on Facebook ↗</a></div>
+        <div className="prospec-contact-details"><strong>Rooted in Botswana. Ready beyond.</strong><span>Prospec Group serves customers from its Botswana base, with local and international sourcing and services.</span><strong>Home base</strong><span>Gaborone, Botswana · Serving customers locally and internationally</span><a href="mailto:info@prospecagency.com">info@prospecagency.com</a><a href="https://www.facebook.com/468612199989878/" target="_blank" rel="noreferrer">Follow Prospec on Facebook ↗</a></div>
       </section>
 </>}
 
