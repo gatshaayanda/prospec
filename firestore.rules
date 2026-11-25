@@ -46,7 +46,7 @@ service cloud.firestore {
         && request.resource.data.messages is list
         && request.resource.data.messages.size() <= 100
         && request.resource.data.messages.hasAll(resource.data.messages)
-        && request.resource.data.messages.size() > resource.data.messages.size()
+        && request.resource.data.messages.size() == resource.data.messages.size() + 1
         && request.resource.data.messages[request.resource.data.messages.size() - 1].from == "customer"
         && request.resource.data.messages[request.resource.data.messages.size() - 1].text is string
         && request.resource.data.messages[request.resource.data.messages.size() - 1].text.size() <= 2000
