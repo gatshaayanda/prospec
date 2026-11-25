@@ -14,6 +14,8 @@ export type ReceiptOrder = {
   id: string;
   receiptNo?: string;
   serviceName: string;
+  serviceItems?: { id: string; name: string; price: number; custom?: boolean }[];
+  quoteRequired?: boolean;
   price: number;
   originalPrice?: number;
   discountAmount?: number;
@@ -24,7 +26,7 @@ export type ReceiptOrder = {
   brief: string;
   status: string;
   createdAt: string;
-  paymentStatus?: "Unpaid" | "Partially paid (demo)" | "Paid (demo)";
+  paymentStatus?: "Unpaid" | "Partially paid (preview)" | "Paid (preview)";
   paidAmount?: number;
   paidAt?: string;
 };
@@ -51,9 +53,10 @@ const dateLabel = (value?: string) => {
 export default function ReceiptDocument({ businessName, currency, accentColor, receiptProfile, order }: Props) {
   const money = (amount: number) => new Intl.NumberFormat("en", { style: "currency", currency, maximumFractionDigits: 2 }).format(amount);
   const total = Math.max(0, Number(order.price) || 0);
+  const quotePending = Boolean(order.quoteRequired && typeof order.quotedPrice !== "number");
   const paid = Math.min(total, Math.max(0, Number(order.paidAmount) || 0));
   const balance = Math.max(0, total - paid);
-  const paymentState = paid <= 0 ? "No payment recorded" : balance > 0 ? "Partially paid" : "Paid in full";
+  const paymentState = quotePending ? "Quote requested" : paid <= 0 ? "No payment recorded" : balance > 0 ? "Partially paid" : "Paid in full";
   const receiptNumber = order.receiptNo || "REQ-" + order.id;
   const brand = businessName.trim() || receiptProfile?.legalName?.trim() || "Your Business";
   const registeredName = receiptProfile?.legalName?.trim();
@@ -69,15 +72,15 @@ export default function ReceiptDocument({ businessName, currency, accentColor, r
   };
 
   return <details className="sd-receipt">
-    <summary>Receipt / payment record · {receiptNumber}</summary>
+    <summary>{quotePending ? "Request / quote record" : "Receipt / payment record"} · {receiptNumber}</summary>
     <div className="sd-receipt-paper" style={{ "--receipt-accent": accentColor, "--receipt-accent-ink": accentInk(accentColor) } as CSSProperties}>
       <header className="sd-receipt-brand">
         <span className="sd-receipt-mark" aria-hidden="true">{brand.slice(0, 1).toUpperCase()}</span>
-        <div><strong>{brand}</strong><small>Customer receipt &amp; job record</small></div>
+        <div><strong>{brand}</strong><small>{quotePending ? "Customer enquiry &amp; quote record" : "Customer receipt &amp; job record"}</small></div>
         <span className="sd-receipt-state">{paymentState}</span>
       </header>
       {showRegisteredName ? <p className="sd-receipt-registered">Registered name: {registeredName}</p> : null}
-      <div className="sd-receipt-heading"><span>{paid > 0 ? "PAYMENT RECORD" : "REQUEST RECORD"}</span><h2>{paymentState === "Paid in full" ? "Paid in full" : paymentState === "Partially paid" ? "Part payment" : "Payment outstanding"}</h2><p>{paymentState === "Paid in full" ? "The recorded demo balance is settled." : paymentState === "Partially paid" ? "A payment has been recorded; the remaining balance is shown below." : "This request is recorded. No payment has been recorded."}</p></div>
+      <div className="sd-receipt-heading"><span>{quotePending ? "ENQUIRY RECORD" : paid > 0 ? "PAYMENT RECORD" : "REQUEST RECORD"}</span><h2>{quotePending ? "Quote requested" : paymentState === "Paid in full" ? "Paid in full" : paymentState === "Partially paid" ? "Part payment" : "Payment outstanding"}</h2><p>{quotePending ? "One or more selected items do not have a published price. Prospec will review the brief and prepare a quotation." : paymentState === "Paid in full" ? "The recorded preview balance is settled." : paymentState === "Partially paid" ? "A preview payment has been recorded; the remaining balance is shown below." : "This request is recorded. No payment has been recorded."}</p></div>
       <dl className="sd-receipt-meta">
         <div><dt>Record number</dt><dd>{receiptNumber}</dd></div>
         <div><dt>Request date</dt><dd>{dateLabel(order.createdAt)}</dd></div>
@@ -88,9 +91,9 @@ export default function ReceiptDocument({ businessName, currency, accentColor, r
         <div><span>PREPARED FOR</span><strong>{order.customerName}</strong><small>{order.email}</small></div>
         <div><span>BUSINESS CONTACT</span><strong>{receiptProfile?.phone || "Not supplied"}</strong><small>{receiptProfile?.address || "Address not supplied"}</small></div>
       </div>
-      <div className="sd-receipt-line"><span>{order.serviceName}</span><strong>{money(order.originalPrice ?? total)}</strong></div>
+      <div className="sd-receipt-line"><span>{order.serviceName}</span><strong>{quotePending && total === 0 ? "Quote pending" : money(order.originalPrice ?? total)}</strong></div>
       {order.discountAmount ? <div className="sd-receipt-line is-discount"><span>Discount {order.discountCode ? "(" + order.discountCode + ")" : ""}</span><strong>−{money(order.discountAmount)}</strong></div> : null}
-      <div className="sd-receipt-line is-total"><span>Agreed demo total</span><strong>{money(total)}</strong></div>
+      <div className="sd-receipt-line is-total"><span>{quotePending ? (total > 0 ? "Listed subtotal · quote pending" : "Quote pending") : "Recorded preview total"}</span><strong>{quotePending && total === 0 ? "To be quoted" : money(total)}</strong></div>
       <div className="sd-receipt-payment">
         <div><span>Payment recorded</span><strong>{money(paid)}</strong></div>
         <div><span>Balance outstanding</span><strong>{money(balance)}</strong></div>
@@ -99,7 +102,7 @@ export default function ReceiptDocument({ businessName, currency, accentColor, r
       </div>
       {receiptProfile?.registration ? <p className="sd-receipt-tax">Business reference: {receiptProfile.registration}</p> : null}
       {order.brief ? <div className="sd-receipt-brief"><span>REQUEST NOTES</span><p>{order.brief}</p></div> : null}
-      <footer className="sd-receipt-footer"><strong>{receiptProfile?.footer || "Thank you for your business."}</strong><small>Local prototype record only. This app does not process or independently verify payments. Keep this document with the related job record.</small><button className="sd-small-button sd-receipt-download" type="button" onClick={printReceipt}>Download / print PDF</button></footer>
+      <footer className="sd-receipt-footer"><strong>{receiptProfile?.footer || "Thank you for your business."}</strong><small>Local Prospec preview record only. This app does not process or independently verify payments. Keep this document with the related job record.</small><button className="sd-small-button sd-receipt-download" type="button" onClick={printReceipt}>Download / print PDF</button></footer>
     </div>
   </details>;
 }
