@@ -29,7 +29,8 @@ if (!sw.includes("/prospec-icon.svg")) failures.push("service worker: Prospec ic
 if (!sw.includes("/iphone-install") || !sw.includes("/iphone-install.svg")) failures.push("service worker: iPhone installation guide missing from app shell");
 if (!layout.includes("__iteration13InstallPrompt") || !layout.includes("beforeinstallprompt")) failures.push("PWA layout: early native install-prompt capture missing");
 if (!layout.includes('<PwaRegister initialEmbedded={embedded} initialAndroid={android}/>{children}')) failures.push("PWA layout: install card must remain mounted before page content");
-if (!/\.i13-install-card\s*\{[^}]*position:\s*relative[^}]*max-width:\s*390px[^}]*margin:\s*12px auto 0/s.test(installCss)) failures.push("PWA install card: protected inline compact placement changed");
+if (!/\.i13-install-card\s*\{[^}]*position:\s*fixed[^}]*left:\s*16px[^}]*right:\s*16px[^}]*bottom:\s*16px/s.test(installCss)) failures.push("PWA install card: protected bottom-fixed mobile placement changed");
+if (!/@media\s*\(min-width:\s*700px\)\s*\{\.i13-install-card\s*\{[^}]*position:\s*fixed[^}]*left:\s*auto[^}]*right:\s*18px[^}]*bottom:\s*18px[^}]*width:\s*350px/s.test(installCss)) failures.push("PWA install card: protected bottom-right desktop placement changed");
 if (!pwaRegister.includes("await prompt.prompt()") || !pwaRegister.includes("setCanInstall(true)")) failures.push("PWA install: native prompt no longer connected to explicit action");
 if (!pwaRegister.includes("(canInstall || canShowManualInstall)") || !pwaRegister.includes("isIosSafari()")) failures.push("PWA install: native prompt / iOS Safari visibility gate changed");
 if (!pwaRegister.includes('className={`i13-install-card') || !pwaRegister.includes('className="i13-install-close"') || !pwaRegister.includes("setInstallCardDismissed(true)")) failures.push("PWA install: dismissible branded card missing");
