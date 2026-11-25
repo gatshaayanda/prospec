@@ -66,11 +66,13 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
   const [canInstall, setCanInstall] = useState(false);
   const [canShowManualInstall, setCanShowManualInstall] = useState(false);
   const [installCardDismissed, setInstallCardDismissed] = useState(false);
+  const [installCardCollapsed, setInstallCardCollapsed] = useState(false);
   const embeddedActionRef = useRef<HTMLButtonElement | null>(null);
   const reloadForUpdate = useRef(false);
 
   useEffect(() => {
     const env = environment();
+    setInstallCardDismissed(dismissedRecently());
     const embedded = initialEmbedded || env.embedded;
     setEmbeddedAndroid((initialEmbedded && initialAndroid) || (env.embedded && env.android));
     setCanShowManualInstall(isIosSafari());
@@ -96,7 +98,8 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
       event.preventDefault();
       const prompt = event as InstallPromptEvent;
       installPromptRef.current = prompt;
-      setInstallCardDismissed(false);
+      setInstallCardDismissed(dismissedRecently());
+      setInstallCardCollapsed(false);
       setCanInstall(true);
       // Retain the one-shot native event for the user's explicit Install click.
       // Do not interrupt page load with a second, custom install screen.
@@ -241,6 +244,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
   function dismissInstall() {
     rememberDismissal();
     setInstallCardDismissed(true);
+    setInstallCardCollapsed(false);
     setInstallHelpOpen(false);
     setInstallState("hidden");
   }
@@ -299,12 +303,13 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
 
   return <>
     {!environment().standalone && installState !== "embedded" && (canInstall || canShowManualInstall) && !installCardDismissed && !(installState === "native" && installHelpOpen) && (
-      <aside className="i13-install-card" aria-label="Install Prospec Group">
+      <aside className={`i13-install-card${installCardCollapsed ? " is-collapsed" : ""}`} aria-label="Install Prospec Group">
         <div className="i13-install-brand">
           <span className="i13-install-mark" aria-hidden="true">P</span>
           <span><strong>PROSPEC GROUP</strong><small>PITBULLS OF BRANDING</small></span>
         </div>
-        <button className="i13-install-close" type="button" aria-label="Dismiss install prompt" onClick={() => setInstallCardDismissed(true)}>×</button>
+        <button className="i13-install-collapse" type="button" aria-label={installCardCollapsed ? "Expand install options" : "Collapse install options"} aria-expanded={!installCardCollapsed} onClick={() => setInstallCardCollapsed(value => !value)}>{installCardCollapsed ? "＋" : "−"}</button>
+        <button className="i13-install-close" type="button" aria-label="Dismiss install prompt for seven days" onClick={dismissInstall}>×</button>
         <button className="i13-install-action" type="button" onClick={() => {
           if (installPromptRef.current) {
             void install();
@@ -314,7 +319,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
             setInstallHelpOpen(true);
             setInstallState("native");
           }
-        }}>{canInstall ? "Install Prospec Group" : "Add to Home Screen"} <span aria-hidden="true">↗</span></button>
+        }}>{installCardCollapsed ? "Install" : canInstall ? "Install Prospec Group" : "Add to Home Screen"} <span aria-hidden="true">↗</span></button>
       </aside>
     )}
     {installCard}
