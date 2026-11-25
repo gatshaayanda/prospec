@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { prospecCatalogue, prospecDivisions } from "@/lib/prospec-catalogue";
 import ServiceGuide from "@/app/ServiceGuide";
 import ServiceMediaPicker from "@/app/ServiceMediaPicker";
 import AnnouncementImagePicker from "@/app/AnnouncementImagePicker";
@@ -12,18 +13,18 @@ import AdminMoneyInsights from "@/app/AdminMoneyInsights";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type Service = { id: string; name: string; industry?: string; price: number; description: string; media: string; mediaType: "image" | "video"; active: boolean; custom?: boolean };
-type DemoOrder = { id: string; serviceId: string; serviceName: string; serviceItems?: { id: string; name: string; price: number }[]; price: number; dueDate: string; customerName: string; email: string; whatsapp?: string; notificationOptIn?: boolean; brief: string; status: string; createdAt: string; statusUpdatedAt?: string; messages?: AccountMessage[]; paymentStatus?: "Unpaid" | "Partially paid (demo)" | "Paid (demo)"; originalPrice?: number; quotedPrice?: number; discountAmount?: number; discountCode?: string; paidAmount?: number; paidAt?: string; receiptNo?: string; isTest?: boolean; completedAt?: string };
-type DemoEvent = { id: string; kind: "visit" | "service" | "account" | "request" | "completed" | "payment" | "reward" | "shift-start" | "shift-end" | "session-expired"; label: string; at: string; test?: boolean };
+type PreviewOrder = { id: string; serviceId: string; serviceName: string; serviceItems?: { id: string; name: string; price: number }[]; price: number; dueDate: string; customerName: string; email: string; whatsapp?: string; notificationOptIn?: boolean; brief: string; status: string; createdAt: string; statusUpdatedAt?: string; messages?: AccountMessage[]; paymentStatus?: "Unpaid" | "Partially paid (preview)" | "Paid (preview)"; originalPrice?: number; quotedPrice?: number; discountAmount?: number; discountCode?: string; paidAmount?: number; paidAt?: string; receiptNo?: string; isTest?: boolean; completedAt?: string };
+type PreviewEvent = { id: string; kind: "visit" | "service" | "account" | "request" | "completed" | "payment" | "reward" | "shift-start" | "shift-end" | "session-expired"; label: string; at: string; test?: boolean };
 type DiscountClaim = { id: string; email: string; code: string; amount: number; lapTime: number; createdAt: string; status: "Available" | "Redeemed" };
 type JourneyEvent = { id: string; event: string; screen: string; at: string; sessionId: string; serviceId?: string; serviceName?: string; orderId?: string; source: "page" | "guide" };
-type DemoData = { services: Service[]; orders: DemoOrder[]; journeyEvents?: JourneyEvent[]; availability?: "available" | "limited" | "unavailable"; announcement: string; announcementActive?: boolean; announcementImage?: string; views: number; events?: DemoEvent[]; discountAmount?: number; rewardTitle?: string; rewardDescription?: string; rewardImage?: string; rewardActive?: boolean; discountClaims?: DiscountClaim[]; receiptProfile?: { legalName: string; registration: string; address: string; phone: string; footer: string } };
-type SharedExample = { id: string; businessName: string; currency: string; brandColors: string[]; data: Partial<DemoData> };
-const STORAGE_KEY = "iteration13:service-demo:v1";
-const SETUP_DRAFT_KEY = "iteration13:business-setup-draft:v1";
-const CUSTOMER_SELECTION_KEY = "iteration13:customer-selected-services:v1";
+type PreviewData = { services: Service[]; orders: PreviewOrder[]; journeyEvents?: JourneyEvent[]; availability?: "available" | "limited" | "unavailable"; announcement: string; announcementActive?: boolean; announcementImage?: string; views: number; events?: PreviewEvent[]; discountAmount?: number; rewardTitle?: string; rewardDescription?: string; rewardImage?: string; rewardActive?: boolean; discountClaims?: DiscountClaim[]; receiptProfile?: { legalName: string; registration: string; address: string; phone: string; footer: string } };
+type SharedExample = { id: string; businessName: string; currency: string; brandColors: string[]; data: Partial<PreviewData> };
+const STORAGE_KEY = "prospec:service-preview:v1";
+const SETUP_DRAFT_KEY = "prospec:business-setup-draft:v1";
+const CUSTOMER_SELECTION_KEY = "prospec:customer-selected-services:v1";
 
-const emptyData: DemoData = { services: [], orders: [], availability: "available", announcement: "", announcementActive: false, announcementImage: "", views: 0, events: [], discountAmount: 5, rewardTitle: "Race for a discount.", rewardDescription: "Drive for eight seconds. Keep it clean to unlock the published discount on your next request.", rewardImage: "", rewardActive: true, discountClaims: [], receiptProfile: { legalName: "Your Business", registration: "", address: "", phone: "", footer: "Thank you for your business." } };
-const CURRENCY_KEY = "iteration13:business-currency:v1";
+const emptyData: PreviewData = { services: [], orders: [], availability: "available", announcement: "", announcementActive: false, announcementImage: "", views: 0, events: [], discountAmount: 5, rewardTitle: "Race for a discount.", rewardDescription: "Drive for eight seconds. Keep it clean to unlock the published discount on your next request.", rewardImage: "", rewardActive: true, discountClaims: [], receiptProfile: { legalName: "Prospec Group", registration: "", address: "", phone: "", footer: "Thank you for your business." } };
+const CURRENCY_KEY = "prospec:business-currency:v1";
 let sharedExampleCache: { token: string; value: SharedExample | null } | null = null;
 function readSharedExampleFromUrl(): SharedExample | null {
   if (typeof window === "undefined") return null;
@@ -38,7 +39,7 @@ function readSharedExampleFromUrl(): SharedExample | null {
     if (typeof parsed.id !== "string" || !/^[a-z0-9-]{6,80}$/i.test(parsed.id) || typeof parsed.businessName !== "string" || !parsed.businessName.trim()) throw new Error("Invalid shared example");
     if (!Array.isArray(parsed.brandColors) || !parsed.brandColors.length || parsed.brandColors.length > 3 || !parsed.brandColors.every(color => typeof color === "string" && /^#[0-9a-f]{6}$/i.test(color))) throw new Error("Invalid shared palette");
     if (!supportedCurrencies.includes(parsed.currency as typeof supportedCurrencies[number])) throw new Error("Invalid shared currency");
-    const incoming: Partial<DemoData> = parsed.data && typeof parsed.data === "object" ? parsed.data : {};
+    const incoming: Partial<PreviewData> = parsed.data && typeof parsed.data === "object" ? parsed.data : {};
     const services = Array.isArray(incoming.services) ? incoming.services.filter(service => service && typeof service.name === "string" && typeof service.price === "number" && Number.isFinite(service.price) && service.price >= 0).slice(0, 100).map((service, index) => ({
       id: typeof service.id === "string" ? service.id.slice(0, 100) : "shared-service-" + index,
       name: service.name.slice(0, 80),
@@ -109,26 +110,21 @@ function findSavedBusinessWorkspaces(): SavedBusinessWorkspace[] {
     const found: SavedBusinessWorkspace[] = [];
     for (const suffix of suffixes) {
       const raw = window.localStorage.getItem(STORAGE_KEY + suffix);
-      const name = (window.localStorage.getItem("iteration13:business-name:v1" + suffix) || "").trim();
-      const identityComplete = window.localStorage.getItem("iteration13:identity-complete:v1" + suffix) === "true";
-      let parsed: Partial<DemoData> | null = null;
-      try { parsed = raw ? JSON.parse(raw) as Partial<DemoData> : null; } catch { continue; }
+      const name = (window.localStorage.getItem("prospec:business-name:v1" + suffix) || "").trim();
+      const identityComplete = window.localStorage.getItem("prospec:identity-complete:v1" + suffix) === "true";
+      let parsed: Partial<PreviewData> | null = null;
+      try { parsed = raw ? JSON.parse(raw) as Partial<PreviewData> : null; } catch { continue; }
       const services = Array.isArray(parsed?.services) ? parsed.services : [];
       const orders = Array.isArray(parsed?.orders) ? parsed.orders : [];
-      const isUntouchedInjectedTrailWiseSeed = services.length === 1 &&
-        services[0]?.id === "trailwise-guided-walk" &&
-        services[0]?.name === "Guided nature walk" &&
-        services[0]?.price === 350 &&
-        orders.length === 0;
-      if (!raw || (!identityComplete && (!name || services.length === 0)) || isUntouchedInjectedTrailWiseSeed) continue;
+      if (!raw || (!identityComplete && (!name || services.length === 0))) continue;
       found.push({ suffix, name: name || "Saved business", serviceCount: services.length, customerCount: orders.length });
     }
     return found;
   } catch { return []; }
 }
 const getBusinessCurrency = () => {
-  if (typeof window === "undefined") return "USD";
-  try { const value = window.localStorage.getItem(getStorageKey(CURRENCY_KEY)); return supportedCurrencies.includes(value as typeof supportedCurrencies[number]) ? value! : "USD"; }
+  if (typeof window === "undefined") return "BWP";
+  try { const value = window.localStorage.getItem(getStorageKey(CURRENCY_KEY)); return supportedCurrencies.includes(value as typeof supportedCurrencies[number]) ? value! : "BWP"; }
   catch { return "USD"; }
 };
 const money = (amount: number) => new Intl.NumberFormat("en", { style: "currency", currency: getBusinessCurrency(), maximumFractionDigits: 2 }).format(amount);
@@ -203,13 +199,12 @@ function StoreVideoPreview({ src }: { src: string }) {
 
 const localDate = () => { const now = new Date(); return [now.getFullYear(), String(now.getMonth() + 1).padStart(2, "0"), String(now.getDate()).padStart(2, "0")].join("-"); };
 const brandColorOptions = [
-  { color: "#2458e8", label: "Cobalt" }, { color: "#16866a", label: "Emerald" },
-  { color: "#b7791f", label: "Amber" }, { color: "#c04467", label: "Rose" },
-  { color: "#6b4ed6", label: "Violet" }, { color: "#202b3c", label: "Midnight" },
+  { color: "#00B9C7", label: "Prospec Teal" }, { color: "#20272D", label: "Charcoal" },
+  { color: "#FFFFFF", label: "White" }, { color: "#1B8D96", label: "Deep Teal" },
 ];
 
 export default function Home() {
-  const [data, setData] = useState<DemoData>(emptyData);
+  const [data, setData] = useState<PreviewData>(emptyData);
   const [sharedExample, setSharedExample] = useState<SharedExample | null>(null);
   const [isSharedExampleWorkspace, setIsSharedExampleWorkspace] = useState(false);
   const [shareLink, setShareLink] = useState("");
@@ -218,33 +213,33 @@ export default function Home() {
   const [offlineShellReady, setOfflineShellReady] = useState(false);
   const [view, setView] = useState<"shop" | "account" | "login" | "admin">("shop");
   const [launchingBriefcase, setLaunchingBriefcase] = useState(false);
-  const [demoJourney, setDemoJourney] = useState<string[]>(["Storefront preview"]);
+  const [previewJourney, setPreviewJourney] = useState<string[]>(["Storefront preview"]);
 
-  function recordDemoJourney(action: string) {
-    setDemoJourney(current => current.includes(action) ? current : [...current, action]);
+  function recordPreviewJourney(action: string) {
+    setPreviewJourney(current => current.includes(action) ? current : [...current, action]);
   }
   function recordActivity(kind: "service" | "account", label: string) {
-    const event: DemoEvent = { id: "EV-" + Date.now().toString(36), kind, label, at: new Date().toISOString() };
+    const event: PreviewEvent = { id: "EV-" + Date.now().toString(36), kind, label, at: new Date().toISOString() };
     setData(current => ({ ...current, events: [event, ...(current.events || [])].slice(0, 250) }));
   }
 
   function recordJourneyEvent(event: string, details: { screen?: string; serviceId?: string; serviceName?: string; orderId?: string; source?: "page" | "guide" } = {}) {
     let sessionId = "session-unavailable";
     try {
-      sessionId = window.sessionStorage.getItem("iteration13:journey-session:v1") || ("S-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8));
-      window.sessionStorage.setItem("iteration13:journey-session:v1", sessionId);
+      sessionId = window.sessionStorage.getItem("prospec:journey-session:v1") || ("S-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8));
+      window.sessionStorage.setItem("prospec:journey-session:v1", sessionId);
     } catch { /* session identity is optional */ }
     const entry: JourneyEvent = { id: "J-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7), event, screen: details.screen || (view === "admin" ? "briefcase-" + adminTab : view === "account" ? "customer-account" : "store"), at: new Date().toISOString(), sessionId, ...(details.serviceId ? { serviceId: details.serviceId } : {}), ...(details.serviceName ? { serviceName: details.serviceName } : {}), ...(details.orderId ? { orderId: details.orderId } : {}), source: details.source || "page" };
     if (event === "request_submitted") {
       try {
-        const key = "iteration13:guide-events:v1";
+        const key = "prospec:guide-events:v1";
         const events = JSON.parse(window.sessionStorage.getItem(key) || "[]") as { event: string; screen: string; at: string }[];
         window.sessionStorage.setItem(key, JSON.stringify([...events, { event: "request_submitted", screen: entry.screen, at: entry.at }].slice(-60)));
       } catch { /* guide nudge suppression is optional */ }
     }
     try {
       const saved = window.localStorage.getItem(getStorageKey(STORAGE_KEY));
-      const parsed = saved ? JSON.parse(saved) as DemoData : data;
+      const parsed = saved ? JSON.parse(saved) as PreviewData : data;
       const current = saved ? { ...emptyData, ...parsed } : data;
       const next = { ...current, journeyEvents: [entry, ...(current.journeyEvents || [])].slice(0, 300) };
       window.localStorage.setItem(getStorageKey(STORAGE_KEY), JSON.stringify(next));
@@ -255,9 +250,9 @@ export default function Home() {
   useEffect(() => {
     if (!ready) return;
     try {
-      if (window.sessionStorage.getItem("iteration13:journey-store-viewed:v1") !== "yes") {
+      if (window.sessionStorage.getItem("prospec:journey-store-viewed:v1") !== "yes") {
         recordJourneyEvent("store_viewed", { screen: "store" });
-        window.sessionStorage.setItem("iteration13:journey-store-viewed:v1", "yes");
+        window.sessionStorage.setItem("prospec:journey-store-viewed:v1", "yes");
       }
     } catch { recordJourneyEvent("store_viewed", { screen: "store" }); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -285,9 +280,9 @@ export default function Home() {
   const endOwnerShiftRef = useRef<(expired?: boolean, signOut?: boolean) => void>(() => {});
   useEffect(() => {
     try {
-      const savedDuration = Number(window.localStorage.getItem(getStorageKey("iteration13:owner-session-duration:v1")));
+      const savedDuration = Number(window.localStorage.getItem(getStorageKey("prospec:owner-session-duration:v1")));
       if (Number.isInteger(savedDuration) && savedDuration >= 1 && savedDuration <= 24) setSessionDurationHours(savedDuration);
-      window.localStorage.removeItem(getStorageKey("iteration13:owner-session:v1"));
+      window.localStorage.removeItem(getStorageKey("prospec:owner-session:v1"));
       const incoming = readSharedExampleFromUrl();
       if (incoming) {
         setSharedExample(incoming);
@@ -296,17 +291,17 @@ export default function Home() {
         if (exampleWorkspace) {
           const key = getStorageKey(STORAGE_KEY);
           if (!window.localStorage.getItem(key)) {
-            const independentData: DemoData = { ...emptyData, ...incoming.data, orders: [], events: [], views: 0, discountClaims: [], receiptProfile: { ...emptyData.receiptProfile! } };
+            const independentData: PreviewData = { ...emptyData, ...incoming.data, orders: [], events: [], views: 0, discountClaims: [], receiptProfile: { ...emptyData.receiptProfile! } };
             window.localStorage.setItem(key, JSON.stringify(independentData));
-            window.localStorage.setItem(getStorageKey("iteration13:business-name:v1"), incoming.businessName);
-            window.localStorage.setItem(getStorageKey("iteration13:business-palette:v1"), JSON.stringify(incoming.brandColors));
-            window.localStorage.setItem(getStorageKey("iteration13:store-theme:v1"), incoming.brandColors[0]);
+            window.localStorage.setItem(getStorageKey("prospec:business-name:v1"), incoming.businessName);
+            window.localStorage.setItem(getStorageKey("prospec:business-palette:v1"), JSON.stringify(incoming.brandColors));
+            window.localStorage.setItem(getStorageKey("prospec:store-theme:v1"), incoming.brandColors[0]);
             window.localStorage.setItem(getStorageKey(CURRENCY_KEY), incoming.currency);
-            window.localStorage.setItem(getStorageKey("iteration13:identity-complete:v1"), "true");
+            window.localStorage.setItem(getStorageKey("prospec:identity-complete:v1"), "true");
           }
         }
       }
-    } catch { /* a browser-local demo session can safely start fresh */ }
+    } catch { /* a browser-local preview session can safely start fresh */ }
   }, []);
   useEffect(() => {
     if (!shiftStartedAt || !sessionExpiresAt || view !== "admin") return;
@@ -348,7 +343,7 @@ export default function Home() {
   const [customerProfileReady, setCustomerProfileReady] = useState(false);
   useEffect(() => {
     try {
-      const saved = window.localStorage.getItem(getStorageKey("iteration13:customer-profile:v1"));
+      const saved = window.localStorage.getItem(getStorageKey("prospec:customer-profile:v1"));
       if (saved) {
         const profile = JSON.parse(saved) as { name?: unknown; email?: unknown };
         if (typeof profile.name === "string") setCustomerName(profile.name.slice(0, 100));
@@ -360,8 +355,8 @@ export default function Home() {
   useEffect(() => {
     if (!customerProfileReady) return;
     try {
-      if (customerName.trim() || email.trim()) window.localStorage.setItem(getStorageKey("iteration13:customer-profile:v1"), JSON.stringify({ name: customerName.trim(), email: email.trim() }));
-      else window.localStorage.removeItem(getStorageKey("iteration13:customer-profile:v1"));
+      if (customerName.trim() || email.trim()) window.localStorage.setItem(getStorageKey("prospec:customer-profile:v1"), JSON.stringify({ name: customerName.trim(), email: email.trim() }));
+      else window.localStorage.removeItem(getStorageKey("prospec:customer-profile:v1"));
     } catch { setNotice("Your customer details could not be remembered on this device."); }
   }, [customerName, email, customerProfileReady]);
   const [whatsapp, setWhatsapp] = useState("");
@@ -378,6 +373,7 @@ export default function Home() {
   }, [selectedServiceIds, selectionReady]);
   const [customSelections, setCustomSelections] = useState<Service[]>([]);
   const [catalogueQuery, setCatalogueQuery] = useState("");
+  const [catalogueDivision, setCatalogueDivision] = useState("All");
   const [dueDate, setDueDate] = useState("");
   const [brief, setBrief] = useState("");
   const [promoCode, setPromoCode] = useState("");
@@ -403,12 +399,12 @@ export default function Home() {
   const [adminReplyDrafts, setAdminReplyDrafts] = useState<Record<string, string>>({});
   const [paymentDrafts, setPaymentDrafts] = useState<Record<string, string>>({});
   const [quoteDrafts, setQuoteDrafts] = useState<Record<string, string>>({});
-  const [pendingConfirm, setPendingConfirm] = useState<{ kind: "delete-service" | "reset-demo" | "overwrite-business"; serviceId?: string; serviceName?: string } | null>(null);
+  const [pendingConfirm, setPendingConfirm] = useState<{ kind: "delete-service" | "reset-preview" | "overwrite-business"; serviceId?: string; serviceName?: string } | null>(null);
   const [ownerNotes, setOwnerNotes] = useState("");
   const [notesReady, setNotesReady] = useState(false);
-  const [brandColors, setBrandColors] = useState<string[]>(["#2458e8"]);
-  const themeColor = brandColors[0] || "#2458e8";
-  const secondaryColor = brandColors[1] || themeColor;
+  const [brandColors, setBrandColors] = useState<string[]>(["#00B9C7", "#20272D"]);
+  const themeColor = brandColors[0] || "#00B9C7";
+  const secondaryColor = brandColors[1] || "#20272D";
   const highlightColor = brandColors[2] || secondaryColor;
   const [themeReady, setThemeReady] = useState(false);
   const [identityReady, setIdentityReady] = useState(false);
@@ -420,23 +416,23 @@ export default function Home() {
   const [setupPathChosen, setSetupPathChosen] = useState(false);
   const [identityEditing, setIdentityEditing] = useState(false);
   const [identityServiceId, setIdentityServiceId] = useState<string | null>(null);
-  const [customBrandColor, setCustomBrandColor] = useState("#2458e8");
-  const [businessName, setBusinessName] = useState("Your Business");
+  const [customBrandColor, setCustomBrandColor] = useState("#00B9C7");
+  const [businessName, setBusinessName] = useState("Prospec Group");
   const [businessCurrency, setBusinessCurrency] = useState("BWP");
   const [businessNameReady, setBusinessNameReady] = useState(false);
   const [setupDraftReady, setSetupDraftReady] = useState(false);
 
   useEffect(() => {
     try {
-      const savedName = window.localStorage.getItem(getStorageKey("iteration13:business-name:v1"));
+      const savedName = window.localStorage.getItem(getStorageKey("prospec:business-name:v1"));
       if (savedName) setBusinessName(savedName.slice(0, 48));
-    } catch { /* use the demo business name */ }
+    } catch { /* use the preview business name */ }
     setBusinessNameReady(true);
   }, []);
 
   useEffect(() => {
     if (!businessNameReady || !identityComplete) return;
-    try { window.localStorage.setItem(getStorageKey("iteration13:business-name:v1"), businessName.trim().slice(0, 48) || "Your Business"); }
+    try { window.localStorage.setItem(getStorageKey("prospec:business-name:v1"), businessName.trim().slice(0, 48) || "Prospec Group"); }
     catch { setNotice("Business name could not be saved on this device."); }
   }, [businessName, businessNameReady, identityComplete]);
 
@@ -478,8 +474,8 @@ export default function Home() {
   useEffect(() => {
     try { const savedCurrency = window.localStorage.getItem(getStorageKey(CURRENCY_KEY)); if (savedCurrency && supportedCurrencies.includes(savedCurrency as typeof supportedCurrencies[number])) setBusinessCurrency(savedCurrency); } catch { /* default to BWP */ }
     try {
-      const savedPalette = window.localStorage.getItem(getStorageKey("iteration13:business-palette:v1"));
-      const savedTheme = window.localStorage.getItem(getStorageKey("iteration13:store-theme:v1"));
+      const savedPalette = window.localStorage.getItem(getStorageKey("prospec:business-palette:v1"));
+      const savedTheme = window.localStorage.getItem(getStorageKey("prospec:store-theme:v1"));
       if (savedPalette) {
         const parsed = JSON.parse(savedPalette);
         if (Array.isArray(parsed)) {
@@ -495,7 +491,7 @@ export default function Home() {
       const currentWorkspaceExists = discovered.some(option => option.suffix === currentSuffix);
       const hasSavedIdentity = currentWorkspaceExists;
       setHasPreviousSetup(discovered.length > 0);
-      setIdentityComplete(resuming && hasSavedIdentity);
+      setIdentityComplete(params.get("setupDraft") !== "1");
     } catch { /* identity remains at the accessible default */ }
     setThemeReady(true);
     setIdentityReady(true);
@@ -507,20 +503,20 @@ export default function Home() {
     document.documentElement.style.setProperty("--studio-accent-highlight", highlightColor);
     if (!themeReady || !identityComplete) return;
     try {
-      window.localStorage.setItem(getStorageKey("iteration13:business-palette:v1"), JSON.stringify(brandColors));
-      window.localStorage.setItem(getStorageKey("iteration13:store-theme:v1"), themeColor);
+      window.localStorage.setItem(getStorageKey("prospec:business-palette:v1"), JSON.stringify(brandColors));
+      window.localStorage.setItem(getStorageKey("prospec:store-theme:v1"), themeColor);
     } catch { setNotice("Brand colours could not be saved on this device."); }
   }, [brandColors, themeColor, secondaryColor, highlightColor, themeReady, identityComplete]);
 
   useEffect(() => {
-    try { setOwnerNotes(window.localStorage.getItem(getStorageKey("iteration13:owner-notes:v1")) || ""); }
+    try { setOwnerNotes(window.localStorage.getItem(getStorageKey("prospec:owner-notes:v1")) || ""); }
     catch { setNotice("My Notes could not be loaded from this browser."); }
     setNotesReady(true);
   }, []);
 
   useEffect(() => {
     if (!notesReady) return;
-    try { window.localStorage.setItem(getStorageKey("iteration13:owner-notes:v1"), ownerNotes); }
+    try { window.localStorage.setItem(getStorageKey("prospec:owner-notes:v1"), ownerNotes); }
     catch { setNotice("My Notes could not be saved on this device."); }
   }, [ownerNotes, notesReady]);
 
@@ -528,11 +524,11 @@ export default function Home() {
     try {
       const saved = window.localStorage.getItem(getStorageKey(STORAGE_KEY));
       if (saved) {
-        const parsed = JSON.parse(saved) as Partial<DemoData>;
-        // Older demo data did not persist a separate customer profile. Restore the
+        const parsed = JSON.parse(saved) as Partial<PreviewData>;
+        // Older preview data did not persist a separate customer profile. Restore the
         // most recently used customer so their existing local requests are visible.
         try {
-          const savedProfile = window.localStorage.getItem(getStorageKey("iteration13:customer-profile:v1"));
+          const savedProfile = window.localStorage.getItem(getStorageKey("prospec:customer-profile:v1"));
           const latestOrder = Array.isArray(parsed.orders) ? parsed.orders[0] : undefined;
           if (!savedProfile && latestOrder) {
             if (typeof latestOrder.customerName === "string") setCustomerName(latestOrder.customerName);
@@ -547,8 +543,8 @@ export default function Home() {
         setRewardDescriptionDraft(typeof parsed.rewardDescription === "string" ? parsed.rewardDescription : emptyData.rewardDescription || "Drive for eight seconds and keep it clean to unlock a discount code for your next request.");
         setRewardImageDraft(typeof parsed.rewardImage === "string" ? parsed.rewardImage : "");
         setRewardDiscountDraft(String(Number(parsed.discountAmount) > 0 ? Number(parsed.discountAmount) : 5));
-      } else setData(current => ({ ...current, views: 1, events: [{ id: "EV-"+Date.now().toString(36), kind: "visit", label: "Store visited", at: new Date().toISOString() }] }));
-    } catch { setNotice("Local demo storage is unavailable in this browser. You can explore, but changes may not persist."); }
+      } else setData({ ...emptyData, services: prospecCatalogue, views: 1, events: [{ id: "EV-"+Date.now().toString(36), kind: "visit", label: "Public Store visited", at: new Date().toISOString() }] });
+    } catch { setNotice("Local preview storage is unavailable in this browser. You can explore, but changes may not persist."); }
     setReady(true);
     setOnline(navigator.onLine);
     const syncOnline = () => setOnline(navigator.onLine);
@@ -602,14 +598,14 @@ export default function Home() {
     void navigator.serviceWorker.ready.then(registration => {
       (navigator.serviceWorker.controller || registration.active)?.postMessage({ type: "CACHE_MEDIA", urls: mediaUrls });
     }).catch(() => {
-      // Local demo actions remain available even when the browser blocks service workers.
+      // Local preview actions remain available even when the browser blocks service workers.
     });
     return () => navigator.serviceWorker.removeEventListener("controllerchange", prepareOfflineMedia);
   }, [data.services, data.announcementImage, data.orders, ready]);
 
   useEffect(() => {
     if (!notice) return;
-    const duration = /^(Choose|Add |Enter |The browser|Local demo storage|Could not save)/i.test(notice) ? 6500 : 4200;
+    const duration = /^(Choose|Add |Enter |The browser|Local preview storage|Could not save)/i.test(notice) ? 6500 : 4200;
     const timeout = window.setTimeout(() => setNotice(current => current === notice ? "" : current), duration);
     return () => window.clearTimeout(timeout);
   }, [notice]);
@@ -643,7 +639,7 @@ export default function Home() {
     window.history.replaceState({}, "", url.toString());
   }, [view, ready]);
 
-  function commitData(update: (current: DemoData) => DemoData, successMessage: string) {
+  function commitData(update: (current: PreviewData) => PreviewData, successMessage: string) {
     const next = update(data);
     try {
       window.localStorage.setItem(getStorageKey(STORAGE_KEY), JSON.stringify(next));
@@ -657,10 +653,11 @@ export default function Home() {
   }
 
   function toggleService(service: Service) {
-    return commitData(current => ({ ...current, services: current.services.map(item => item.id === service.id ? { ...item, active: !item.active } : item) }), `${service.name} ${service.active ? "hidden" : "visible"} in the demo.`);
+    return commitData(current => ({ ...current, services: current.services.map(item => item.id === service.id ? { ...item, active: !item.active } : item) }), `${service.name} ${service.active ? "hidden" : "visible"} in the preview.`);
   }
 
   const activeServices = data.services.filter(service => service.active);
+  const visibleServices = catalogueDivision === "All" ? activeServices : activeServices.filter(service => service.industry === catalogueDivision);
   const announcementIsActive = data.announcementActive ?? Boolean(data.announcement.trim() || data.announcementImage);
   const currentHour = new Date().getHours();
   const ownerGreeting = currentHour < 12 ? "Good morning" : currentHour < 17 ? "Good afternoon" : "Good evening";
@@ -733,10 +730,10 @@ export default function Home() {
     if (!sharedExample) return;
     switchSharedWorkspace("example");
     const saved = window.localStorage.getItem(getStorageKey(STORAGE_KEY));
-    let exampleData: DemoData;
+    let exampleData: PreviewData;
     if (saved) {
       try {
-        const parsed = JSON.parse(saved) as Partial<DemoData>;
+        const parsed = JSON.parse(saved) as Partial<PreviewData>;
         const savedServices = Array.isArray(parsed.services) ? parsed.services : [];
         const sharedServices = Array.isArray(sharedExample.data?.services) ? sharedExample.data.services : [];
         // The app's initial hydration can create an empty visitor-local record before the visitor opens the shared example.
@@ -774,7 +771,7 @@ export default function Home() {
     setRewardDiscountDraft(String(Number(exampleData.discountAmount) > 0 ? Number(exampleData.discountAmount) : 5));
     try {
       window.localStorage.setItem(getStorageKey(STORAGE_KEY), JSON.stringify(exampleData));
-      window.localStorage.setItem("iteration13:shared-example-visited:" + sharedExample.id, "yes");
+      window.localStorage.setItem("prospec:shared-example-visited:" + sharedExample.id, "yes");
     } catch { setNotice("The example loaded, but this browser could not save its local copy. Your changes may not persist."); }
     setBusinessName(sharedExample.businessName);
     setBusinessCurrency(sharedExample.currency);
@@ -788,7 +785,7 @@ export default function Home() {
   function shareBusinessExample() {
     const snapshot: SharedExample = {
       id: "example-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8),
-      businessName: businessName.trim() || "Your Business",
+      businessName: businessName.trim() || "Prospec Group",
       currency: businessCurrency,
       brandColors: brandColors.slice(0, 3),
       data: {
@@ -853,10 +850,8 @@ export default function Home() {
     setSavedBusinessOptions(discovered);
     // The TrailWise workspace the owner was actively building is the intended
     // continuation target. Prefer that exact named business over generic or older
-    // saved workspaces; never silently open "Your Business" instead.
-    const trailWiseWorkspaces = discovered.filter(option => /^trailwise$/i.test(option.name.trim()));
-    if (trailWiseWorkspaces.length === 1) openSavedBusinessWorkspace(trailWiseWorkspaces[0].suffix);
-    else if (trailWiseWorkspaces.length > 1 || discovered.length > 1) setShowPreviousBusinessPicker(true);
+    // saved workspaces; never silently open "Prospec Group" instead.
+    if (discovered.length > 1) setShowPreviousBusinessPicker(true);
     else if (discovered.length === 1) openSavedBusinessWorkspace(discovered[0].suffix);
     else setNotice("No previous business was found in this browser. Your saved browser data has not been changed.");
   }
@@ -900,15 +895,15 @@ export default function Home() {
       : { ...emptyData, services: nextServices, announcement, announcementActive, announcementImage, views: data.views };
     try {
       window.localStorage.setItem(getStorageKey(STORAGE_KEY), JSON.stringify(nextData));
-      window.localStorage.setItem(getStorageKey("iteration13:business-name:v1"), name.slice(0, 48));
-      window.localStorage.setItem(getStorageKey("iteration13:business-palette:v1"), JSON.stringify(brandColors.slice(0, 3)));
-      window.localStorage.setItem(getStorageKey("iteration13:store-theme:v1"), themeColor);
+      window.localStorage.setItem(getStorageKey("prospec:business-name:v1"), name.slice(0, 48));
+      window.localStorage.setItem(getStorageKey("prospec:business-palette:v1"), JSON.stringify(brandColors.slice(0, 3)));
+      window.localStorage.setItem(getStorageKey("prospec:store-theme:v1"), themeColor);
       window.localStorage.setItem(getStorageKey(CURRENCY_KEY), businessCurrency);
-      window.localStorage.setItem(getStorageKey("iteration13:identity-complete:v1"), "true");
+      window.localStorage.setItem(getStorageKey("prospec:identity-complete:v1"), "true");
       window.localStorage.removeItem(getStorageKey(SETUP_DRAFT_KEY));
       if (!identityEditing && confirmedOverwrite) {
-        window.localStorage.removeItem(getStorageKey("iteration13:owner-notes:v1"));
-        window.localStorage.removeItem(getStorageKey("iteration13:account-extras:v1"));
+        window.localStorage.removeItem(getStorageKey("prospec:owner-notes:v1"));
+        window.localStorage.removeItem(getStorageKey("prospec:account-extras:v1"));
         setOwnerNotes("");
       }
       setData(nextData);
@@ -930,7 +925,7 @@ export default function Home() {
     if (new URLSearchParams(window.location.search).get("sample") !== "1") return;
     sampleLaunchHandled.current = true;
     let alreadyVisited = false;
-    try { alreadyVisited = window.localStorage.getItem("iteration13:shared-example-visited:" + sharedExample.id) === "yes"; }
+    try { alreadyVisited = window.localStorage.getItem("prospec:shared-example-visited:" + sharedExample.id) === "yes"; }
     catch { /* If storage is unavailable, preserve the direct first-visit experience. */ }
     if (!alreadyVisited) loadSharedBusinessExample();
   }, [sharedExample, isSharedExampleWorkspace, identityComplete]);
@@ -951,7 +946,7 @@ export default function Home() {
       let total = 0;
       for (let index = 0; index < window.localStorage.length; index += 1) {
         const key = window.localStorage.key(index);
-        if (!key || !key.startsWith("iteration13:")) continue;
+        if (!key || !key.startsWith("prospec:")) continue;
         total += new Blob([key, window.localStorage.getItem(key) || ""]).size;
       }
       return total;
@@ -1028,7 +1023,7 @@ export default function Home() {
     setSessionExpiresAt(expiresAt);
     setSessionNow(now);
     lastAdminActivity.current = now;
-    try { window.localStorage.setItem(getStorageKey("iteration13:owner-session:v1"), JSON.stringify({ startedAt: now, expiresAt })); } catch { /* the current Briefcase still tracks its active shift */ }
+    try { window.localStorage.setItem(getStorageKey("prospec:owner-session:v1"), JSON.stringify({ startedAt: now, expiresAt })); } catch { /* the current Briefcase still tracks its active shift */ }
     commitData(current => ({ ...current, events: [{ id: "EV-" + now.toString(36), kind: "shift-start", label: "Owner Briefcase opened · " + new Date(now).toLocaleString(), at: new Date(now).toISOString() }, ...(current.events || [])] }), "Your Briefcase shift has started.");
   }
   function requestAdminLogin() {
@@ -1039,7 +1034,7 @@ export default function Home() {
     }
     setAdminPassphrase("");
     setView("login");
-    setNotice("Enter the demo access word to open the owner workspace.");
+    setNotice("Enter the preview access word to open the owner workspace.");
   }
   function launchOwnerBriefcase() {
     if (launchingBriefcase) return;
@@ -1050,12 +1045,13 @@ export default function Home() {
     window.setTimeout(enter, 420);
   }
 
-  function submitAdminLogin(event: React.FormEvent<HTMLFormElement>) {
+  async function submitAdminLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (adminPassphrase.trim().toLowerCase() !== "admin") {
-      setNotice("That word is not correct. Enter admin for this demo.");
-      return;
-    }
+    try {
+      const response = await fetch("/api/admin/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ password: adminPassphrase }) });
+      const result = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) { setNotice(result.error || "Owner access was not accepted."); return; }
+    } catch { setNotice("Owner access could not be checked. Check your connection and try again."); return; }
     setAdminLocked(false);
     setAdminUnlocked(true);
     setAdminPassphrase("");
@@ -1065,10 +1061,11 @@ export default function Home() {
   function endOwnerShift(expired = false, signOut = true) {
     const now = Date.now();
     if (shiftStartedAt) commitData(current => ({ ...current, events: [{ id: "EV-" + now.toString(36), kind: expired ? "session-expired" : "shift-end", label: expired ? "Owner Briefcase locked after inactivity or maximum duration" : "Owner Briefcase closed", at: new Date(now).toISOString() }, ...(current.events || [])] }), expired ? "Your Briefcase shift ended and owner access was locked." : "Your Briefcase shift has ended.");
-    try { window.localStorage.removeItem(getStorageKey("iteration13:owner-session:v1")); } catch { /* no-op */ }
+    try { window.localStorage.removeItem(getStorageKey("prospec:owner-session:v1")); } catch { /* no-op */ }
     setShiftStartedAt(null);
     setSessionExpiresAt(null);
     if (signOut) {
+      void fetch("/api/admin/session", { method: "DELETE" }).catch(() => {});
       setAdminUnlocked(false);
       setAdminLocked(false);
       setAdminPassphrase("");
@@ -1086,9 +1083,9 @@ export default function Home() {
     const closeShift = () => {
       try {
         const key = getStorageKey(STORAGE_KEY);
-        const saved = JSON.parse(window.localStorage.getItem(key) || "null") as DemoData | null;
+        const saved = JSON.parse(window.localStorage.getItem(key) || "null") as PreviewData | null;
         if (saved) window.localStorage.setItem(key, JSON.stringify({ ...saved, events: [{ id: "EV-" + Date.now().toString(36), kind: "shift-end", label: "Owner Briefcase screen closed", at: new Date().toISOString() }, ...(saved.events || [])] }));
-        window.localStorage.removeItem(getStorageKey("iteration13:owner-session:v1"));
+        window.localStorage.removeItem(getStorageKey("prospec:owner-session:v1"));
       } catch { /* browser shutdown must never block closing the page */ }
     };
     window.addEventListener("pagehide", closeShift);
@@ -1097,11 +1094,11 @@ export default function Home() {
   function setOwnerSessionDuration(value: number) {
     const safeValue = Math.max(1, Math.min(24, Math.round(value)));
     setSessionDurationHours(safeValue);
-    try { window.localStorage.setItem(getStorageKey("iteration13:owner-session-duration:v1"), String(safeValue)); } catch { /* in-memory setting remains */ }
+    try { window.localStorage.setItem(getStorageKey("prospec:owner-session-duration:v1"), String(safeValue)); } catch { /* in-memory setting remains */ }
     if (shiftStartedAt) {
       const expiresAt = shiftStartedAt + safeValue * 60 * 60 * 1000;
       setSessionExpiresAt(expiresAt);
-      try { window.localStorage.setItem(getStorageKey("iteration13:owner-session:v1"), JSON.stringify({ startedAt: shiftStartedAt, expiresAt })); } catch { /* in-memory timer remains */ }
+      try { window.localStorage.setItem(getStorageKey("prospec:owner-session:v1"), JSON.stringify({ startedAt: shiftStartedAt, expiresAt })); } catch { /* in-memory timer remains */ }
     }
   }
   function openAdminGuide(target?: "services" | "announcement" | "requests") {
@@ -1124,7 +1121,7 @@ export default function Home() {
     if (dueDate < localDate()) { setNotice("Choose today or a future date for your requested timeline."); return; }
     const createdAt = new Date().toISOString();
     const id = "DEMO-" + Date.now().toString(36).toUpperCase();
-    const order: DemoOrder = { id, receiptNo: "RCP-" + createdAt.slice(0, 10).replaceAll("-", "") + "-" + id.slice(-5), serviceId: selectedServices[0].id, serviceName: selectedServices.map(service => service.name).join(" + "), serviceItems: selectedServices.map(({id,name,price}) => ({id,name,price})), price: Math.max(0, servicesTotal - discountAmount), ...(discountAmount ? { originalPrice: servicesTotal, discountAmount, discountCode: claim!.code } : {}), dueDate, customerName: customerName.trim(), email: email.trim(), whatsapp: whatsapp.trim(), notificationOptIn, brief: brief.trim(), status: "New request", createdAt, paymentStatus: "Unpaid", paidAmount: 0 };
+    const order: PreviewOrder = { id, receiptNo: "RCP-" + createdAt.slice(0, 10).replaceAll("-", "") + "-" + id.slice(-5), serviceId: selectedServices[0].id, serviceName: selectedServices.map(service => service.name).join(" + "), serviceItems: selectedServices.map(({id,name,price}) => ({id,name,price})), price: Math.max(0, servicesTotal - discountAmount), ...(discountAmount ? { originalPrice: servicesTotal, discountAmount, discountCode: claim!.code } : {}), dueDate, customerName: customerName.trim(), email: email.trim(), whatsapp: whatsapp.trim(), notificationOptIn, brief: brief.trim(), status: "New request", createdAt, paymentStatus: "Unpaid", paidAmount: 0 };
     if (!commitData(current => ({ ...current, orders: [order, ...current.orders], discountClaims: claim ? (current.discountClaims || []).map(item => item.id === claim.id ? { ...item, status: "Redeemed" as const } : item) : current.discountClaims, events: [{ id: "EV-"+Date.now().toString(36), kind: "request", label: "Customer request received · "+order.serviceName, at: new Date().toISOString() }, ...(current.events || [])] }), "Order request saved on this device. No payment was taken.")) return;
     recordJourneyEvent("request_submitted", { screen: "customer-account", serviceId: order.serviceId, serviceName: order.serviceName, orderId: order.id });
     setView("account"); setOrderFormOpen(false); setSelected(null); setSelectedServiceIds([]); setCustomSelections([]); setCatalogueQuery(""); setPromoCode("");
@@ -1132,8 +1129,8 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
   function buildAdminHubHandoffUrl() {
-    const demo = { businessName: businessName.trim() || "Your Business", currency: businessCurrency, brandColors: brandColors.slice(0, 3), services: activeServices.slice(0, 8).map(service => ({ name: service.name, industry: service.industry || "", price: service.price, description: service.description || "" })), journey: [...demoJourney, ...(data.orders.length && !demoJourney.includes("Customer request submitted") ? ["Customer request submitted"] : []), ...(data.discountClaims?.length && !demoJourney.includes("Racing discount earned") ? ["Racing discount earned"] : [])] };
-    const params = new URLSearchParams({ source: "iteration13", demo: JSON.stringify(demo) });
+    const preview = { businessName: businessName.trim() || "Prospec Group", currency: businessCurrency, brandColors: brandColors.slice(0, 3), services: activeServices.slice(0, 8).map(service => ({ name: service.name, industry: service.industry || "", price: service.price, description: service.description || "" })), journey: [...previewJourney, ...(data.orders.length && !previewJourney.includes("Customer request submitted") ? ["Customer request submitted"] : []), ...(data.discountClaims?.length && !previewJourney.includes("Racing discount earned") ? ["Racing discount earned"] : [])] };
+    const params = new URLSearchParams({ source: "iteration13", preview: JSON.stringify(preview) });
     return "https://www.adminhub-global.com/?" + params.toString();
   }
   function startEdit(service: Service) {
@@ -1157,23 +1154,23 @@ export default function Home() {
     const saved = commitData(current => ({ ...current, orders: current.orders.map(item => item.id === id ? { ...item, status, statusUpdatedAt: now, ...(status === "Completed" ? { completedAt: now } : {}) } : item), events: [{ id: "EV-"+Date.now().toString(36), kind: status === "Completed" ? "completed" : "request", label: (order?.serviceName || "Job")+" moved to "+status, at: now, test: order?.isTest }, ...(current.events || [])] }), order ? `${order.serviceName} status changed to ${status}. Saved on this device.` : "Request status saved on this device.");
     if (saved && changed) recordJourneyEvent("owner_status_updated", { screen: "briefcase-work", serviceId: order!.serviceId, serviceName: order!.serviceName, orderId: id });
   }
-  function recordDemoPayment(id: string, amount: number) {
+  function recordPreviewPayment(id: string, amount: number) {
     const order = data.orders.find(item => item.id === id);
     if (!order) return;
     const alreadyPaid = Math.max(0, order.paidAmount || 0);
     const outstanding = Math.max(0, order.price - alreadyPaid);
     const payment = Math.round(amount * 100) / 100;
     if (!Number.isFinite(payment) || payment <= 0) { setNotice("Enter a payment amount greater than zero."); return; }
-    if (outstanding <= 0) { setNotice("This request is already fully paid in the local demo."); return; }
+    if (outstanding <= 0) { setNotice("This request is already fully paid in the local preview."); return; }
     if (payment > outstanding) { setNotice("The payment cannot exceed the remaining balance of " + money(outstanding) + "."); return; }
     const now = new Date().toISOString();
     const paidAmount = Math.min(order.price, alreadyPaid + payment);
-    const paymentStatus = paidAmount >= order.price ? "Paid (demo)" as const : "Partially paid (demo)" as const;
+    const paymentStatus = paidAmount >= order.price ? "Paid (preview)" as const : "Partially paid (preview)" as const;
     const receiptNo = order.receiptNo || "RCP-" + now.slice(0, 10).replaceAll("-", "") + "-" + id.slice(-5);
     if (commitData(current => ({
       ...current,
       orders: current.orders.map(item => item.id === id ? { ...item, paymentStatus, paidAmount, paidAt: now, receiptNo } : item),
-      events: [{ id: "EV-" + Date.now().toString(36), kind: "payment", label: "Demo payment recorded · " + money(payment) + " · " + order.serviceName, at: now, test: order.isTest }, ...(current.events || [])]
+      events: [{ id: "EV-" + Date.now().toString(36), kind: "payment", label: "Preview payment recorded · " + money(payment) + " · " + order.serviceName, at: now, test: order.isTest }, ...(current.events || [])]
     }), money(payment) + " recorded on this device. Remaining balance: " + money(Math.max(0, order.price - paidAmount)) + ". No money moved.")) {
       setPaymentDrafts(current => ({ ...current, [id]: "" }));
     }
@@ -1204,11 +1201,11 @@ export default function Home() {
     const text = (adminReplyDrafts[id] || "").trim();
     if (!text) { setNotice("Write a reply before sending it."); return; }
     const message: AccountMessage = { id: "MSG-" + Date.now().toString(36), from: "studio", text, createdAt: new Date().toISOString() };
-    if (commitData(current => ({ ...current, orders: current.orders.map(order => order.id === id ? { ...order, messages: [...(order.messages || []), message] } : order) }), "Studio reply saved to this browser's demo thread.")) setAdminReplyDrafts(current => ({ ...current, [id]: "" }));
+    if (commitData(current => ({ ...current, orders: current.orders.map(order => order.id === id ? { ...order, messages: [...(order.messages || []), message] } : order) }), "Studio reply saved to this browser's preview thread.")) setAdminReplyDrafts(current => ({ ...current, [id]: "" }));
   }
 
     const namedSavedBusiness = savedBusinessOptions.find(option => option.name.trim() && !/^your business$/i.test(option.name.trim()));
-  const savedBusinessName = namedSavedBusiness?.name.trim() || (businessName.trim() && !/^your business$/i.test(businessName.trim()) ? businessName.trim() : "saved business");
+  const savedBusinessName = namedSavedBusiness?.name.trim() || (businessName.trim() && !/^your business$/i.test(businessName.trim()) ? businessName.trim() : "Prospec Group");
   const setupChecklist = [
     { label: "Business name", complete: Boolean(businessName.trim()) },
     { label: "Pricing currency", complete: supportedCurrencies.includes(businessCurrency as typeof supportedCurrencies[number]) },
@@ -1217,9 +1214,9 @@ export default function Home() {
   ];
   const setupCompletedCount = setupChecklist.filter(item => item.complete).length;
   const setupReady = setupCompletedCount === setupChecklist.length;
-return <main className="serviceDemo" style={{ "--studio-accent": themeColor, "--studio-accent-secondary": secondaryColor, "--studio-accent-highlight": highlightColor, "--studio-accent-ink": accentInk(themeColor), "--studio-accent-text": accentText(themeColor) } as React.CSSProperties}>
+return <main className="servicePreview" style={{ "--studio-accent": themeColor, "--studio-accent-secondary": secondaryColor, "--studio-accent-highlight": highlightColor, "--studio-accent-ink": accentInk(themeColor), "--studio-accent-text": accentText(themeColor) } as React.CSSProperties}>
     {!identityReady || !ready || !businessNameReady ? <section className="sd-identity-loading" aria-live="polite">Preparing your business identity…</section> : !identityComplete ? <section className="sd-identity-onboarding">
-      <div className="sd-identity-onboarding-top"><span>ITERATION13 / BUSINESS OS</span><span>{identityEditing ? "BUSINESS IDENTITY" : "SETUP · STORE · ACCOUNT · BRIEFCASE"}</span></div>
+      <div className="sd-identity-onboarding-top"><span>PROSPEC / BUSINESS OS</span><span>{identityEditing ? "BUSINESS IDENTITY" : "SETUP · STORE · ACCOUNT · BRIEFCASE"}</span></div>
       {!setupPathChosen && !identityEditing ? <section className="sd-identity-entry" aria-labelledby="sd-identity-entry-title">
         <span className="sd-kicker">YOUR BUSINESS · ONE CONNECTED SYSTEM</span>
         <h1 id="sd-identity-entry-title">Your business. <em>Your choice.</em></h1>
@@ -1238,7 +1235,7 @@ return <main className="serviceDemo" style={{ "--studio-accent": themeColor, "--
       </section>
       <div className="sd-identity-onboarding-layout">
         <div className="sd-identity-onboarding-copy">
-          <h1><span>{businessName.trim() || "Your Business"}</span> <em>at work.</em></h1>
+          <h1><span>{businessName.trim() || "Prospec Group"}</span> <em>at work.</em></h1>
           <section className="sd-identity-setup-step sd-identity-identity-step" aria-labelledby="sd-identity-step-title">
             <div className="sd-identity-step-heading"><span>01 / BUSINESS IDENTITY</span><strong id="sd-identity-step-title">Make it yours</strong></div>
             <label className="sd-identity-name-label">Business name
@@ -1292,8 +1289,8 @@ return <main className="serviceDemo" style={{ "--studio-accent": themeColor, "--
       </div>
       </>}
     {pendingConfirm?.kind === "overwrite-business" && <div className="sd-confirm-backdrop" onClick={() => setPendingConfirm(null)}><section className="sd-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="sd-onboarding-overwrite-title" aria-describedby="sd-onboarding-overwrite-description" onClick={event => event.stopPropagation()}><span className="sd-kicker">CONFIRM ACTION</span><h2 id="sd-onboarding-overwrite-title">Replace the saved business?</h2><p id="sd-onboarding-overwrite-description">This replaces the current business name, colours, currency and products / services. Its saved customer requests, messages and owner notes on this device will also be cleared. This cannot be undone.</p><div className="sd-confirm-actions"><button type="button" className="sd-button sd-outline" autoFocus onClick={() => setPendingConfirm(null)}>Keep existing setup</button><button type="button" className="sd-button sd-primary" onClick={() => { setPendingConfirm(null); completeBusinessIdentity(true); }}>Replace and create</button></div></section></div>}</section> : <>
-    <div className="sd-topline"><div className="sd-wrap"><details className="sd-connect-details"><summary className={(online ? "sd-connect" : "sd-connect is-offline") + (offlineShellReady ? " is-offline-ready" : "")} aria-label={offlineShellReady ? "App shell saved on this device; open details" : online ? "Browser-local demo; open details" : "Offline mode; open details"}><i />{offlineShellReady ? "App shell saved" : online ? "Demo mode" : "Offline mode"}<span className="sd-connect-chevron" aria-hidden="true">⌄</span></summary><div className="sd-connect-popover"><strong>{offlineShellReady ? "The Store can reopen offline on this device." : "This is a browser-local demo."}</strong><span>{offlineShellReady ? "The app interface is saved on this device. When an update is ready, use Refresh to switch to the new version." : "Your demo workspace is stored in this browser."}</span><span>Business edits stay on this device. Uploads and cloud-connected actions still need internet.</span></div></details></div></div>
-    <header className="sd-header"><div className="sd-wrap sd-nav"><button className="sd-brand" onClick={() => { setView("shop"); setNotice(""); window.scrollTo({top:0,behavior:"smooth"}); }} aria-label="Back to Store"><span className="sd-logo">{(businessName.trim() || "YB").slice(0,2).toUpperCase()}</span><span><strong>{businessName || "Your Business"}</strong><small>STORE</small></span></button><nav aria-label="Main navigation"><button onClick={() => { setView("shop"); setNotice(""); }}>Store</button><button onClick={() => { recordDemoJourney("Customer account opened"); recordActivity("account", "Customer account opened"); setView("account"); setNotice(""); }}>Account <span className="sd-count">{data.orders.length}</span></button></nav>
+    <div className="sd-topline"><div className="sd-wrap"><details className="sd-connect-details"><summary className={(online ? "sd-connect" : "sd-connect is-offline") + (offlineShellReady ? " is-offline-ready" : "")} aria-label={offlineShellReady ? "App shell saved on this device; open details" : online ? "Browser-local preview; open details" : "Offline mode; open details"}><i />{offlineShellReady ? "App shell saved" : online ? "Preview mode" : "Offline mode"}<span className="sd-connect-chevron" aria-hidden="true">⌄</span></summary><div className="sd-connect-popover"><strong>{offlineShellReady ? "The Store can reopen offline on this device." : "This is a browser-local preview."}</strong><span>{offlineShellReady ? "The app interface is saved on this device. When an update is ready, use Refresh to switch to the new version." : "Your preview workspace is stored in this browser."}</span><span>Business edits stay on this device. Uploads and cloud-connected actions still need internet.</span></div></details></div></div>
+    <header className="sd-header"><div className="sd-wrap sd-nav"><button className="sd-brand" onClick={() => { setView("shop"); setNotice(""); window.scrollTo({top:0,behavior:"smooth"}); }} aria-label="Back to Store"><img className="prospec-header-wordmark" src="/prospec-wordmark.svg" alt="Prospec Group" /></button><nav aria-label="Main navigation"><button onClick={() => { setView("shop"); setNotice(""); }}>Store</button><button onClick={() => { recordPreviewJourney("Customer account opened"); recordActivity("account", "Customer account opened"); setView("account"); setNotice(""); }}>Account <span className="sd-count">{data.orders.length}</span></button></nav>
 </div></header>
 
     {view !== "login" && <ServiceGuide
@@ -1310,36 +1307,39 @@ return <main className="serviceDemo" style={{ "--studio-accent": themeColor, "--
 
 
     {view === "shop" && <>
+      <section className="prospec-hero sd-wrap" aria-labelledby="prospec-hero-title"><div className="prospec-hero-copy"><span className="prospec-eyebrow">PROSPEC GROUP · BOTSWANA · 100% YOUTH CITIZEN-OWNED</span><h1 id="prospec-hero-title">We keep our noses in <em>other people&apos;s business.</em></h1><p>Four specialist divisions. One sharp team. We build brands, source what you need, connect people and put your name where it belongs.</p><div className="prospec-hero-actions"><button type="button" onClick={() => document.getElementById("prospec-divisions")?.scrollIntoView({behavior:"smooth"})}>Meet the divisions <span aria-hidden="true">↘</span></button><button type="button" className="is-secondary" onClick={() => { setView("account"); setNotice("Tell Prospec what you need and we’ll route your enquiry to the right division."); }}>Start an enquiry <span aria-hidden="true">↗</span></button></div><div className="prospec-hero-signoff"><strong>PITBULLS OF BRANDING</strong><span>QWERTY by nature · strategic by design</span></div></div><div className="prospec-hero-stamp" aria-label="Prospec vision: Annihilate"><span>OUR VISION</span><strong>ANNIHILATE.</strong><i>THE ORDINARY</i></div></section>
+      <section className="prospec-divisions sd-wrap" id="prospec-divisions" aria-labelledby="prospec-divisions-title"><div className="prospec-section-heading"><div><span className="prospec-eyebrow">FOUR DIVISIONS · ONE PROSPEC</span><h2 id="prospec-divisions-title">Different lanes. <em>Same bite.</em></h2></div><p>Pick a division to see what we can get moving.</p></div><div className="prospec-division-grid">{prospecDivisions.map((division,index)=><button type="button" className="prospec-division" key={division.name} onClick={()=>{setCatalogueDivision(division.name);document.getElementById("prospec-catalogue")?.scrollIntoView({behavior:"smooth"});}}><span className="prospec-division-index">0{index+1}</span><span className="prospec-division-mark">{division.marker}</span><strong>{division.name}</strong><small>{division.subtitle}</small><p>{division.detail}</p><b>Explore division <span aria-hidden="true">↗</span></b></button>)}</div></section>
       <section className="sd-services sd-wrap sd-digital-store sd-store-collection" id="services">
-        <div className="sd-storefront-bar">
+        <div className="prospec-catalogue-heading" id="prospec-catalogue"><div><span className="prospec-eyebrow">THE PROSPEC CATALOGUE</span><h2>Make something <em>happen.</em></h2><p>Published prices are shown in Pula. Items marked quote on request can still be selected and sent to the team.</p></div><span className="prospec-catalogue-count">{activeServices.length} listings</span></div><div className="prospec-division-filters" role="group" aria-label="Filter catalogue by division"><button type="button" aria-pressed={catalogueDivision==="All"} onClick={()=>setCatalogueDivision("All")}>All divisions</button>{prospecDivisions.map(item=><button key={item.name} type="button" aria-pressed={catalogueDivision===item.name} onClick={()=>setCatalogueDivision(item.name)}>{item.name}</button>)}</div><div className="sd-storefront-bar">
           <div className="sd-storefront-title"><div><span className="sd-kicker">THE STORE</span><StoreAnnouncementSlot active={announcementIsActive && Boolean(data.announcement.trim() || data.announcementImage)} message={data.announcement} image={data.announcementImage} /></div></div>
           <div className="sd-storefront-signals"><span className={"sd-store-availability is-"+(data.availability || "available")}><i aria-hidden="true"/>{data.availability === "limited" ? "Limited availability" : data.availability === "unavailable" ? "Currently unavailable" : "Available now"}</span></div>
         </div>
-        <div className={"sd-service-grid sd-store-grid "+(activeServices.length === 1 ? "has-featured-item" : activeServices.length > 4 ? "has-catalogue" : "has-small-catalogue")}>
-          {activeServices.length ? activeServices.map((service,index)=><article className="sd-service-card sd-store-card" key={service.id}>
+        <div className={"sd-service-grid sd-store-grid "+(visibleServices.length === 1 ? "has-featured-item" : visibleServices.length > 4 ? "has-catalogue" : "has-small-catalogue")}>
+          {visibleServices.length ? visibleServices.map((service,index)=><article className="sd-service-card sd-store-card" key={service.id}>
             <div className={"sd-service-media sd-media-"+(index%4)+(service.mediaType==="video"?" is-video":"")}>
               
               <div className="sd-media-placeholder" hidden={Boolean(service.media)} aria-hidden="true"><span>{businessName || "THE STORE"}</span><strong>{service.name}</strong><i/></div>
               {service.media&&service.mediaType==="video"?<StoreVideoPreview src={service.media} />:service.media?<StoreMediaImage src={service.media} alt={service.name+" preview"} />:null}
               {service.media&&service.mediaType==="video"&&<span className="sd-service-media-badge">VIDEO PREVIEW</span>}
             </div>
-            <div className="sd-service-info">{service.industry && <div className="sd-service-meta"><span>{service.industry}</span></div>}<div className="sd-service-title"><h3>{service.name}</h3><strong>{money(service.price)}</strong></div><p>{service.description}</p><button className="sd-order-button" onClick={()=>beginOrder(service)}>Select service <span aria-hidden="true">↗</span></button></div>
+            <div className="sd-service-info">{service.industry && <div className="sd-service-meta"><span>{service.industry}</span></div>}<div className="sd-service-title"><h3>{service.name}</h3><strong>{service.custom || service.price <= 0 ? "Quote on request" : money(service.price)}</strong></div><p>{service.description}</p><button className="sd-order-button" onClick={()=>beginOrder(service)}>Enquire about this item <span aria-hidden="true">↗</span></button></div>
           </article>) : <div className="sd-store-empty"><span aria-hidden="true">🛍️</span><strong>Something is being prepared.</strong><p>Products and services will appear here when the business publishes its catalogue.</p></div>}
         </div>
       </section>
 
     </>}
 
-    {view === "account" && <AccountWorkspace businessName={businessName.trim() || "Your Business"} currency={businessCurrency} orders={data.orders} discountClaims={data.discountClaims || []} receiptProfile={data.receiptProfile} accentColor={themeColor} secondaryColor={secondaryColor} highlightColor={highlightColor} availability={data.availability || "available"} customerName={customerName} email={email} setEmail={setEmail} online={online} announcement={data.announcement} announcementActive={announcementIsActive} onNewRequest={openRequestForm} onBrowse={() => { setOrderFormOpen(false); setView("shop"); setNotice(""); }} onUpdateOrder={(orderId, update, message) => { commitData(current => ({ ...current, orders: current.orders.map(order => order.id === orderId ? update(order) : order) }), message); }} selectedServices={selectedServices.map(({id,name,price,custom})=>({id,name,price,custom:Boolean(custom)}))} onRemoveSelected={id=>{setSelectedServiceIds(current=>current.filter(value=>value!==id));setCustomSelections(current=>current.filter(item=>item.id!==id));}} onContinueRequest={openRequestForm} requestForm={orderFormOpen && (<section className="sd-account-request-form" id="service-order" aria-labelledby="sd-request-title"><div className="sd-request-modal-head"><div><span className="sd-kicker">CUSTOMER ACCOUNT / NEW REQUEST</span><h2 id="sd-request-title">Send a request</h2><p>Your requested date is reviewed before confirmation. No payment is taken here.</p></div><button type="button" className="sd-form-close" onClick={() => setOrderFormOpen(false)} aria-label="Close request form">×</button></div><form className="sd-order-form" onSubmit={submitOrder}><div className="sd-form-heading"><span>REQUEST DETAILS</span><strong>{selectedServices.length?selectedServices.map(service=>service.name).join(" + "):"Choose a product / service"}</strong>{selectedServices.length>0&&<b>{selectedServices.some(service=>service.custom)?"Quote required":money(selectedServices.reduce((sum,service)=>sum+service.price,0))} <small>{selectedServices.some(service=>service.custom)?"custom item included":"estimated total"}</small></b>}</div><div className="sd-catalogue-add"><label htmlFor="customer-catalogue-search">Find a product or service</label><div><input id="customer-catalogue-search" list="customer-catalogue-options" value={catalogueQuery} onChange={event=>setCatalogueQuery(event.target.value)} placeholder="Start typing a name…" autoComplete="off"/><datalist id="customer-catalogue-options">{activeServices.map(item=><option key={item.id} value={item.name}/>)}</datalist><button type="button" onClick={addCatalogueItem}>Add item</button></div><small>Choose from the business catalogue or add a custom request item.</small></div><fieldset className="sd-enquiry-services"><legend>Products / services in this request</legend><p>Choose one or more items.</p>{activeServices.map(service=><label key={service.id}><input type="checkbox" checked={selectedServiceIds.includes(service.id)} onChange={event=>{const next=event.target.checked?[...selectedServiceIds,service.id]:selectedServiceIds.filter(id=>id!==service.id);setSelectedServiceIds(next);setSelected(next[0]||null);}}/><span>{service.name}</span><strong>{service.custom?"Quote required":money(service.price)}</strong></label>)}</fieldset>{customSelections.length>0&&<div className="sd-custom-request-items"><strong>Custom items · price to be confirmed</strong>{customSelections.map(item=><div key={item.id}><span>{item.name}</span><button type="button" onClick={()=>{setCustomSelections(current=>current.filter(value=>value.id!==item.id));setSelectedServiceIds(current=>current.filter(id=>id!==item.id));}}>Remove</button></div>)}</div>}<div className="sd-form-two"><label>Your name<input value={customerName} onChange={event=>setCustomerName(event.target.value)} autoComplete="name" required placeholder="Name or business"/></label><label>Email<input value={email} onChange={event=>setEmail(event.target.value)} type="email" autoComplete="email" required placeholder="you@example.com"/></label></div><label>WhatsApp number<input type="tel" value={whatsapp} onChange={event=>setWhatsapp(event.target.value)} autoComplete="tel" required placeholder="+267 …"/></label><label>Target date<input type="date" value={dueDate} min={localDate()} onChange={event=>setDueDate(event.target.value)} required/><small>Your requested date is reviewed before confirmation.</small></label><label>Discount code <span className="sd-optional">OPTIONAL</span><input value={promoCode} onChange={event=>setPromoCode(event.target.value.toUpperCase())} placeholder="Enter a game reward code" /></label><label className="sd-request-brief">Project brief<textarea value={brief} onChange={event=>setBrief(event.target.value)} rows={2} placeholder="What would you like to achieve?" required/></label><label className="sd-enquiry-notifications"><input type="checkbox" checked={notificationOptIn} onChange={event=>setNotificationOptIn(event.target.checked)}/> Keep me informed about updates to this enquiry <span>In-app updates appear in your Account. Push and email delivery are not connected in this demo.</span></label><button className="sd-button sd-primary sd-submit" type="submit">Send request →</button><p className="sd-privacy-note">Saved in this browser only · no payment taken</p></form></section>)}><section className="sd-racing-promo sd-wrap" id="racing-rewards">
+    <section className="prospec-contact sd-wrap" aria-labelledby="prospec-contact-title"><div><span className="prospec-eyebrow">LET&apos;S GET INTO IT</span><h2 id="prospec-contact-title">Got a brief? <em>Bring it.</em></h2><p>Choose a listing above or send a general enquiry. Every request is reviewed by the Prospec team and routed to the right division.</p><a href="https://wa.me/26771215185?text=Hello%20Prospec%20Group%2C%20I%27d%20like%20to%20make%20an%20enquiry." target="_blank" rel="noreferrer">WhatsApp Prospec <span aria-hidden="true">↗</span></a></div><div className="prospec-contact-details"><strong>Head office</strong><span>Plot 20643 Unit 1, Block 3 Industrial, Gaborone, Botswana</span><strong>Branch</strong><span>Tribal Lot 4216 Unit 6B, Supasave Mall, Mogoditshane, Botswana</span><a href="tel:+26776609311">+267 76 609 311</a><a href="tel:+26772647807">+267 72 647 807</a><a href="mailto:info@prospecagency.com">info@prospecagency.com</a></div></section>
+{view === "account" && <AccountWorkspace businessName={businessName.trim() || "Prospec Group"} currency={businessCurrency} orders={data.orders} discountClaims={data.discountClaims || []} receiptProfile={data.receiptProfile} accentColor={themeColor} secondaryColor={secondaryColor} highlightColor={highlightColor} availability={data.availability || "available"} customerName={customerName} email={email} setEmail={setEmail} online={online} announcement={data.announcement} announcementActive={announcementIsActive} onNewRequest={openRequestForm} onBrowse={() => { setOrderFormOpen(false); setView("shop"); setNotice(""); }} onUpdateOrder={(orderId, update, message) => { commitData(current => ({ ...current, orders: current.orders.map(order => order.id === orderId ? update(order) : order) }), message); }} selectedServices={selectedServices.map(({id,name,price,custom})=>({id,name,price,custom:Boolean(custom)}))} onRemoveSelected={id=>{setSelectedServiceIds(current=>current.filter(value=>value!==id));setCustomSelections(current=>current.filter(item=>item.id!==id));}} onContinueRequest={openRequestForm} requestForm={orderFormOpen && (<section className="sd-account-request-form" id="service-order" aria-labelledby="sd-request-title"><div className="sd-request-modal-head"><div><span className="sd-kicker">CUSTOMER ACCOUNT / NEW REQUEST</span><h2 id="sd-request-title">Send a request</h2><p>Your requested date is reviewed before confirmation. No payment is taken here.</p></div><button type="button" className="sd-form-close" onClick={() => setOrderFormOpen(false)} aria-label="Close request form">×</button></div><form className="sd-order-form" onSubmit={submitOrder}><div className="sd-form-heading"><span>REQUEST DETAILS</span><strong>{selectedServices.length?selectedServices.map(service=>service.name).join(" + "):"Choose a product / service"}</strong>{selectedServices.length>0&&<b>{selectedServices.some(service=>service.custom)?"Quote required":money(selectedServices.reduce((sum,service)=>sum+service.price,0))} <small>{selectedServices.some(service=>service.custom)?"custom item included":"estimated total"}</small></b>}</div><div className="sd-catalogue-add"><label htmlFor="customer-catalogue-search">Find a product or service</label><div><input id="customer-catalogue-search" list="customer-catalogue-options" value={catalogueQuery} onChange={event=>setCatalogueQuery(event.target.value)} placeholder="Start typing a name…" autoComplete="off"/><datalist id="customer-catalogue-options">{activeServices.map(item=><option key={item.id} value={item.name}/>)}</datalist><button type="button" onClick={addCatalogueItem}>Add item</button></div><small>Choose from the business catalogue or add a custom request item.</small></div><fieldset className="sd-enquiry-services"><legend>Products / services in this request</legend><p>Choose one or more items.</p>{activeServices.map(service=><label key={service.id}><input type="checkbox" checked={selectedServiceIds.includes(service.id)} onChange={event=>{const next=event.target.checked?[...selectedServiceIds,service.id]:selectedServiceIds.filter(id=>id!==service.id);setSelectedServiceIds(next);setSelected(next[0]||null);}}/><span>{service.name}</span><strong>{service.custom?"Quote required":money(service.price)}</strong></label>)}</fieldset>{customSelections.length>0&&<div className="sd-custom-request-items"><strong>Custom items · price to be confirmed</strong>{customSelections.map(item=><div key={item.id}><span>{item.name}</span><button type="button" onClick={()=>{setCustomSelections(current=>current.filter(value=>value.id!==item.id));setSelectedServiceIds(current=>current.filter(id=>id!==item.id));}}>Remove</button></div>)}</div>}<div className="sd-form-two"><label>Your name<input value={customerName} onChange={event=>setCustomerName(event.target.value)} autoComplete="name" required placeholder="Name or business"/></label><label>Email<input value={email} onChange={event=>setEmail(event.target.value)} type="email" autoComplete="email" required placeholder="you@example.com"/></label></div><label>WhatsApp number<input type="tel" value={whatsapp} onChange={event=>setWhatsapp(event.target.value)} autoComplete="tel" required placeholder="+267 …"/></label><label>Target date<input type="date" value={dueDate} min={localDate()} onChange={event=>setDueDate(event.target.value)} required/><small>Your requested date is reviewed before confirmation.</small></label><label>Discount code <span className="sd-optional">OPTIONAL</span><input value={promoCode} onChange={event=>setPromoCode(event.target.value.toUpperCase())} placeholder="Enter a game reward code" /></label><label className="sd-request-brief">Project brief<textarea value={brief} onChange={event=>setBrief(event.target.value)} rows={2} placeholder="What would you like to achieve?" required/></label><label className="sd-enquiry-notifications"><input type="checkbox" checked={notificationOptIn} onChange={event=>setNotificationOptIn(event.target.checked)}/> Keep me informed about updates to this enquiry <span>In-app updates appear in your Account. Push and email delivery are not connected in this preview.</span></label><button className="sd-button sd-primary sd-submit" type="submit">Send request →</button><p className="sd-privacy-note">Saved in this browser only · no payment taken</p></form></section>)}><section className="sd-racing-promo sd-wrap" id="racing-rewards">
         <div className="sd-racing-promo-copy"><span className="sd-kicker">PLAY / EARN A LITTLE EXTRA</span><h2>Race for a little extra.</h2><p>{data.rewardActive === false ? "The sprint is currently paused. Check back when a reward is published." : data.rewardDescription || "Drive for eight seconds and keep it clean to unlock a discount for your next request."}</p></div>
-        <details className="sd-racing-details" onToggle={event => { if (event.currentTarget.open) recordDemoJourney("Racing discount explored"); }}><summary><span aria-hidden="true">🏁</span><strong>8-second sprint · {money(data.discountAmount ?? 5)} OFF</strong><span className="sd-racing-open">Play now ↗</span></summary>
+        <details className="sd-racing-details" onToggle={event => { if (event.currentTarget.open) recordPreviewJourney("Racing discount explored"); }}><summary><span aria-hidden="true">🏁</span><strong>8-second sprint · {money(data.discountAmount ?? 5)} OFF</strong><span className="sd-racing-open">Play now ↗</span></summary>
           <RacingWarmup embedded discountAmount={data.discountAmount ?? 5} sprintDuration={8} promoTitle={data.rewardTitle || "Race for a discount."} promoDescription={data.rewardDescription || "Drive for eight seconds. Keep it clean to unlock the published discount on your next request."} promoImage={data.rewardImage || ""} rewardEnabled={data.rewardActive !== false} onDiscountEarned={(customerEmail, lapTime) => { const normalized = customerEmail.trim().toLowerCase(); if (!normalized || !normalized.includes("@")) { setNotice("Enter your email in the racing panel to receive a discount."); return; } const existing = (data.discountClaims || []).find(item => item.email.toLowerCase() === normalized && item.status === "Available"); if (existing) { setNotice("You already have an unused discount code in this browser account: "+existing.code); return; } const code = "RACE-"+Math.random().toString(36).slice(2,7).toUpperCase(); const claim: DiscountClaim = { id:"DISC-"+Date.now().toString(36), email:normalized, code, amount:data.discountAmount ?? 5, lapTime, createdAt:new Date().toISOString(), status:"Available" }; commitData(current=>({...current,discountClaims:[claim,...(current.discountClaims||[])],events:[{id:"EV-"+Date.now().toString(36),kind:"reward",label:"Racing discount earned · "+money(claim.amount),at:new Date().toISOString()},...(current.events||[])]}),"You earned "+money(claim.amount)+" off. Code "+code+" is saved for "+normalized+"."); }} />
         </details>
       </section></AccountWorkspace>}
 
-    {view === "login" && <section className="sd-admin sd-wrap"><div className="sd-admin-panel sd-admin-login-card" style={{maxWidth:480,margin:"clamp(28px,8vh,84px) auto",padding:24}}><span className="sd-kicker">ITERATION13 / YOUR PRIVATE BRIEFCASE</span><h1 style={{fontSize:"clamp(1.8rem,5vw,2.5rem)",margin:"8px 0"}}>Open your <em>Briefcase.</em></h1><p className="sd-admin-help">This is the owner side of your business: customers, jobs, money, Store design and the records that keep everything together.</p><form className="sd-admin-form" onSubmit={submitAdminLogin}><label>{adminLocked ? "Resume access word" : "Demo access word"}<input type="password" autoComplete="off" value={adminPassphrase} onChange={event=>setAdminPassphrase(event.target.value)} placeholder="Enter access word" required /></label><button className="sd-button sd-primary" type="submit">{adminLocked ? "Resume my Briefcase →" : "Unlock my Briefcase →"}</button></form><p className="sd-admin-help" style={{marginTop:12}}>Demo word: <strong>admin</strong>. This client-side gate is for demonstration only; it does not protect real data. {adminLocked ? "Your shift remains active while access is locked." : "Successful access starts your shift automatically."}</p><button className="sd-button sd-outline" type="button" onClick={() => { setView("shop"); setNotice(""); }}>← Back to Store</button></div></section>}
+    {view === "login" && <section className="sd-admin sd-wrap"><div className="sd-admin-panel sd-admin-login-card" style={{maxWidth:480,margin:"clamp(28px,8vh,84px) auto",padding:24}}><span className="sd-kicker">PROSPEC GROUP / PRIVATE BRIEFCASE</span><h1 style={{fontSize:"clamp(1.8rem,5vw,2.5rem)",margin:"8px 0"}}>Open your <em>Briefcase.</em></h1><p className="sd-admin-help">This is the owner side of your business: customers, jobs, money, Store design and the records that keep everything together.</p><form className="sd-admin-form" onSubmit={submitAdminLogin}><label>Owner access word<input type="password" autoComplete="off" value={adminPassphrase} onChange={event=>setAdminPassphrase(event.target.value)} placeholder="Enter access word" required /></label><button className="sd-button sd-primary" type="submit">{adminLocked ? "Resume my Briefcase →" : "Unlock my Briefcase →"}</button></form><p className="sd-admin-help" style={{marginTop:12}}>Use the owner access word supplied to the Prospec team. Access is checked on the server; customer and enquiry records remain local preview data until the Prospec database connection is configured.</p><button className="sd-button sd-outline" type="button" onClick={() => { setView("shop"); setNotice(""); }}>← Back to Store</button></div></section>}
 
-    {view === "admin" && adminUnlocked && <section className="sd-admin sd-wrap" data-admin-current={adminTab} data-store-section={storeSection}><div className="sd-os-heading"><div><span className="sd-kicker">PRIVATE BRIEFCASE / OWNER WORKSPACE</span><small className="sd-owner-greeting">{ownerGreeting}</small><h1>Your business in your pocket.</h1><p><strong>{businessName.trim() || "Your Business"}</strong> · Your workspace for customers, jobs, money and records</p></div><span className="sd-os-status" title="This prototype saves its demo records in this browser only">LOCAL PREVIEW · THIS DEVICE</span></div>
+    {view === "admin" && adminUnlocked && <section className="sd-admin sd-wrap" data-admin-current={adminTab} data-store-section={storeSection}><div className="sd-os-heading"><div><span className="sd-kicker">PRIVATE BRIEFCASE / OWNER WORKSPACE</span><small className="sd-owner-greeting">{ownerGreeting}</small><h1>Your divisions. <em>One briefcase.</em></h1><p><strong>{businessName.trim() || "Prospec Group"}</strong> · Your workspace for customers, jobs, money and records</p></div><span className="sd-os-status" title="This prototype saves its preview records in this browser only">LOCAL PREVIEW · THIS DEVICE</span></div>
 <details className="sd-owner-shift-panel sd-owner-shift-details" data-admin-tab="today">
   <summary className="sd-owner-shift-title"><span className="sd-shift-clock" aria-hidden="true">◷</span><div><span className="sd-kicker">OWNER SHIFT</span><strong>Shift active</strong></div><span className="sd-shift-live"><i /> ACTIVE</span><span className="sd-shift-summary-hint">Manage shift</span></summary>
   <div className="sd-owner-shift-metrics"><div><small>Time on shift</small><strong>{shiftStartedAt ? new Date(Math.max(0,sessionNow-shiftStartedAt)).toISOString().slice(11,19) : "00:00:00"}</strong><span>Started {shiftStartedAt ? new Date(shiftStartedAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) : "just now"}</span></div><div><small>Session expires in</small><strong>{sessionExpiresAt ? (()=>{const ms=Math.max(0,sessionExpiresAt-sessionNow);return [Math.floor(ms/3600000),Math.floor(ms%3600000/60000),Math.floor(ms%60000/1000)].map(v=>String(v).padStart(2,"0")).join(":")})() : "12:00:00"}</strong><span>Automatic expiry</span></div></div>
@@ -1358,14 +1358,14 @@ return <main className="serviceDemo" style={{ "--studio-accent": themeColor, "--
     <small>Example: Metsi Wellness. Use a real or fictional name. Your Store, Account and Briefcase rebrand together instantly.</small>
     
   </div>
-  <div className="sd-business-identity-preview" style={{borderColor:themeColor}}><span className="sd-kicker">LIVE BUSINESS IDENTITY</span><strong>{businessName.trim() || "Your Business"}</strong><small>Store · Account · Briefcase</small><button type="button" className="sd-small-button" onClick={openBusinessSetup}>Edit business setup ↗</button></div>
+  <div className="sd-business-identity-preview" style={{borderColor:themeColor}}><span className="sd-kicker">LIVE BUSINESS IDENTITY</span><strong>{businessName.trim() || "Prospec Group"}</strong><small>Store · Account · Briefcase</small><button type="button" className="sd-small-button" onClick={openBusinessSetup}>Edit business setup ↗</button></div>
   <div className="sd-business-share"><div><span className="sd-kicker">SHARE YOUR BUSINESS EXAMPLE</span><p>Share this exact Store, Account and Briefcase setup. Visitors get their own browser-local copy; your customer records and owner notes are never included.</p></div><button type="button" className="sd-button sd-outline" onClick={shareBusinessExample}>Generate share link ↗</button>{shareLink && <label>Share link<input readOnly value={shareLink} onFocus={event=>event.currentTarget.select()} aria-label="Business example share link" /></label>}</div>
 </section>
 <div className="sd-theme-control sd-palette-control" data-admin-tab="store" aria-label="Business brand colours"><div><strong>Brand palette · {brandColors.length} of 3 colours</strong><small>One to three brand colours shared by Store, Account, Briefcase and receipts.</small></div><div className="sd-admin-palette-swatches">{brandColorOptions.map(option => <button key={option.color} type="button" className={brandColors.includes(option.color) ? "is-selected" : ""} style={{ "--swatch": option.color } as React.CSSProperties} aria-label={option.label} aria-pressed={brandColors.includes(option.color)} onClick={() => toggleBrandColor(option.color)}>{brandColors.includes(option.color) ? "✓" : "+"}</button>)}<label title="Choose a custom brand colour"><input type="color" value={customBrandColor} onChange={event=>setCustomBrandColor(event.target.value)} aria-label="Custom brand colour"/><button type="button" onClick={addCustomBrandColor}>Add</button></label></div></div></div><div className="sd-stats sd-pulse-metrics" id="admin-today" data-admin-tab="today">
  <article className="is-primary"><span>Requests received</span><strong>{data.orders.length}</strong><small>Saved on this device</small><i aria-hidden="true">↗</i></article>
  <article><span>Needs first review</span><strong>{statusCounts["New request"] || 0}</strong><small>New customer requests</small><i aria-hidden="true">✳</i></article>
  <article><span>Active jobs</span><strong>{data.orders.filter(order => !["Completed", "Declined"].includes(order.status)).length}</strong><small>Not completed or declined</small><i aria-hidden="true">◷</i></article>
- <article><span>Payments received</span><strong>{money(paidTotal)}</strong><small>Recorded demo payments</small><i aria-hidden="true">↗</i></article>
+ <article><span>Payments received</span><strong>{money(paidTotal)}</strong><small>Recorded preview payments</small><i aria-hidden="true">↗</i></article>
  </div>
  <section className="sd-admin-panel sd-today-notifications" data-admin-tab="today" aria-labelledby="sd-notifications-title"><div className="sd-panel-head"><div><span className="sd-kicker">OWNER NOTIFICATIONS</span><h3 id="sd-notifications-title">What needs your attention</h3></div><span className="sd-local-pill">{statusCounts["New request"]||0} TO REVIEW</span></div><div className="sd-notification-list">{data.orders.filter(order=>order.status==="New request").slice(0,5).map(order=><article key={order.id}><span className="sd-notification-dot"/><div><strong>New request · {order.customerName}</strong><small>{order.serviceName}</small></div><button type="button" onClick={()=>setAdminTab("work")}>Review →</button></article>)}{(statusCounts["New request"]||0)===0&&<p className="sd-admin-empty">All clear. New requests will appear here.</p>}</div></section><section className="sd-business-pulse" data-admin-tab="today" aria-labelledby="sd-business-pulse-title">
   <div className="sd-business-pulse-head"><div><span className="sd-kicker">LIVE WORK MIX / THIS DEVICE</span><h3 id="sd-business-pulse-title">Where the work stands</h3><p>Request status is based on the records saved in this browser.</p></div><span className="sd-pulse-total">{data.orders.length} {data.orders.length===1?"request":"requests"}</span></div>
@@ -1380,7 +1380,7 @@ return <main className="serviceDemo" style={{ "--studio-accent": themeColor, "--
       <p>Prices display in {businessCurrency}. Changing currency changes the denomination only; it does not convert existing amounts.</p>
     </section>
 <div className="sd-finance-metrics"><article><small>Payments received</small><strong>{money(paidTotal)}</strong></article><article><small>Completed value</small><strong>{money(completedValue)}</strong></article><article><small>Projected · accepted / active</small><strong>{money(projectedValue)}</strong></article><article><small>Requested value · excluding declined</small><strong>{money(requestedValue)}</strong></article><article><small>Completed · unpaid</small><strong>{money(completedUnpaid)}</strong></article></div>
-<p className="sd-admin-help">Paid totals include only payments recorded in this demo. Completed-unpaid and active pipeline are estimates, not cash received.</p>
+<p className="sd-admin-help">Paid totals include only payments recorded in this preview. Completed-unpaid and active pipeline are estimates, not cash received.</p>
 <AdminMoneyInsights mode="money" businessName={businessName} currency={businessCurrency} brandColor={themeColor} />
 <div className="sd-receipt-profile"><h3>Business details on receipts</h3><p className="sd-admin-help">Use the business&apos;s own details and tax references in this prototype document.</p>
 <div className="sd-form-two">
@@ -1389,27 +1389,27 @@ return <main className="serviceDemo" style={{ "--studio-accent": themeColor, "--
 <label>Business address<input value={data.receiptProfile?.address || ""} onChange={event=>commitData(current=>({...current,receiptProfile:{...emptyData.receiptProfile!,...(current.receiptProfile||{}),address:event.target.value}}),"Receipt address saved on this device.")}/></label>
 <label>Contact number<input value={data.receiptProfile?.phone || ""} onChange={event=>commitData(current=>({...current,receiptProfile:{...emptyData.receiptProfile!,...(current.receiptProfile||{}),phone:event.target.value}}),"Receipt contact saved on this device.")}/></label></div>
 <label className="sd-admin-label">Receipt footer / tax note<textarea rows={2} value={data.receiptProfile?.footer || ""} onChange={event=>commitData(current=>({...current,receiptProfile:{...emptyData.receiptProfile!,...(current.receiptProfile||{}),footer:event.target.value}}),"Receipt footer saved on this device.")}/></label></div>
-<div className="sd-discount-admin"><div className="sd-panel-head"><div><span className="sd-kicker">CUSTOMER REWARDS</span><h3>Sprint discount promotion</h3><p className="sd-admin-help">Edit the offer customers see beside the racing game. Changes stay in this browser demo.</p></div><span className="sd-local-pill">OWNER CONTROLLED</span></div><div className="sd-reward-editor"><label>Promotion headline<input maxLength={80} value={rewardTitleDraft} onChange={event=>setRewardTitleDraft(event.target.value)} placeholder="Race for a discount." /></label><label>Customer announcement<textarea rows={3} maxLength={280} value={rewardDescriptionDraft} onChange={event=>setRewardDescriptionDraft(event.target.value)} placeholder="Tell customers what the reward is and how to earn it." /></label><label>Discount for a clean eight-second sprint ({businessCurrency})<input type="number" min="0.01" max="5000" step="0.01" value={rewardDiscountDraft} onChange={event=>setRewardDiscountDraft(event.target.value)} /></label><AnnouncementImagePicker value={rewardImageDraft} online={online} onChange={setRewardImageDraft} onUploadingChange={setRewardImageUploading} /><div className="sd-reward-admin-actions"><button className="sd-small-button" type="button" disabled={rewardImageUploading} onClick={()=>{const amount=Number(rewardDiscountDraft);if(!rewardTitleDraft.trim()||!rewardDescriptionDraft.trim()){setNotice("Add a promotion headline and customer announcement first.");return;}if(!Number.isFinite(amount)||amount<=0||amount>5000){setNotice("Enter a valid discount amount in " + businessCurrency + ".");return;}commitData(current=>({...current,rewardTitle:rewardTitleDraft.trim(),rewardDescription:rewardDescriptionDraft.trim(),rewardImage:rewardImageDraft.trim(),discountAmount:amount,rewardActive:true}),"Sprint discount published on this device.");}}>Save &amp; publish reward</button><button className="sd-small-button" type="button" onClick={()=>commitData(current=>({...current,rewardActive:false}),"Sprint discount hidden from the customer Store.")}>Hide reward</button><button className="sd-small-button" type="button" onClick={()=>{setRewardTitleDraft("");setRewardDescriptionDraft("");setRewardImageDraft("");setRewardDiscountDraft("5");commitData(current=>({...current,rewardTitle:"",rewardDescription:"",rewardImage:"",discountAmount:5,rewardActive:false}),"Sprint discount removed from this device.");}}>Remove promotion</button></div><div className="sd-reward-preview"><span>STORE PREVIEW</span><div>{rewardImageDraft?<img src={rewardImageDraft} alt="Lap reward thumbnail preview"/>:<span className="sd-reward-preview-fallback">🏁</span>}<section><strong>{rewardTitleDraft||"Your promotion headline"}</strong><p>{rewardDescriptionDraft||"Your customer announcement will appear here."}</p><b>{money(Number(rewardDiscountDraft)>0?Number(rewardDiscountDraft):0)} OFF</b></section></div><small>{data.rewardActive===false?"Currently hidden":"Currently published"} · save to apply edits</small></div></div><label>Customer email for a direct promotion<input type="email" value={promoAssignEmail} onChange={event=>setPromoAssignEmail(event.target.value)} placeholder="customer@example.com" /></label><button className="sd-small-button" type="button" onClick={assignPromoReward}>Assign discount to customer →</button><div className="sd-discount-claims">{(data.discountClaims || []).length ? (data.discountClaims || []).slice(0,8).map(claim=><article key={claim.id}><strong>{claim.code}</strong><span>{claim.email}</span><b>{money(claim.amount)} · {claim.status}</b></article>) : <p className="sd-admin-empty">No racing rewards earned yet.</p>}</div></div>
+<div className="sd-discount-admin"><div className="sd-panel-head"><div><span className="sd-kicker">CUSTOMER REWARDS</span><h3>Sprint discount promotion</h3><p className="sd-admin-help">Edit the offer customers see beside the racing game. Changes stay in this browser preview.</p></div><span className="sd-local-pill">OWNER CONTROLLED</span></div><div className="sd-reward-editor"><label>Promotion headline<input maxLength={80} value={rewardTitleDraft} onChange={event=>setRewardTitleDraft(event.target.value)} placeholder="Race for a discount." /></label><label>Customer announcement<textarea rows={3} maxLength={280} value={rewardDescriptionDraft} onChange={event=>setRewardDescriptionDraft(event.target.value)} placeholder="Tell customers what the reward is and how to earn it." /></label><label>Discount for a clean eight-second sprint ({businessCurrency})<input type="number" min="0.01" max="5000" step="0.01" value={rewardDiscountDraft} onChange={event=>setRewardDiscountDraft(event.target.value)} /></label><AnnouncementImagePicker value={rewardImageDraft} online={online} onChange={setRewardImageDraft} onUploadingChange={setRewardImageUploading} /><div className="sd-reward-admin-actions"><button className="sd-small-button" type="button" disabled={rewardImageUploading} onClick={()=>{const amount=Number(rewardDiscountDraft);if(!rewardTitleDraft.trim()||!rewardDescriptionDraft.trim()){setNotice("Add a promotion headline and customer announcement first.");return;}if(!Number.isFinite(amount)||amount<=0||amount>5000){setNotice("Enter a valid discount amount in " + businessCurrency + ".");return;}commitData(current=>({...current,rewardTitle:rewardTitleDraft.trim(),rewardDescription:rewardDescriptionDraft.trim(),rewardImage:rewardImageDraft.trim(),discountAmount:amount,rewardActive:true}),"Sprint discount published on this device.");}}>Save &amp; publish reward</button><button className="sd-small-button" type="button" onClick={()=>commitData(current=>({...current,rewardActive:false}),"Sprint discount hidden from the customer Store.")}>Hide reward</button><button className="sd-small-button" type="button" onClick={()=>{setRewardTitleDraft("");setRewardDescriptionDraft("");setRewardImageDraft("");setRewardDiscountDraft("5");commitData(current=>({...current,rewardTitle:"",rewardDescription:"",rewardImage:"",discountAmount:5,rewardActive:false}),"Sprint discount removed from this device.");}}>Remove promotion</button></div><div className="sd-reward-preview"><span>STORE PREVIEW</span><div>{rewardImageDraft?<img src={rewardImageDraft} alt="Lap reward thumbnail preview"/>:<span className="sd-reward-preview-fallback">🏁</span>}<section><strong>{rewardTitleDraft||"Your promotion headline"}</strong><p>{rewardDescriptionDraft||"Your customer announcement will appear here."}</p><b>{money(Number(rewardDiscountDraft)>0?Number(rewardDiscountDraft):0)} OFF</b></section></div><small>{data.rewardActive===false?"Currently hidden":"Currently published"} · save to apply edits</small></div></div><label>Customer email for a direct promotion<input type="email" value={promoAssignEmail} onChange={event=>setPromoAssignEmail(event.target.value)} placeholder="customer@example.com" /></label><button className="sd-small-button" type="button" onClick={assignPromoReward}>Assign discount to customer →</button><div className="sd-discount-claims">{(data.discountClaims || []).length ? (data.discountClaims || []).slice(0,8).map(claim=><article key={claim.id}><strong>{claim.code}</strong><span>{claim.email}</span><b>{money(claim.amount)} · {claim.status}</b></article>) : <p className="sd-admin-empty">No racing rewards earned yet.</p>}</div></div>
 </section>
 <section className="sd-admin-panel sd-customers-panel" id="admin-customers" data-admin-tab="work"><div className="sd-panel-head"><div><span className="sd-kicker">CUSTOMER DIRECTORY</span><h2>Customers</h2></div><span className="sd-local-pill">{customerRecords.length} DEMO CONTACTS</span></div>
-{customerRecords.length ? <div className="sd-customer-list">{customerRecords.map(customer=><article key={customer.email}><div><strong>{customer.name}</strong><span>{customer.email}</span></div><b>{customer.jobs.length} {customer.jobs.length===1?"job":"jobs"}</b><small>{money(customer.jobs.reduce((sum,job)=>sum+job.price,0))} total request value</small></article>)}</div> : <p className="sd-admin-empty">Customer profiles appear here when someone submits a Store request.</p>}</section><section className="sd-admin-panel sd-activity-panel" id="admin-activity" data-admin-tab="insights"><div className="sd-panel-head"><div><span className="sd-kicker">ACTIVITY / DEMO EVENT LOG</span><h2>What happened</h2></div><span className="sd-local-pill">THIS BROWSER</span></div><div className="sd-activity-summary"><span><strong>{data.views}</strong> Store visits recorded</span><span><strong>{data.orders.length}</strong> requests / jobs</span><span><strong>{data.events?.length || 0}</strong> recent events</span></div><div className="sd-journey-funnel"><div className="sd-panel-head"><div><span className="sd-kicker">CUSTOMER JOURNEY / THIS DEVICE</span><h3>From discovery to follow-up</h3></div><span className="sd-local-pill">LOCAL DEMO</span></div><p className="sd-admin-help">Counts are recorded actions, not unique people. Sessions are tab-scoped. A request started without a submission is an unfinished journey signal—not proof someone abandoned or intended to leave.</p>{(() => { const events = data.journeyEvents || []; const count = (name: string) => events.filter(item => item.event === name).length; const steps = [{label:"Store reached",value:count("store_viewed")},{label:"Offers selected",value:count("offer_selected")+count("offer-selected")},{label:"Requests started",value:count("request_started")+count("request-started")},{label:"Requests submitted",value:count("request_submitted")},{label:"Owner updates",value:count("owner_status_updated")}]; const guideOpens = events.filter(item => item.source === "guide" && ["guide-opened","guide-opened-from-teaser"].includes(item.event)).length; const guideActions = events.filter(item => item.source === "guide" && item.event.startsWith("action:")).length; const unfinished = Math.max(0,steps[2].value-steps[3].value); const max = Math.max(1,...steps.map(step=>step.value)); return <><div className="sd-journey-steps">{steps.map(step=><article key={step.label}><div><span>{step.label}</span><strong>{step.value}</strong></div><div className="sd-performance-track"><span style={{width:(step.value/max*100)+"%"}}/></div></article>)}</div><div className="sd-journey-highlights"><article><span>Unfinished request starts</span><strong>{unfinished}</strong><small>May include people still deciding or returning later</small></article><article><span>Guide opens</span><strong>{guideOpens}</strong><small>Scripted guide opened in this tab</small></article><article><span>Guide actions</span><strong>{guideActions}</strong><small>Shortcuts selected from the guide</small></article></div></>; })()}</div><AdminMoneyInsights mode="insights" businessName={businessName} currency={businessCurrency} brandColor={themeColor} /><div className="sd-event-list">{(data.events || []).slice(0,8).map(event=><article key={event.id}><i className={"sd-event-dot "+(event.test?"is-test":"")}/><div><strong>{event.label}</strong><small>{new Date(event.at).toLocaleString()} {event.test?"· TEST":""}</small></div></article>)}</div><p className="sd-admin-help">Vercel Analytics and Speed Insights are included at application level. This prototype shows the local event trail tied to the demo customer and job records; it does not fetch private Vercel dashboard analytics or connect Firebase Analytics.</p></section><section className="sd-admin-panel sd-admin-performance" data-admin-tab="insights"><div className="sd-panel-head"><div><span className="sd-kicker">04 / DEMO PERFORMANCE</span><h2>Conversion &amp; operations</h2></div><span className="sd-local-pill">LOCAL DEMO DATA</span></div><p className="sd-admin-help">Percentages are calculated from this browser’s saved demo counts only. They are directional indicators, not shared production analytics.</p><div className="sd-performance-grid"><article><div><span>Visit to request</span><strong>{data.views > 0 ? Math.round(data.orders.length / data.views * 100) : 0}%</strong></div><div className="sd-performance-track"><span style={{width: `${Math.min(100, data.views > 0 ? data.orders.length / data.views * 100 : 0)}%`}} /></div><small>{data.orders.length} requests from {data.views} recorded visits</small></article><article><div><span>Visible products / services</span><strong>{data.services.length ? Math.round(activeServices.length / data.services.length * 100) : 0}%</strong></div><div className="sd-performance-track"><span style={{width: `${data.services.length ? activeServices.length / data.services.length * 100 : 0}%`}} /></div><small>{activeServices.length} of {data.services.length} products / services visible</small></article><article><div><span>Requests needing attention</span><strong>{data.orders.length ? Math.round((data.orders.length - (statusCounts["Completed"] || 0) - (statusCounts["Declined"] || 0)) / data.orders.length * 100) : 0}%</strong></div><div className="sd-performance-track"><span style={{width: `${data.orders.length ? (data.orders.length - (statusCounts["Completed"] || 0) - (statusCounts["Declined"] || 0)) / data.orders.length * 100 : 0}%`}} /></div><small>{data.orders.length - (statusCounts["Completed"] || 0) - (statusCounts["Declined"] || 0)} active of {data.orders.length} requests</small></article><article><div><span>New request share</span><strong>{data.orders.length ? Math.round((statusCounts["New request"] || 0) / data.orders.length * 100) : 0}%</strong></div><div className="sd-performance-track"><span style={{width: `${data.orders.length ? (statusCounts["New request"] || 0) / data.orders.length * 100 : 0}%`}} /></div><small>{statusCounts["New request"] || 0} new of {data.orders.length} requests</small></article></div></section>
+{customerRecords.length ? <div className="sd-customer-list">{customerRecords.map(customer=><article key={customer.email}><div><strong>{customer.name}</strong><span>{customer.email}</span></div><b>{customer.jobs.length} {customer.jobs.length===1?"job":"jobs"}</b><small>{money(customer.jobs.reduce((sum,job)=>sum+job.price,0))} total request value</small></article>)}</div> : <p className="sd-admin-empty">Customer profiles appear here when someone submits a Store request.</p>}</section><section className="sd-admin-panel sd-activity-panel" id="admin-activity" data-admin-tab="insights"><div className="sd-panel-head"><div><span className="sd-kicker">ACTIVITY / DEMO EVENT LOG</span><h2>What happened</h2></div><span className="sd-local-pill">THIS BROWSER</span></div><div className="sd-activity-summary"><span><strong>{data.views}</strong> Store visits recorded</span><span><strong>{data.orders.length}</strong> requests / jobs</span><span><strong>{data.events?.length || 0}</strong> recent events</span></div><div className="sd-journey-funnel"><div className="sd-panel-head"><div><span className="sd-kicker">CUSTOMER JOURNEY / THIS DEVICE</span><h3>From discovery to follow-up</h3></div><span className="sd-local-pill">LOCAL DEMO</span></div><p className="sd-admin-help">Counts are recorded actions, not unique people. Sessions are tab-scoped. A request started without a submission is an unfinished journey signal—not proof someone abandoned or intended to leave.</p>{(() => { const events = data.journeyEvents || []; const count = (name: string) => events.filter(item => item.event === name).length; const steps = [{label:"Store reached",value:count("store_viewed")},{label:"Offers selected",value:count("offer_selected")+count("offer-selected")},{label:"Requests started",value:count("request_started")+count("request-started")},{label:"Requests submitted",value:count("request_submitted")},{label:"Owner updates",value:count("owner_status_updated")}]; const guideOpens = events.filter(item => item.source === "guide" && ["guide-opened","guide-opened-from-teaser"].includes(item.event)).length; const guideActions = events.filter(item => item.source === "guide" && item.event.startsWith("action:")).length; const unfinished = Math.max(0,steps[2].value-steps[3].value); const max = Math.max(1,...steps.map(step=>step.value)); return <><div className="sd-journey-steps">{steps.map(step=><article key={step.label}><div><span>{step.label}</span><strong>{step.value}</strong></div><div className="sd-performance-track"><span style={{width:(step.value/max*100)+"%"}}/></div></article>)}</div><div className="sd-journey-highlights"><article><span>Unfinished request starts</span><strong>{unfinished}</strong><small>May include people still deciding or returning later</small></article><article><span>Guide opens</span><strong>{guideOpens}</strong><small>Scripted guide opened in this tab</small></article><article><span>Guide actions</span><strong>{guideActions}</strong><small>Shortcuts selected from the guide</small></article></div></>; })()}</div><AdminMoneyInsights mode="insights" businessName={businessName} currency={businessCurrency} brandColor={themeColor} /><div className="sd-event-list">{(data.events || []).slice(0,8).map(event=><article key={event.id}><i className={"sd-event-dot "+(event.test?"is-test":"")}/><div><strong>{event.label}</strong><small>{new Date(event.at).toLocaleString()} {event.test?"· TEST":""}</small></div></article>)}</div><p className="sd-admin-help">Vercel Analytics and Speed Insights are included at application level. This prototype shows the local event trail tied to the preview customer and job records; it does not fetch private Vercel dashboard analytics or connect Firebase Analytics.</p></section><section className="sd-admin-panel sd-admin-performance" data-admin-tab="insights"><div className="sd-panel-head"><div><span className="sd-kicker">04 / DEMO PERFORMANCE</span><h2>Conversion &amp; operations</h2></div><span className="sd-local-pill">LOCAL DEMO DATA</span></div><p className="sd-admin-help">Percentages are calculated from this browser’s saved preview counts only. They are directional indicators, not shared production analytics.</p><div className="sd-performance-grid"><article><div><span>Visit to request</span><strong>{data.views > 0 ? Math.round(data.orders.length / data.views * 100) : 0}%</strong></div><div className="sd-performance-track"><span style={{width: `${Math.min(100, data.views > 0 ? data.orders.length / data.views * 100 : 0)}%`}} /></div><small>{data.orders.length} requests from {data.views} recorded visits</small></article><article><div><span>Visible products / services</span><strong>{data.services.length ? Math.round(activeServices.length / data.services.length * 100) : 0}%</strong></div><div className="sd-performance-track"><span style={{width: `${data.services.length ? activeServices.length / data.services.length * 100 : 0}%`}} /></div><small>{activeServices.length} of {data.services.length} products / services visible</small></article><article><div><span>Requests needing attention</span><strong>{data.orders.length ? Math.round((data.orders.length - (statusCounts["Completed"] || 0) - (statusCounts["Declined"] || 0)) / data.orders.length * 100) : 0}%</strong></div><div className="sd-performance-track"><span style={{width: `${data.orders.length ? (data.orders.length - (statusCounts["Completed"] || 0) - (statusCounts["Declined"] || 0)) / data.orders.length * 100 : 0}%`}} /></div><small>{data.orders.length - (statusCounts["Completed"] || 0) - (statusCounts["Declined"] || 0)} active of {data.orders.length} requests</small></article><article><div><span>New request share</span><strong>{data.orders.length ? Math.round((statusCounts["New request"] || 0) / data.orders.length * 100) : 0}%</strong></div><div className="sd-performance-track"><span style={{width: `${data.orders.length ? (statusCounts["New request"] || 0) / data.orders.length * 100 : 0}%`}} /></div><small>{statusCounts["New request"] || 0} new of {data.orders.length} requests</small></article></div></section>
       <section className="sd-admin-panel sd-showcase-preview" data-admin-tab="store" aria-live="polite">
-  <div className="sd-panel-head"><div><span className="sd-kicker"><span aria-hidden="true">🏪</span> LIVE STOREFRONT / SHOWCASE</span><h2>{businessName.trim() || "Your Business"}</h2></div><span className="sd-local-pill">DISPLAYING IN DEMO STORE</span></div>
+  <div className="sd-panel-head"><div><span className="sd-kicker"><span aria-hidden="true">🏪</span> LIVE STOREFRONT / SHOWCASE</span><h2>{businessName.trim() || "Prospec Group"}</h2></div><span className="sd-local-pill">DISPLAYING IN DEMO STORE</span></div>
   <div className="sd-showcase-preview-head"><div><span>YOUR BUSINESS / CUSTOMER VIEW</span><strong>What customers see</strong><p>Your selected colour, business name and currently visible products / services.</p></div><button className="sd-small-button" type="button" onClick={() => { setView("shop"); window.scrollTo({top:0,behavior:"smooth"}); }}>Open full Store ↗</button></div>
   <StoreAnnouncementSlot active={announcementIsActive && Boolean(data.announcement.trim() || data.announcementImage)} message={data.announcement} image={data.announcementImage} preview />
   <div className="sd-showcase-preview-grid">{activeServices.length ? activeServices.map((service,index)=><article key={service.id}><div className="sd-showcase-preview-media sd-service-media">{service.media&&service.mediaType==="video"?<StoreVideoPreview src={service.media} />:service.media?<img src={service.media} alt={service.name+" preview"} loading="lazy"/>:<div className="sd-showcase-media-fallback"><span>{serviceEmoji(service.name)}</span></div>}<span className="sd-service-emoji" aria-hidden="true">{serviceEmoji(service.name)}</span></div><div className="sd-showcase-preview-copy"><span className="sd-showcase-preview-index">0{index+1}</span><strong>{service.name}</strong><b>{money(service.price)}</b><p>{service.description || "An item from this business."}</p></div></article>) : <p className="sd-admin-empty">No visible products or services yet. Add one below to populate the Store preview.</p>}</div>
-  <div className="sd-showcase-footer"><button className="sd-owner-briefcase" type="button" disabled aria-label="Preview of the owner Briefcase icon" title="Owner Briefcase"><span aria-hidden="true">💼</span></button><p>Built to be explored online and offline.</p></div><p className="sd-admin-help">Preview updates from the same local demo data as your Store. The footer Briefcase card matches the customer-facing Store. Saving, hiding or deleting a product / service changes this showcase; it does not publish a live customer website.</p>
+  <div className="sd-showcase-footer"><button className="sd-owner-briefcase" type="button" disabled aria-label="Preview of the owner Briefcase icon" title="Owner Briefcase"><span aria-hidden="true">💼</span></button><p>Built to be explored online and offline.</p></div><p className="sd-admin-help">Preview updates from the same local preview data as your Store. The footer Briefcase card matches the customer-facing Store. Saving, hiding or deleting a product / service changes this showcase; it does not publish a live customer website.</p>
 </section>
 <div className="sd-admin-grid"><section className="sd-admin-panel" id="admin-service-tools" data-store-panel="offerings"><div className="sd-panel-head"><div><span className="sd-kicker">01 / PRODUCT & SERVICE CATALOGUE</span><h2>Product / service catalogue</h2></div><button className="sd-small-button" onClick={() => { resetServiceForm(); const editor=document.getElementById("admin-service-editor"); if(editor instanceof HTMLDetailsElement) editor.open=true; setNotice("New product / service form ready."); }}>+ New product / service</button></div><div className="sd-admin-services">{data.services.map(service => <article key={service.id}><div><strong>{service.name}</strong><span>{money(service.price)} · {service.active ? "Visible" : "Hidden"}</span></div><div className="sd-row-actions"><button onClick={() => { startEdit(service); const editor=document.getElementById("admin-service-editor"); if(editor instanceof HTMLDetailsElement) editor.open=true; setNotice(`Editing ${service.name}. Save your changes when ready.`); }}>Edit</button><button onClick={() => toggleService(service)}>{service.active ? "Hide" : "Show"}</button><button className="sd-danger" onClick={() => setPendingConfirm({ kind: "delete-service", serviceId: service.id, serviceName: service.name })}>Delete</button></div></article>)}</div>
       <button className="sd-button sd-primary sd-store-editor-cta" type="button" onClick={() => { const editor=document.getElementById("admin-service-editor"); if(editor instanceof HTMLDetailsElement){editor.open=true;editor.scrollIntoView({behavior:"smooth",block:"center"});} }}>＋ Add a product / service</button><details className="sd-store-editor" id="admin-service-editor"><summary><strong>{editingId ? "Edit product / service" : "Product / service editor"}</strong><span>Expand or collapse form</span></summary>
 <form className="sd-admin-form" id="admin-service-form" onSubmit={saveService}><h3>{editingId ? "Edit product / service" : "Add a product / service"}</h3><label>Product / service name<input value={serviceName} onChange={event => setServiceName(event.target.value)} maxLength={64} required /></label><label>Industry / line of business<input value={serviceIndustry} onChange={event => setServiceIndustry(event.target.value)} placeholder="e.g. Beauty & wellness, automotive, retail, consulting" maxLength={48} required /></label><p className="sd-admin-help">Classify each product or service by its industry. A business can offer items across different industries.</p><label>Price ({businessCurrency})<input type="number" min="0" step="1" value={servicePrice} onChange={event => setServicePrice(event.target.value)} required /></label><label>Description<textarea rows={3} value={serviceDescription} onChange={event => setServiceDescription(event.target.value)} maxLength={220} /></label><ServiceMediaPicker value={serviceMedia} type={serviceMediaType} online={online} onChange={(url, type) => { setServiceMedia(url); setServiceMediaType(type); }} onUploadingChange={setServiceMediaUploading} /><label className="sd-check"><input type="checkbox" checked={serviceActive} onChange={event => setServiceActive(event.target.checked)} /> Show on customer storefront</label><div className="sd-form-two"><button className="sd-button sd-primary" type="submit" disabled={serviceMediaUploading}>{serviceMediaUploading ? "Uploading media…" : editingId ? "Save changes" : "Add product / service"}</button><button className="sd-button sd-outline" type="button" onClick={resetServiceForm}>Cancel</button></div></form>
 </details></section>
       <section className="sd-admin-panel" id="admin-announcement-tools"><div data-store-panel="announcement"><div className="sd-panel-head"><div><span className="sd-kicker">02 / CUSTOMER NOTICE</span><h2>Special announcement</h2></div></div><p className="sd-admin-help">Publish a special offer, discount or product / service update. Include the amount, dates and any important terms so customers know exactly what is being offered.</p><button className="sd-button sd-primary sd-store-editor-cta" type="button" onClick={() => { const editor=document.querySelector("#admin-announcement-tools .sd-announcement-editor"); if(editor instanceof HTMLDetailsElement){editor.open=true;editor.scrollIntoView({behavior:"smooth",block:"center"});} }}>Edit announcement →</button><details className="sd-store-editor sd-announcement-editor"><summary><strong>Announcement editor</strong><span>Expand or collapse form</span></summary>
-<label className="sd-admin-label">Announcement<textarea rows={4} value={announcementDraft} onChange={event => setAnnouncementDraft(event.target.value)} maxLength={180} placeholder="Example: 15% off all bookings made before 30 November…" /><small className="sd-copy-limit">{announcementDraft.length}/180 characters · Keep the offer clear and concise.</small></label><AnnouncementImagePicker value={announcementImageDraft} online={online} onChange={setAnnouncementImageDraft} onUploadingChange={setAnnouncementImageUploading} /><label className="sd-check sd-announcement-toggle"><input type="checkbox" checked={announcementEnabledDraft} onChange={event => { const enabled = event.target.checked; setAnnouncementEnabledDraft(enabled); commitData(current => ({ ...current, announcementActive: enabled }), enabled ? "Announcement switched on in the demo Store." : "Announcement switched off in the demo Store."); }} /><span><strong>Show announcement in Store</strong><small>{announcementEnabledDraft ? "Visible to customers" : "Hidden from customers"}</small></span></label><button className="sd-button sd-primary" disabled={announcementImageUploading} onClick={() => { const announcement = announcementDraft.trim(); const announcementImage = announcementImageDraft.trim(); if (announcementImage) { try { const parsed = new URL(announcementImage); if (parsed.protocol !== "https:" && parsed.protocol !== "http:") throw new Error("Unsupported protocol"); } catch { setNotice("Enter a valid image URL or upload the thumbnail before publishing."); return; } } if (commitData(current => ({ ...current, announcement, announcementActive: announcementEnabledDraft, announcementImage }), announcementEnabledDraft && (announcement || announcementImage) ? "Announcement published on this device." : "Announcement content saved on this device.")) { setAnnouncementDraft(announcement); setAnnouncementImageDraft(announcementImage); } }}>{announcementImageUploading ? "Uploading thumbnail…" : "Save announcement"}</button>
+<label className="sd-admin-label">Announcement<textarea rows={4} value={announcementDraft} onChange={event => setAnnouncementDraft(event.target.value)} maxLength={180} placeholder="Example: 15% off all bookings made before 30 November…" /><small className="sd-copy-limit">{announcementDraft.length}/180 characters · Keep the offer clear and concise.</small></label><AnnouncementImagePicker value={announcementImageDraft} online={online} onChange={setAnnouncementImageDraft} onUploadingChange={setAnnouncementImageUploading} /><label className="sd-check sd-announcement-toggle"><input type="checkbox" checked={announcementEnabledDraft} onChange={event => { const enabled = event.target.checked; setAnnouncementEnabledDraft(enabled); commitData(current => ({ ...current, announcementActive: enabled }), enabled ? "Announcement switched on in the preview Store." : "Announcement switched off in the preview Store."); }} /><span><strong>Show announcement in Store</strong><small>{announcementEnabledDraft ? "Visible to customers" : "Hidden from customers"}</small></span></label><button className="sd-button sd-primary" disabled={announcementImageUploading} onClick={() => { const announcement = announcementDraft.trim(); const announcementImage = announcementImageDraft.trim(); if (announcementImage) { try { const parsed = new URL(announcementImage); if (parsed.protocol !== "https:" && parsed.protocol !== "http:") throw new Error("Unsupported protocol"); } catch { setNotice("Enter a valid image URL or upload the thumbnail before publishing."); return; } } if (commitData(current => ({ ...current, announcement, announcementActive: announcementEnabledDraft, announcementImage }), announcementEnabledDraft && (announcement || announcementImage) ? "Announcement published on this device." : "Announcement content saved on this device.")) { setAnnouncementDraft(announcement); setAnnouncementImageDraft(announcementImage); } }}>{announcementImageUploading ? "Uploading thumbnail…" : "Save announcement"}</button>
 </details></div>
-<div className="sd-panel-head sd-request-head" id="admin-requests-tools"><div><span className="sd-kicker">03 / INCOMING WORK</span><h2>Customer requests</h2></div></div>{data.orders.length === 0 ? <div className="sd-admin-empty">No requests yet. Submit a customer request from the Store to see it appear here.</div> : <div className="sd-admin-orders">{data.orders.map(order => <article key={order.id}><div className="sd-admin-order-top"><strong>{order.serviceName} · {money(order.price)} {order.isTest && <span className="sd-test-label">TEST</span>}</strong><span>{order.id}</span></div><p>{order.customerName} · {order.email}{order.whatsapp ? " · WhatsApp " + order.whatsapp : ""}</p><p>Requested date: <b>{order.dueDate}</b></p>{order.serviceItems?.some(item => item.price === 0) && !order.quotedPrice && <div className="sd-admin-quote"><strong>Custom product / service · quote needed</strong><label>Total quote ({businessCurrency})<input type="number" min="0.01" step="0.01" value={quoteDrafts[order.id] || ""} onChange={event => setQuoteDrafts(current => ({ ...current, [order.id]: event.target.value }))} placeholder="Enter the full request total"/></label><button type="button" className="sd-small-button" onClick={() => sendCustomQuote(order.id)}>Send quote to Customer Account →</button></div>}{order.quotedPrice && <p><strong>Business quote:</strong> {money(order.quotedPrice)} · sent to customer</p>}<p>Payment: <b>{order.paymentStatus || "Unpaid"}</b> · {money(order.paidAmount || 0)} received · {money(Math.max(0,order.price-(order.paidAmount||0)))} due</p>{order.discountAmount ? <p>Discount: <b>{money(order.discountAmount)} off · {order.discountCode}</b> (regular {money(order.originalPrice || order.price + order.discountAmount)})</p> : null}{order.brief && <p>{order.brief}</p>}<div className="sd-order-admin-actions">{Math.max(0, order.price - (order.paidAmount || 0)) > 0 && <label className="sd-payment-entry">Record payment (demo)<span><input type="number" min="0.01" max={Math.max(0, order.price - (order.paidAmount || 0))} step="0.01" value={paymentDrafts[order.id] ?? String(Math.max(0, order.price - (order.paidAmount || 0)))} onChange={event=>setPaymentDrafts(current=>({...current,[order.id]:event.target.value}))} aria-label={"Payment amount for "+order.serviceName}/><button className="sd-small-button" type="button" onClick={()=>recordDemoPayment(order.id,Number(paymentDrafts[order.id] ?? Math.max(0, order.price - (order.paidAmount || 0))))}>Record amount</button></span></label>}<label>Request status<select value={order.status} onChange={event => updateOrder(order.id, event.target.value)}><option>New request</option><option>Reviewing</option><option>Accepted</option><option>In progress</option><option>Completed</option><option>Declined</option></select></label></div><ReceiptDocument businessName={businessName.trim() || "Your Business"} currency={businessCurrency} accentColor={themeColor} receiptProfile={data.receiptProfile} order={order}/><div className="sd-admin-thread"><strong>Customer conversation · {(order.messages || []).length} messages</strong>{(order.messages || []).map(message => <div className={"sd-admin-thread-message is-" + message.from} key={message.id}><b>{message.from === "customer" ? "Customer" : "Studio / Admin"}</b><small>{new Date(message.createdAt).toLocaleString()}</small>{message.text && <p>{message.text}</p>}{message.attachment && <a href={message.attachment.url} target="_blank" rel="noreferrer">↗ {message.attachment.name}</a>}</div>)}<form onSubmit={event => { event.preventDefault(); replyToOrder(order.id); }}><label>Reply to customer<textarea rows={2} value={adminReplyDrafts[order.id] || ""} onChange={event => setAdminReplyDrafts(current => ({ ...current, [order.id]: event.target.value }))} placeholder="Write a project update or question…" maxLength={1200}/></label><button className="sd-small-button" type="submit" disabled={!(adminReplyDrafts[order.id] || "").trim()}>Save reply to local thread →</button></form></div></article>)}</div>}</section></div><section className="sd-admin-panel sd-capacity-reference" data-admin-tab="insights">
+<div className="sd-panel-head sd-request-head" id="admin-requests-tools"><div><span className="sd-kicker">03 / INCOMING WORK</span><h2>Customer requests</h2></div></div>{data.orders.length === 0 ? <div className="sd-admin-empty">No requests yet. Submit a customer request from the Store to see it appear here.</div> : <div className="sd-admin-orders">{data.orders.map(order => <article key={order.id}><div className="sd-admin-order-top"><strong>{order.serviceName} · {money(order.price)} {order.isTest && <span className="sd-test-label">TEST</span>}</strong><span>{order.id}</span></div><p>{order.customerName} · {order.email}{order.whatsapp ? " · WhatsApp " + order.whatsapp : ""}</p><p>Requested date: <b>{order.dueDate}</b></p>{order.serviceItems?.some(item => item.price === 0) && !order.quotedPrice && <div className="sd-admin-quote"><strong>Custom product / service · quote needed</strong><label>Total quote ({businessCurrency})<input type="number" min="0.01" step="0.01" value={quoteDrafts[order.id] || ""} onChange={event => setQuoteDrafts(current => ({ ...current, [order.id]: event.target.value }))} placeholder="Enter the full request total"/></label><button type="button" className="sd-small-button" onClick={() => sendCustomQuote(order.id)}>Send quote to Customer Account →</button></div>}{order.quotedPrice && <p><strong>Business quote:</strong> {money(order.quotedPrice)} · sent to customer</p>}<p>Payment: <b>{order.paymentStatus || "Unpaid"}</b> · {money(order.paidAmount || 0)} received · {money(Math.max(0,order.price-(order.paidAmount||0)))} due</p>{order.discountAmount ? <p>Discount: <b>{money(order.discountAmount)} off · {order.discountCode}</b> (regular {money(order.originalPrice || order.price + order.discountAmount)})</p> : null}{order.brief && <p>{order.brief}</p>}<div className="sd-order-admin-actions">{Math.max(0, order.price - (order.paidAmount || 0)) > 0 && <label className="sd-payment-entry">Record payment (preview)<span><input type="number" min="0.01" max={Math.max(0, order.price - (order.paidAmount || 0))} step="0.01" value={paymentDrafts[order.id] ?? String(Math.max(0, order.price - (order.paidAmount || 0)))} onChange={event=>setPaymentDrafts(current=>({...current,[order.id]:event.target.value}))} aria-label={"Payment amount for "+order.serviceName}/><button className="sd-small-button" type="button" onClick={()=>recordPreviewPayment(order.id,Number(paymentDrafts[order.id] ?? Math.max(0, order.price - (order.paidAmount || 0))))}>Record amount</button></span></label>}<label>Request status<select value={order.status} onChange={event => updateOrder(order.id, event.target.value)}><option>New request</option><option>Reviewing</option><option>Accepted</option><option>In progress</option><option>Completed</option><option>Declined</option></select></label></div><ReceiptDocument businessName={businessName.trim() || "Prospec Group"} currency={businessCurrency} accentColor={themeColor} receiptProfile={data.receiptProfile} order={order}/><div className="sd-admin-thread"><strong>Customer conversation · {(order.messages || []).length} messages</strong>{(order.messages || []).map(message => <div className={"sd-admin-thread-message is-" + message.from} key={message.id}><b>{message.from === "customer" ? "Customer" : "Studio / Admin"}</b><small>{new Date(message.createdAt).toLocaleString()}</small>{message.text && <p>{message.text}</p>}{message.attachment && <a href={message.attachment.url} target="_blank" rel="noreferrer">↗ {message.attachment.name}</a>}</div>)}<form onSubmit={event => { event.preventDefault(); replyToOrder(order.id); }}><label>Reply to customer<textarea rows={2} value={adminReplyDrafts[order.id] || ""} onChange={event => setAdminReplyDrafts(current => ({ ...current, [order.id]: event.target.value }))} placeholder="Write a project update or question…" maxLength={1200}/></label><button className="sd-small-button" type="submit" disabled={!(adminReplyDrafts[order.id] || "").trim()}>Save reply to local thread →</button></form></div></article>)}</div>}</section></div><section className="sd-admin-panel sd-capacity-reference" data-admin-tab="insights">
   <div className="sd-panel-head"><div><span className="sd-kicker">APP ACTIVITY / LOCAL ANALYTICS</span><h2>Work happening behind the scenes</h2></div><span className="sd-local-pill">THIS BROWSER</span></div>
-  <p className="sd-admin-help">See the work this demo has actually recorded: Store visits in this browser, product / service selections, account opens and enquiries saved locally. This is useful activity—not a claim that a sale has happened.</p>
+  <p className="sd-admin-help">See the work this preview has actually recorded: Store visits in this browser, product / service selections, account opens and enquiries saved locally. This is useful activity—not a claim that a sale has happened.</p>
   <div className="sd-capacity-grid sd-local-activity-grid">
     <article><strong>{recordedVisits.toLocaleString()}</strong><span>Store visits recorded in this browser</span></article>
     <article><strong>{serviceSelections.toLocaleString()}</strong><span>Product / service selections started</span></article>
@@ -1417,8 +1417,8 @@ return <main className="serviceDemo" style={{ "--studio-accent": themeColor, "--
     <article><strong>{data.orders.length.toLocaleString()}</strong><span>Enquiries saved on this device</span></article>
   </div>
   <div className="sd-local-analytics-columns">
-    <article className="sd-local-footprint-card"><span className="sd-kicker">LOCAL DATA FOOTPRINT</span><strong>{formatLocalBytes(localStorageBytes)}</strong><p>Approximate saved data measured in this browser, including business setup, notes and demo records.</p><span className="sd-local-pill">Measured locally · this device</span></article>
-    <article className="sd-firebase-capacity-card"><span className="sd-kicker">ADMIN HUB CAPACITY TARGET</span><strong>25 GB / month</strong><p>Compare this browser&apos;s saved data with the monthly cloud capacity maintained by the Admin Hub.</p><div className="sd-capacity-comparison"><div className="sd-capacity-comparison-labels"><strong>{formatLocalBytes(localStorageBytes)} used locally</strong><strong>{localCapacityPercentLabel} of capacity</strong></div><div className="sd-capacity-scale" role="img" aria-label={localCapacityPercent === null ? "Local data size unavailable; Admin Hub capacity target is 25 gigabytes" : `${formatLocalBytes(localStorageBytes)} local data, ${localCapacityPercentLabel} of the 25 gigabyte Admin Hub capacity target`}><div className="sd-capacity-scale-fill" style={{ width: `${localCapacityPercent ?? 0}%` }} /></div><div className="sd-capacity-scale-labels"><span>0 GB</span><span>25 GB target</span></div></div><small className="sd-capacity-scale-note">This compares this browser’s local demo data with the Admin Hub’s 25 GB planning target. It is not live cloud metering; Firebase is not connected to this prototype.</small></article>
+    <article className="sd-local-footprint-card"><span className="sd-kicker">LOCAL DATA FOOTPRINT</span><strong>{formatLocalBytes(localStorageBytes)}</strong><p>Approximate saved data measured in this browser, including business setup, notes and preview records.</p><span className="sd-local-pill">Measured locally · this device</span></article>
+    <article className="sd-firebase-capacity-card"><span className="sd-kicker">ADMIN HUB CAPACITY TARGET</span><strong>25 GB / month</strong><p>Compare this browser&apos;s saved data with the monthly cloud capacity maintained by the Admin Hub.</p><div className="sd-capacity-comparison"><div className="sd-capacity-comparison-labels"><strong>{formatLocalBytes(localStorageBytes)} used locally</strong><strong>{localCapacityPercentLabel} of capacity</strong></div><div className="sd-capacity-scale" role="img" aria-label={localCapacityPercent === null ? "Local data size unavailable; Admin Hub capacity target is 25 gigabytes" : `${formatLocalBytes(localStorageBytes)} local data, ${localCapacityPercentLabel} of the 25 gigabyte Admin Hub capacity target`}><div className="sd-capacity-scale-fill" style={{ width: `${localCapacityPercent ?? 0}%` }} /></div><div className="sd-capacity-scale-labels"><span>0 GB</span><span>25 GB target</span></div></div><small className="sd-capacity-scale-note">This compares this browser’s local preview data with the Admin Hub’s 25 GB planning target. It is not live cloud metering; Firebase is not connected to this prototype.</small></article>
   </div>
   <details className="sd-insights-deep-dive"><summary><span><strong>Infrastructure & capacity planning</strong><small>Hosting, database, storage assumptions and workload calculator</small></span><b>Explore details</b></summary>
   <section className="sd-infrastructure-panel" aria-labelledby="sd-infrastructure-title">
@@ -1429,7 +1429,7 @@ return <main className="serviceDemo" style={{ "--studio-accent": themeColor, "--
     <p className="sd-infrastructure-intro">A domain is the address, not the computer. DNS points that address to Vercel, whose managed infrastructure delivers the app. A connected database would then keep customer and business records in the cloud.</p>
     <div className="sd-infrastructure-flow">
       <article className="sd-infrastructure-node is-current">
-        <span className="sd-infrastructure-step">01 · CUSTOMER</span><strong>Visitor&apos;s browser</strong><p>Opens the Store, browses services and chooses an item. In this demo, clicks and saved requests are handled here.</p><span className="sd-infrastructure-tag">Browser activity · measured locally</span>
+        <span className="sd-infrastructure-step">01 · CUSTOMER</span><strong>Visitor&apos;s browser</strong><p>Opens the Store, browses services and chooses an item. In this preview, clicks and saved requests are handled here.</p><span className="sd-infrastructure-tag">Browser activity · measured locally</span>
       </article>
       <span className="sd-infrastructure-arrow" aria-hidden="true">→</span>
       <article className="sd-infrastructure-node is-current">
@@ -1437,7 +1437,7 @@ return <main className="serviceDemo" style={{ "--studio-accent": themeColor, "--
       </article>
       <span className="sd-infrastructure-arrow" aria-hidden="true">→</span>
       <article className="sd-infrastructure-node is-planned">
-        <span className="sd-infrastructure-step">03 · COMPUTE</span><strong>Vercel Functions</strong><p>Runs server-side work when a real cloud action needs it—such as validating and saving an enquiry. Functions scale with demand and can scale down when idle.</p><span className="sd-infrastructure-tag">Future connection · not active in demo</span>
+        <span className="sd-infrastructure-step">03 · COMPUTE</span><strong>Vercel Functions</strong><p>Runs server-side work when a real cloud action needs it—such as validating and saving an enquiry. Functions scale with demand and can scale down when idle.</p><span className="sd-infrastructure-tag">Future connection · not active in preview</span>
       </article>
       <span className="sd-infrastructure-arrow" aria-hidden="true">→</span>
       <article className="sd-infrastructure-node is-planned">
@@ -1448,7 +1448,7 @@ return <main className="serviceDemo" style={{ "--studio-accent": themeColor, "--
       <div><strong>Available around the clock</strong><p>The public site can be reachable 24/7. That does not mean one app server is burning CPU at full power all day: cached content is served by the CDN, while serverless compute runs when invoked.</p></div>
       <div><strong>Where the machines are</strong><p>Google lists Firestore&apos;s Johannesburg region. Vercel Functions default to Washington, D.C. unless configured; Cape Town is its listed South African compute region. A future deployment should deliberately choose the closest supported compute region and test database latency. Neither connection is active here.</p></div>
       <div><strong>Real-world infrastructure</strong><p>Data centres use physical servers, networking, electricity, cooling and backup systems. This prototype has no provider-side energy or live resource telemetry, so it does not invent those measurements.</p></div>
-      <div><strong>Public visitor or owner?</strong><p>Public browsing stays anonymous. A customer becomes an account holder through an explicit account flow; an owner signs in separately. The cloud version must enforce roles at the server and database rules—not trust a browser label. This demo&apos;s owner passphrase is not production authentication.</p></div>
+      <div><strong>Public visitor or owner?</strong><p>Public browsing stays anonymous. A customer becomes an account holder through an explicit account flow; an owner signs in separately. The cloud version must enforce roles at the server and database rules—not trust a browser label. This preview&apos;s owner passphrase is not production authentication.</p></div>
     </div>
   </section>
   <section className="sd-capacity-playground" aria-labelledby="sd-capacity-playground-title">
@@ -1456,9 +1456,9 @@ return <main className="serviceDemo" style={{ "--studio-accent": themeColor, "--
     <p className="sd-infrastructure-intro">This joins your Admin Hub 25 GB storage target with Vercel Hobby&apos;s monthly compute allowance. Storage and compute are different limits: the 25 GB target estimates how much record data can accumulate; Vercel resources estimate how much server-side work can be processed. The customer/day result is a scenario, not a load-test result.</p>
     <div className="sd-capacity-business-results"><span className="sd-kicker">SCENARIO OUTPUT · NOT LIVE TELEMETRY</span><div className="sd-capacity-hero-metric"><strong>{estimatedCustomersPerDay.toLocaleString()}</strong><span>estimated customer journeys/day within the tightest Hobby compute budget</span></div><div className="sd-capacity-limit-breakdown"><div><span>Invocation allowance</span><strong>{estimatedDailyByInvocations.toLocaleString()} / day</strong></div><div><span>Active CPU allowance</span><strong>{estimatedDailyByCpu.toLocaleString()} / day</strong></div><div><span>Provisioned memory allowance</span><strong>{estimatedDailyByMemory.toLocaleString()} / day</strong></div><p>Current model bottleneck: <strong>{limitingResource}</strong>. Monthly Hobby allowances are spread evenly across 30 days.</p></div><div className="sd-capacity-labour-result"><strong>{Math.round(estimatedCustomersHandledWithoutOwner).toLocaleString()}</strong><span>routine conversations potentially handled without the owner replying</span><strong>{estimatedOwnerHoursReleased.toFixed(1)} hours</strong><span>equivalent staff-hours of repetitive handling represented per day</span></div><p>This is labour-equivalent time, not a claim that one person works more than 24 hours. It illustrates how much repetitive handling could be absorbed so the owner can take time away and return for exceptions, qualified opportunities and human decisions.</p></div>
     <section className="sd-live-work-snapshot" aria-label="Recorded activity in this browser">
-      <div className="sd-live-work-heading"><div><span className="sd-kicker">📍 WHAT HAS ACTUALLY HAPPENED</span><h4>This demo&apos;s activity so far</h4><p>Real counts saved in this browser — not estimated cloud usage.</p></div><span className="sd-live-local-tag">💻 THIS DEVICE ONLY</span></div>
+      <div className="sd-live-work-heading"><div><span className="sd-kicker">📍 WHAT HAS ACTUALLY HAPPENED</span><h4>This preview&apos;s activity so far</h4><p>Real counts saved in this browser — not estimated cloud usage.</p></div><span className="sd-live-local-tag">💻 THIS DEVICE ONLY</span></div>
       <div className="sd-live-work-grid">
-        <article><span aria-hidden="true">👀</span><strong>{recordedVisits.toLocaleString()}</strong><b>Store visits</b><small>Times the local demo recorded a visit</small></article>
+        <article><span aria-hidden="true">👀</span><strong>{recordedVisits.toLocaleString()}</strong><b>Store visits</b><small>Times the local preview recorded a visit</small></article>
         <article><span aria-hidden="true">🛍️</span><strong>{serviceSelections.toLocaleString()}</strong><b>Services explored</b><small>Product / service selections recorded</small></article>
         <article><span aria-hidden="true">📨</span><strong>{localRequestsRecorded.toLocaleString()}</strong><b>Requests saved</b><small>Customer enquiries saved in this browser</small></article>
         <article><span aria-hidden="true">👤</span><strong>{accountOpens.toLocaleString()}</strong><b>Account visits</b><small>Account openings recorded locally</small></article>
@@ -1499,13 +1499,13 @@ return <main className="serviceDemo" style={{ "--studio-accent": themeColor, "--
   </div>
   <p className="sd-admin-help sd-local-analytics-boundary">Important boundary: visitors using another phone, browser or device do not appear in this local count. The app does not listen to public traffic across devices in this iteration. There is no shared visitor analytics, Firebase telemetry or cross-device sync yet.</p>
   </details>
-</section><section className="sd-admin-panel sd-owner-notes" id="admin-notes" data-admin-tab="notes"><div className="sd-panel-head"><div><span className="sd-kicker">PRIVATE BRIEFCASE / NOTES</span><h2>My Notes</h2></div><span className="sd-local-pill">THIS DEVICE</span></div><p className="sd-admin-help">Capture priorities, decisions, reminders and ideas for the business. Notes are private to this browser profile in this demo; they are not synced or encrypted as an owner account.</p><label className="sd-admin-label" htmlFor="owner-notes">Working notes</label><textarea id="owner-notes" rows={8} maxLength={12000} value={ownerNotes} onChange={event => setOwnerNotes(event.target.value)} placeholder="Today’s priorities…&#10;Decisions to revisit…&#10;Ideas to develop…" /><div className="sd-notes-meta"><span>{ownerNotes.length.toLocaleString()} / 12,000 characters</span><span>{notesReady ? "Auto-saves on this device" : "Loading notes…"}</span></div></section><div className="sd-admin-footer"><button className="sd-button sd-outline" onClick={() => setPendingConfirm({ kind: "reset-demo" })}>Reset demo data</button><p>Prototype only · no Firebase · no shared admin/customer records</p></div></section>}
+</section><section className="sd-admin-panel sd-owner-notes" id="admin-notes" data-admin-tab="notes"><div className="sd-panel-head"><div><span className="sd-kicker">PRIVATE BRIEFCASE / NOTES</span><h2>My Notes</h2></div><span className="sd-local-pill">THIS DEVICE</span></div><p className="sd-admin-help">Capture priorities, decisions, reminders and ideas for the business. Notes are private to this browser profile in this preview; they are not synced or encrypted as an owner account.</p><label className="sd-admin-label" htmlFor="owner-notes">Working notes</label><textarea id="owner-notes" rows={8} maxLength={12000} value={ownerNotes} onChange={event => setOwnerNotes(event.target.value)} placeholder="Today’s priorities…&#10;Decisions to revisit…&#10;Ideas to develop…" /><div className="sd-notes-meta"><span>{ownerNotes.length.toLocaleString()} / 12,000 characters</span><span>{notesReady ? "Auto-saves on this device" : "Loading notes…"}</span></div></section><div className="sd-admin-footer"><button className="sd-button sd-outline" onClick={() => setPendingConfirm({ kind: "reset-preview" })}>Reset preview data</button><p>Prototype only · no Firebase · no shared admin/customer records</p></div></section>}
 
 
 
-    <footer className="sd-footer"><div className="sd-wrap sd-footer-inner"><div className="sd-footer-systems" role="group" aria-label="Your operating systems"><button className="sd-owner-briefcase" type="button" onClick={launchOwnerBriefcase} aria-label="Open owner Briefcase" title="Open owner Briefcase"><span aria-hidden="true">💼</span><strong>Owner Briefcase</strong><small>Business workspace</small></button><a className="sd-owner-backpack" href="https://iteration14.vercel.app/" aria-label="Open BACKPACK OS" title="Open BACKPACK OS"><img src="/backpack-icon.svg?v=4" alt="" aria-hidden="true"/><strong>Backpack OS</strong><small>Personal workspace</small></a></div></div></footer>{launchingBriefcase&&<div className="sd-system-transition" role="status" aria-live="polite"><div className="sd-transition-emblem">💼</div><span>i13 · BUSINESS OPERATING SYSTEM</span><strong>Your Briefcase is opening</strong><small>Preparing owner access…</small></div>}
-    {pendingConfirm && <div className="sd-confirm-backdrop" onClick={() => setPendingConfirm(null)}><section className="sd-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="sd-confirm-title" aria-describedby="sd-confirm-description" onClick={event => event.stopPropagation()}><span className="sd-kicker">CONFIRM ACTION</span><h2 id="sd-confirm-title">{pendingConfirm.kind === "reset-demo" ? "Reset demo data?" : pendingConfirm.kind === "overwrite-business" ? "Replace the saved business?" : `Delete ${pendingConfirm.serviceName || "this product / service"}?`}</h2><p id="sd-confirm-description">{pendingConfirm.kind === "reset-demo" ? "This clears local requests, product / service edits and the announcement, restoring the starter examples on this device." : pendingConfirm.kind === "overwrite-business" ? "This replaces the current business name, colours, currency and products / services. Its saved customer requests, messages and owner notes on this device will also be cleared. This cannot be undone." : "This removes the product / service from this browser demo. Existing requests keep their saved product / service name and price."}</p><div className="sd-confirm-actions"><button type="button" className="sd-button sd-outline" autoFocus onClick={() => setPendingConfirm(null)}>Keep it</button><button type="button" className="sd-button sd-primary" onClick={() => { const action = pendingConfirm; setPendingConfirm(null); if (action.kind === "reset-demo") { if (commitData(() => ({ ...emptyData, views: data.views }), "Demo data reset on this device.")) { setAnnouncementDraft(""); setAnnouncementImageDraft(""); setAnnouncementEnabledDraft(false); resetServiceForm(); } } else if (action.kind === "overwrite-business") { completeBusinessIdentity(true); } else if (action.serviceId) { if (commitData(current => ({ ...current, services: current.services.filter(item => item.id !== action.serviceId) }), `${action.serviceName || "Service"} deleted from this demo.`) && editingId === action.serviceId) resetServiceForm(); } }}>Confirm</button></div></section></div>}
-    {notice && <div className="sd-toast-region"><div className={"sd-toast" + (/^(Choose|Add |Enter |The browser|Local demo storage|Could not save)/i.test(notice) ? " is-error" : " is-success")} role={/^(Choose|Add |Enter |The browser|Local demo storage|Could not save)/i.test(notice) ? "alert" : "status"}><span className="sd-toast-mark" aria-hidden="true">{/^(Choose|Add |Enter |The browser|Local demo storage|Could not save)/i.test(notice) ? "!" : "✓"}</span><p>{notice}</p><button type="button" aria-label="Dismiss message" onClick={() => setNotice("")}>×</button></div></div>}
+    <footer className="sd-footer"><div className="sd-wrap sd-footer-inner"><div className="sd-footer-systems" role="group" aria-label="Owner access"><button className="sd-owner-briefcase prospec-owner-entry" type="button" onClick={launchOwnerBriefcase} aria-label="Open Prospec owner Briefcase" title="Owner Briefcase"><img src="/briefcase-mark.svg" alt="" aria-hidden="true"/></button></div><span className="prospec-footer-signoff">PROSPEC GROUP · PITBULLS OF BRANDING</span></div></footer>{launchingBriefcase&&<div className="sd-system-transition" role="status" aria-live="polite"><div className="sd-transition-emblem">💼</div><span>PROSPEC GROUP · BUSINESS OPERATING SYSTEM</span><strong>Your Briefcase is opening</strong><small>Preparing owner access…</small></div>}
+    {pendingConfirm && <div className="sd-confirm-backdrop" onClick={() => setPendingConfirm(null)}><section className="sd-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="sd-confirm-title" aria-describedby="sd-confirm-description" onClick={event => event.stopPropagation()}><span className="sd-kicker">CONFIRM ACTION</span><h2 id="sd-confirm-title">{pendingConfirm.kind === "reset-preview" ? "Reset preview data?" : pendingConfirm.kind === "overwrite-business" ? "Replace the saved business?" : `Delete ${pendingConfirm.serviceName || "this product / service"}?`}</h2><p id="sd-confirm-description">{pendingConfirm.kind === "reset-preview" ? "This clears local requests, product / service edits and the announcement, restoring the starter examples on this device." : pendingConfirm.kind === "overwrite-business" ? "This replaces the current business name, colours, currency and products / services. Its saved customer requests, messages and owner notes on this device will also be cleared. This cannot be undone." : "This removes the product / service from this browser preview. Existing requests keep their saved product / service name and price."}</p><div className="sd-confirm-actions"><button type="button" className="sd-button sd-outline" autoFocus onClick={() => setPendingConfirm(null)}>Keep it</button><button type="button" className="sd-button sd-primary" onClick={() => { const action = pendingConfirm; setPendingConfirm(null); if (action.kind === "reset-preview") { if (commitData(() => ({ ...emptyData, views: data.views }), "Preview data reset on this device.")) { setAnnouncementDraft(""); setAnnouncementImageDraft(""); setAnnouncementEnabledDraft(false); resetServiceForm(); } } else if (action.kind === "overwrite-business") { completeBusinessIdentity(true); } else if (action.serviceId) { if (commitData(current => ({ ...current, services: current.services.filter(item => item.id !== action.serviceId) }), `${action.serviceName || "Service"} deleted from this preview.`) && editingId === action.serviceId) resetServiceForm(); } }}>Confirm</button></div></section></div>}
+    {notice && <div className="sd-toast-region"><div className={"sd-toast" + (/^(Choose|Add |Enter |The browser|Local preview storage|Could not save)/i.test(notice) ? " is-error" : " is-success")} role={/^(Choose|Add |Enter |The browser|Local preview storage|Could not save)/i.test(notice) ? "alert" : "status"}><span className="sd-toast-mark" aria-hidden="true">{/^(Choose|Add |Enter |The browser|Local preview storage|Could not save)/i.test(notice) ? "!" : "✓"}</span><p>{notice}</p><button type="button" aria-label="Dismiss message" onClick={() => setNotice("")}>×</button></div></div>}
     </>}
   </main>;
 }

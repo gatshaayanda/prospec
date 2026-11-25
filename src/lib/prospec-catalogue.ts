@@ -1,0 +1,42 @@
+export type ProspecCatalogueItem = { id:string; name:string; industry:string; price:number; description:string; media:string; mediaType:"image"|"video"; active:boolean; custom?:boolean };
+export const prospecCatalogue: ProspecCatalogueItem[] = [
+  {id:"ag-brand-strategy",name:"Brand strategy & positioning",industry:"Prospec AG",price:0,description:"Brand direction, positioning and a clearer plan for how your business shows up.",media:"",mediaType:"image",active:true,custom:true},
+  {id:"ag-marketing-campaigns",name:"Marketing & advertising campaigns",industry:"Prospec AG",price:0,description:"Campaign planning and execution shaped around your audience and objectives.",media:"",mediaType:"image",active:true,custom:true},
+  {id:"ag-public-relations",name:"Public relations & communications",industry:"Prospec AG",price:0,description:"Communications support, public relations and reputation-building work.",media:"",mediaType:"image",active:true,custom:true},
+  {id:"ag-content-management",name:"Content & social media management",industry:"Prospec AG",price:0,description:"Content planning, creation and channel management for your brand.",media:"",mediaType:"image",active:true,custom:true},
+  {id:"ag-brand-identity",name:"Brand identity & creative design",industry:"Prospec AG",price:0,description:"Creative direction and brand assets that help your business communicate clearly.",media:"",mediaType:"image",active:true,custom:true},
+  {id:"supplies-procurement",name:"General supplies procurement",industry:"Prospec Supplies",price:0,description:"Tell us what your organisation needs. We source locally or internationally and prepare a quotation.",media:"",mediaType:"image",active:true,custom:true},
+  {id:"supplies-local-sourcing",name:"Local sourcing",industry:"Prospec Supplies",price:0,description:"Sourcing and procurement support from suppliers in Botswana.",media:"",mediaType:"image",active:true,custom:true},
+  {id:"supplies-international-sourcing",name:"International sourcing",industry:"Prospec Supplies",price:0,description:"Product discovery and sourcing support beyond Botswana, with a quote prepared for your requirements.",media:"",mediaType:"image",active:true,custom:true},
+  {id:"nfc-digital-card",name:"NFC digital business card",industry:"Prospec NFC",price:0,description:"A tap-to-share digital business card. Enquire with your preferred details and quantity.",media:"",mediaType:"image",active:true,custom:true},
+  {id:"nfc-qr-card",name:"QR digital business card",industry:"Prospec NFC",price:0,description:"A scannable digital profile for sharing your business details.",media:"",mediaType:"image",active:true,custom:true},
+  {id:"nfc-tap-share-go",name:"Tap Share & Go setup",industry:"Prospec NFC",price:0,description:"A tailored NFC and QR setup for individuals, teams or organisations.",media:"",mediaType:"image",active:true,custom:true},
+  {id:"print-gazebo-3x3",name:"3m × 3m sublimated gazebo",industry:"Prospec AG Printing",price:5130,description:"Full-colour sublimated gazebo branding. Listed price: P5,130.",media:"",mediaType:"image",active:true},
+  {id:"print-football-kit-set",name:"Sublimated football kit (set)",industry:"Prospec AG Printing",price:3800,description:"Custom sublimated football kit set. Listed price: P3,800.",media:"",mediaType:"image",active:true},
+  {id:"print-wall-banner-3x225",name:"3m × 2.25m sublimated wall banner",industry:"Prospec AG Printing",price:3779.99,description:"Large-format sublimated wall banner. Listed price: P3,779.99.",media:"",mediaType:"image",active:true},
+  {id:"print-telescopic-set-4m",name:"4m telescopic banner set (2)",industry:"Prospec AG Printing",price:2849.99,description:"Set of two 4m sublimated telescopic banners. Listed price: P2,849.99.",media:"",mediaType:"image",active:true},
+  {id:"print-telescopic-3m",name:"3m sublimated telescopic banner",industry:"Prospec AG Printing",price:2069.99,description:"Sublimated 3m telescopic banner. Listed price: P2,069.99.",media:"",mediaType:"image",active:true},
+  {id:"print-teardrop-3m",name:"3m sublimated teardrop banner",industry:"Prospec AG Printing",price:1799.99,description:"Sublimated 3m teardrop banner. Listed price: P1,799.99.",media:"",mediaType:"image",active:true},
+  {id:"print-popup-2x1",name:"2m × 1m pop-up banner",industry:"Prospec AG Printing",price:1709.99,description:"Pop-up display banner. Listed price: P1,709.99.",media:"",mediaType:"image",active:true},
+  {id:"print-directors-chair",name:"Sublimated director's chair",industry:"Prospec AG Printing",price:1249.99,description:"Branded sublimated director's chair. Listed price: P1,249.99.",media:"",mediaType:"image",active:true},
+  {id:"print-pullup-2m",name:"Standard 2m pull-up banner",industry:"Prospec AG Printing",price:584.99,description:"Standard 2m pull-up banner. Listed price: P584.99.",media:"",mediaType:"image",active:true},
+  {id:"print-wall-vinyl",name:"Printable wall vinyl",industry:"Prospec AG Printing",price:550,description:"Printable wall vinyl, priced per square metre. Listed price: P550/m².",media:"",mediaType:"image",active:true},
+  {id:"print-door-labels",name:"Aluminium door labels",industry:"Prospec AG Printing",price:549.99,description:"Aluminium door labels. Listed price: P549.99.",media:"",mediaType:"image",active:true},
+  {id:"print-golf-shirt",name:"Sublimated golf T-shirt",industry:"Prospec AG Printing",price:220,description:"Sublimated golf T-shirt. Listed price: P220.",media:"",mediaType:"image",active:true},
+  {id:"print-round-v-neck",name:"Sublimated round-neck / V-neck T-shirt",industry:"Prospec AG Printing",price:194.99,description:"Sublimated round-neck or V-neck T-shirt. Listed price: P194.99.",media:"",mediaType:"image",active:true},
+  {id:"print-a5-flyers",name:"A5 flyers (100)",industry:"Prospec AG Printing",price:159.99,description:"A5 flyers, pack of 100. Listed price: P159.99.",media:"",mediaType:"image",active:true},
+  {id:"print-car-branding",name:"Car branding",industry:"Prospec AG Printing",price:149.99,description:"Vehicle branding, priced per square metre. Listed price: P149.99/m².",media:"",mediaType:"image",active:true},
+  {id:"print-bucket-hat",name:"Sublimated bucket hat",industry:"Prospec AG Printing",price:94.99,description:"Sublimated bucket hat. Listed price: P94.99.",media:"",mediaType:"image",active:true},
+  {id:"print-dtf-a4",name:"DTF printing (A4)",industry:"Prospec AG Printing",price:44.99,description:"DTF print, A4 size. Listed price: P44.99.",media:"",mediaType:"image",active:true},
+  {id:"print-embroidery-pocket",name:"Pocket-size embroidery",industry:"Prospec AG Printing",price:34.99,description:"Pocket-size embroidery. Listed price: P34.99.",media:"",mediaType:"image",active:true},
+  {id:"print-uv",name:"UV printing",industry:"Prospec AG Printing",price:34.99,description:"UV printing. Listed price: P34.99.",media:"",mediaType:"image",active:true},
+  {id:"print-sock-banner",name:"Sock banner (0.8m × 2m)",industry:"Prospec AG Printing",price:0,description:"Enquire for the current specification and quotation.",media:"",mediaType:"image",active:true,custom:true},
+  {id:"print-kit-designs",name:"Football kit designs",industry:"Prospec AG Printing",price:0,description:"Browse design options and request a quotation.",media:"",mediaType:"image",active:true,custom:true},
+  {id:"print-kit-design-catalogue",name:"Football kit design catalogue",industry:"Prospec AG Printing",price:0,description:"Ask us for the available design catalogue and a tailored quotation.",media:"",mediaType:"image",active:true,custom:true}
+];
+export const prospecDivisions = [
+ {name:"Prospec AG",subtitle:"Marketing & Advertising",detail:"Strategy, campaigns, PR, branding and content.",marker:"AG"},
+ {name:"Prospec Supplies",subtitle:"Procurement & Sourcing",detail:"Local and international sourcing, without the guesswork.",marker:"SUP"},
+ {name:"Prospec NFC",subtitle:"Digital Identity",detail:"NFC and QR business cards. Tap Share & Go.",marker:"NFC"},
+ {name:"Prospec AG Printing",subtitle:"Print & Branded Products",detail:"Large format, sublimation, heatpress, signage and more.",marker:"PRINT"}
+] as const;
