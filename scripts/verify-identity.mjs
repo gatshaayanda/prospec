@@ -16,7 +16,8 @@ const page = read("src/app/page.tsx");
 if (manifest.name !== "Prospec Group | Pitbulls of Branding") failures.push("manifest: wrong Prospec application name");
 if (manifest.short_name !== "Prospec") failures.push("manifest: wrong short name");
 if (manifest.theme_color !== "#00B9C7") failures.push("manifest: wrong theme colour");
-if (!manifest.icons?.some((icon) => icon.src === "/prospec-icon.svg" && icon.sizes === "192x192") || !manifest.icons?.some((icon) => icon.src === "/prospec-icon.svg" && icon.sizes === "512x512")) failures.push("manifest: explicit 192px and 512px install icons missing");
+if (!manifest.icons?.some((icon) => icon.src === "/prospec-icon-192.png" && icon.sizes === "192x192" && icon.type === "image/png") || !manifest.icons?.some((icon) => icon.src === "/prospec-icon-512.png" && icon.sizes === "512x512" && icon.type === "image/png")) failures.push("manifest: explicit 192px and 512px PNG install icons missing");
+for (const iconPath of ["public/prospec-icon-192.png","public/prospec-icon-512.png"]) if (!fs.existsSync(path.join(root,iconPath))) failures.push("manifest: install icon asset missing: "+iconPath);
 if (!appManifest.includes('name: "Prospec Group | Pitbulls of Branding"')) failures.push("app manifest: wrong application name");
 if (!layout.includes('applicationName:"Prospec Group"')) failures.push("layout: wrong application name");
 if (!layout.includes('title:{default:"Prospec Group | Pitbulls of Branding"')) failures.push("layout: wrong default title");
@@ -31,7 +32,7 @@ if (!layout.includes("__iteration13InstallPrompt") || !layout.includes("beforein
 if (!layout.includes('<PwaRegister initialEmbedded={embedded} initialAndroid={android}/>{children}')) failures.push("PWA layout: install card must remain mounted before page content");
 if (!/\.i13-install-card\s*\{[^}]*position:\s*fixed[^}]*left:\s*16px[^}]*right:\s*16px[^}]*bottom:\s*16px/s.test(installCss)) failures.push("PWA install card: protected bottom-fixed mobile placement changed");
 if (!/@media\s*\(min-width:\s*700px\)\s*\{\.i13-install-card\s*\{[^}]*left:\s*auto[^}]*right:\s*18px[^}]*bottom:\s*18px[^}]*width:\s*350px/s.test(installCss)) failures.push("PWA install card: protected bottom-right desktop placement changed");
-if (!pwaRegister.includes("await prompt.prompt()") || !pwaRegister.includes("setCanInstall(true)") || !pwaRegister.includes("nativeInstall.call(navigator)")) failures.push("PWA install: browser-owned install API and deferred native prompt are not connected to the explicit action");
+if (!pwaRegister.includes("await prompt.prompt()") || !pwaRegister.includes("setCanInstall(true)") || !pwaRegister.includes("installPromptRef.current") || !pwaRegister.includes("onClick={() => { void install(); }}")) failures.push("PWA install: retained browser-owned prompt is not connected to the explicit Install action");
 if (!pwaRegister.includes("(canInstall || canShowManualInstall)") || !pwaRegister.includes("isIosSafari()")) failures.push("PWA install: native prompt / iOS Safari visibility gate changed");
 if (!pwaRegister.includes('className={`i13-install-card') || !pwaRegister.includes('className="i13-install-close"') || !pwaRegister.includes("setInstallCardDismissed(true)")) failures.push("PWA install: dismissible branded card missing");
 if (!pwaRegister.includes("PROSPEC GROUP")) failures.push("PWA install: Prospec branding missing");
