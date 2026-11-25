@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasProspecAdminSession } from "@/lib/admin-session";
-import { adminDb } from "@/lib/firebase/admin";
+import { getProspecAdminDb } from "@/lib/firebase/admin";
 
 export const runtime = "nodejs";
 
@@ -11,6 +11,7 @@ async function authorised() {
 export async function GET() {
   if (!(await authorised())) return NextResponse.json({ error: "Owner session required." }, { status: 401 });
   try {
+    const adminDb = getProspecAdminDb();
     const [storefront, enquiries] = await Promise.all([
       adminDb.collection("prospecPublic").doc("storefront").get(),
       adminDb.collection("prospecEnquiries").orderBy("createdAt", "desc").limit(500).get(),
@@ -27,6 +28,7 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   if (!(await authorised())) return NextResponse.json({ error: "Owner session required." }, { status: 401 });
   try {
+    const adminDb = getProspecAdminDb();
     const body = await request.json() as Record<string, unknown>;
     if (body.action === "storefront" && body.storefront && typeof body.storefront === "object") {
       const value = body.storefront as Record<string, unknown>;
