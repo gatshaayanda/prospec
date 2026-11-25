@@ -16,6 +16,7 @@ export type ReceiptOrder = {
   serviceName: string;
   serviceItems?: { id: string; name: string; price: number; custom?: boolean }[];
   quoteRequired?: boolean;
+  quotedPrice?: number;
   price: number;
   originalPrice?: number;
   discountAmount?: number;
@@ -94,12 +95,12 @@ export default function ReceiptDocument({ businessName, currency, accentColor, r
       <div className="sd-receipt-line"><span>{order.serviceName}</span><strong>{quotePending && total === 0 ? "Quote pending" : money(order.originalPrice ?? total)}</strong></div>
       {order.discountAmount ? <div className="sd-receipt-line is-discount"><span>Discount {order.discountCode ? "(" + order.discountCode + ")" : ""}</span><strong>−{money(order.discountAmount)}</strong></div> : null}
       <div className="sd-receipt-line is-total"><span>{quotePending ? (total > 0 ? "Listed subtotal · quote pending" : "Quote pending") : "Recorded preview total"}</span><strong>{quotePending && total === 0 ? "To be quoted" : money(total)}</strong></div>
-      <div className="sd-receipt-payment">
+      {quotePending ? <div className="sd-receipt-payment"><div><span>Payment status</span><strong>No payment recorded</strong></div></div> : <div className="sd-receipt-payment">
         <div><span>Payment recorded</span><strong>{money(paid)}</strong></div>
         <div><span>Balance outstanding</span><strong>{money(balance)}</strong></div>
         <div><span>Payment status</span><strong>{paymentState}</strong></div>
         <div><span>Last payment recorded</span><strong>{dateLabel(order.paidAt)}</strong></div>
-      </div>
+      </div>}
       {receiptProfile?.registration ? <p className="sd-receipt-tax">Business reference: {receiptProfile.registration}</p> : null}
       {order.brief ? <div className="sd-receipt-brief"><span>REQUEST NOTES</span><p>{order.brief}</p></div> : null}
       <footer className="sd-receipt-footer"><strong>{receiptProfile?.footer || "Thank you for your business."}</strong><small>Local Prospec preview record only. This app does not process or independently verify payments. Keep this document with the related job record.</small><button className="sd-small-button sd-receipt-download" type="button" onClick={printReceipt}>Download / print PDF</button></footer>
