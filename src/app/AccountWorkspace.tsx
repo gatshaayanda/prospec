@@ -9,7 +9,7 @@ const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
 export type AccountAttachment = { name: string; url: string; type: string; size: number };
 export type AccountMessage = { id: string; from: "customer" | "studio"; text: string; createdAt: string; attachment?: AccountAttachment };
-export type WorkspaceOrder = { id: string; serviceId: string; serviceName: string; serviceItems?: { id: string; name: string; price: number }[]; whatsapp?: string; notificationOptIn?: boolean; price: number; quotedPrice?: number; originalPrice?: number; discountAmount?: number; discountCode?: string; receiptNo?: string; paidAmount?: number; paidAt?: string; paymentStatus?: "Unpaid" | "Partially paid (demo)" | "Paid (demo)"; dueDate: string; customerName: string; email: string; brief: string; status: string; createdAt: string; statusUpdatedAt?: string; messages?: AccountMessage[] };
+export type WorkspaceOrder = { id: string; serviceId: string; serviceName: string; serviceItems?: { id: string; name: string; price: number }[]; whatsapp?: string; notificationOptIn?: boolean; price: number; quotedPrice?: number; originalPrice?: number; discountAmount?: number; discountCode?: string; receiptNo?: string; paidAmount?: number; paidAt?: string; paymentStatus?: "Unpaid" | "Partially paid (recorded)" | "Paid (recorded)"; dueDate: string; customerName: string; email: string; brief: string; status: string; createdAt: string; statusUpdatedAt?: string; messages?: AccountMessage[] };
 
 type DiscountClaim = { id: string; email: string; code: string; amount: number; lapTime: number; createdAt: string; status: "Available" | "Redeemed" };
 type Props = {
@@ -73,7 +73,7 @@ export default function AccountWorkspace({ businessName, currency, orders, disco
     const messageText = (drafts[order.id] || "").trim();
     if (!messageText && !attachment) { setUploadNotice("Write a message or attach a file before sending."); return; }
     const message: AccountMessage = { id: "MSG-" + Date.now().toString(36), from: "customer", text: messageText, createdAt: new Date().toISOString(), ...(attachment ? { attachment } : {}) };
-    onUpdateOrder(order.id, current => ({ ...current, messages: [...(current.messages || []), message] }), "Message saved in this browser's demo thread. The business can see it in the Admin demo on this device.");
+    onUpdateOrder(order.id, current => ({ ...current, messages: [...(current.messages || []), message] }), "Message saved in this browser preview. It appears in the Prospec Briefcase on this device only.");
     setDrafts(current => ({ ...current, [order.id]: "" }));
     setUploadNotice("Message added to this local preview conversation.");
     setOpenThread(order.id);
