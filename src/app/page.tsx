@@ -204,7 +204,7 @@ const brandColorOptions = [
 ];
 
 export default function Home() {
-  const [data, setData] = useState<PreviewData>(emptyData);
+  const [data, setData] = useState<PreviewData>({ ...emptyData, services: prospecCatalogue });
   const [sharedExample, setSharedExample] = useState<SharedExample | null>(null);
   const [isSharedExampleWorkspace, setIsSharedExampleWorkspace] = useState(false);
   const [shareLink, setShareLink] = useState("");
@@ -401,7 +401,7 @@ export default function Home() {
   const highlightColor = brandColors[2] || secondaryColor;
   const [themeReady, setThemeReady] = useState(false);
   const [identityReady, setIdentityReady] = useState(false);
-  const [identityComplete, setIdentityComplete] = useState(false);
+  const [identityComplete, setIdentityComplete] = useState(true);
   const sampleLaunchHandled = useRef(false);
   const [hasPreviousSetup, setHasPreviousSetup] = useState(false);
   const [savedBusinessOptions, setSavedBusinessOptions] = useState<SavedBusinessWorkspace[]>([]);
