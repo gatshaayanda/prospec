@@ -27,17 +27,20 @@ Public visitor → select a division/catalogue item → customer Account → sub
 The sole public owner entry is the icon-only 💼 footer control. One access-word field, validated server-side against the exact environment key ADMIN_PASSWORD; no hard-coded fallback, no second credential and no Firebase staff account provisioning. Session cookie is HttpOnly, Secure in production, SameSite strict and expires after 12 hours. Owner UI inactivity lock remains 30 minutes.
 
 ## Data and security boundary
-- Current catalogue, requests, messages, statuses, receipts, notes and analytics still use browser-local preview storage. This is not a secure customer account, shared inbox or cross-device database.
-- The customer Account currently matches preview requests by email in the same browser profile. Do not describe it as authenticated identity or account recovery.
-- Firebase client scaffolding and environment placeholders exist, but no Prospec Firebase project ID/configuration was verified in this repository at baseline. Do not reuse Iteration 13, The Plug, JTS or another client's Firebase project.
-- Do not change Firestore rules, indexes, Firebase project IDs or credentials until the actual Prospec project configuration and approved data contract are inspected. The product owner has an existing database; connect to that project, not a newly invented one.
+- Firebase project: `theworks-f4957` (explicitly supplied by the product owner for Prospec). Public web config is in `src/lib/firebase/client.ts` and `.env.example`; it is not a private credential.
+- Customer sessions use persistent Firebase Anonymous Auth identities; each customer can read only their own `prospecEnquiries` documents. Firestore persistent local cache and multiple-tab manager queue writes while offline and sync on reconnect.
+- Public storefront content is stored at `prospecPublic/storefront`. Customer profiles use `prospecCustomers/{uid}`. Enquiries use `prospecEnquiries/{id}` with owner-only status/quote/payment updates and customer-only message appends.
+- Owner Briefcase reads/writes through `/api/admin/workspace`, protected by the HttpOnly owner session and Firebase Admin SDK. `FIREBASE_ADMIN_KEY` is required server-side and must match `theworks-f4957`; it is not the public web config.
+- Firestore rules and the customer query index are maintained in `firestore.rules` and `firestore.indexes.json`. They must be published to the supplied Firebase project before production customer sync works.
+- Anonymous Auth must be enabled in Firebase Authentication. Anonymous identity is device-persistent but is not yet a cross-device recoverable sign-in. Do not claim email/password account recovery.
+- Do not add Firebase Storage rules. Keep UploadThing for approved uploads. The product owner has an existing database; connect to that project, not a newly invented one.
 - No Firebase Storage rules. Keep UploadThing for approved uploads; do not copy credentials.
 - Do not claim payment gateway, payment capture, email delivery or push notifications unless implemented and tested.
 
 ## PWA / offline lock
 - Preserve beforeinstallprompt early capture, retained native event, click-triggered browser prompt, dismissible inline install-card placement, iOS Safari Share → Add to Home Screen guidance, embedded-browser handoff, service-worker registration/update lifecycle and offline shell.
 - Change only branding/assets and isolated cache namespace. Do not move the install card, fake a prompt, duplicate listeners or change lifecycle mechanics.
-- Offline copy must state that browser-local preview data does not sync or queue to the server.
+- Offline copy must explain that Firestore retains a persistent local cache and queues supported customer writes until connectivity returns. Uploads still require internet.
 
 ## Verification
 - npm run lint
@@ -45,8 +48,8 @@ The sole public owner entry is the icon-only 💼 footer control. One access-wor
 - Review customer enquiry and owner status/quote flows; verify all unpriced catalogue items can be selected.
 - Inspect mobile and desktop screenshots before claiming visual completion.
 - Verify install, offline and update behavior on supported browsers/devices when available.
-- Do not claim production database readiness until customer authentication/ownership, admin authorization at API and Firestore-rule boundaries, shared persistence, upload policy and notification behavior are verified.
+- Do not claim production database readiness until Firebase Authentication, Firestore rules/indexes, `FIREBASE_ADMIN_KEY`, customer ownership, owner authorization, shared persistence, upload policy and notification behavior are verified.
 
 ## Last verified checkpoint
 - Baseline clone and push: d94dd55; source commit and target baseline match.
-- Adaptation status: Prospec identity/catalogue/front-end adaptation in progress. Production database integration and browser/device QA remain separate acceptance gates.
+- Firebase integration: web client, persistent offline Firestore cache, anonymous customer identity, customer-owned enquiries/messages, public storefront listener, owner-session API and Firestore rules/index added. Firebase Console configuration and end-to-end QA remain acceptance gates.
