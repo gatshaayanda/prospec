@@ -9,7 +9,7 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     scope: "/",
     display: "standalone",
-    background_color: "#f6f5f0",
+    background_color: "#20272D",
     theme_color: "#00B9C7",
     orientation: "portrait-primary",
     lang: "en",
@@ -17,11 +17,8 @@ export default function manifest(): MetadataRoute.Manifest {
     prefer_related_applications: false,
     icons: [
       { src: "/prospec-icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
-      { src: "/prospec-icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
-      { src: "/prospec-icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
-      { src: "/prospec-icon.svg", sizes: "192x192", type: "image/svg+xml", purpose: "any" },
-      
-      { src: "/prospec-icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }
+      { src: "/prospec-icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/prospec-icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" }
     ],
     shortcuts: [
       {
@@ -29,21 +26,21 @@ export default function manifest(): MetadataRoute.Manifest {
         short_name: "Services",
         description: "Explore Prospec divisions and send an enquiry",
         url: "/",
-        icons: [{ src: "/prospec-icon.svg", sizes: "any", type: "image/svg+xml" }]
+        icons: [{ src: "/prospec-icon-192.png", sizes: "192x192", type: "image/png" }]
       },
       {
         name: "My account",
         short_name: "Account",
         description: "Review your Prospec enquiries",
         url: "/?view=account",
-        icons: [{ src: "/prospec-icon.svg", sizes: "any", type: "image/svg+xml" }]
+        icons: [{ src: "/prospec-icon-192.png", sizes: "192x192", type: "image/png" }]
       },
       {
         name: "Owner Briefcase",
         short_name: "Admin",
         description: "Open the private owner workspace",
         url: "/#admin",
-        icons: [{ src: "/prospec-icon.svg", sizes: "any", type: "image/svg+xml" }]
+        icons: [{ src: "/prospec-icon-192.png", sizes: "192x192", type: "image/png" }]
       }
     ]
   };

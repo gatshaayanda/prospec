@@ -1312,7 +1312,7 @@ export default function Home() {
   ];
   const setupCompletedCount = setupChecklist.filter(item => item.complete).length;
   const setupReady = setupCompletedCount === setupChecklist.length;
-return <main className="servicePreview" style={{ "--studio-accent": themeColor, "--studio-accent-secondary": secondaryColor, "--studio-accent-highlight": highlightColor, "--studio-accent-ink": accentInk(themeColor), "--studio-accent-text": accentText(themeColor) } as React.CSSProperties}>
+return <main className="servicePreview serviceDemo" style={{ "--studio-accent": themeColor, "--studio-accent-secondary": secondaryColor, "--studio-accent-highlight": highlightColor, "--studio-accent-ink": accentInk(themeColor), "--studio-accent-text": accentText(themeColor) } as React.CSSProperties}>
     {!identityReady || !ready || !businessNameReady ? <section className="sd-identity-loading" aria-live="polite">Preparing your business identity…</section> : !identityComplete ? <section className="sd-identity-onboarding">
       <div className="sd-identity-onboarding-top"><span>PROSPEC / BUSINESS OS</span><span>{identityEditing ? "BUSINESS IDENTITY" : "SETUP · STORE · ACCOUNT · BRIEFCASE"}</span></div>
       {!setupPathChosen && !identityEditing ? <section className="sd-identity-entry" aria-labelledby="sd-identity-entry-title">
