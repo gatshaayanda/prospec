@@ -9,7 +9,7 @@ const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
 export type AccountAttachment = { name: string; url: string; type: string; size: number };
 export type AccountMessage = { id: string; from: "customer" | "studio"; text: string; createdAt: string; attachment?: AccountAttachment };
-export type WorkspaceOrder = { id: string; serviceId: string; serviceName: string; serviceItems?: { id: string; name: string; price: number }[]; whatsapp?: string; notificationOptIn?: boolean; price: number; quotedPrice?: number; originalPrice?: number; discountAmount?: number; discountCode?: string; receiptNo?: string; paidAmount?: number; paidAt?: string; paymentStatus?: "Unpaid" | "Partially paid (recorded)" | "Paid (recorded)"; dueDate: string; customerName: string; email: string; brief: string; status: string; createdAt: string; statusUpdatedAt?: string; messages?: AccountMessage[] };
+export type WorkspaceOrder = { id: string; serviceId: string; serviceName: string; serviceItems?: { id: string; name: string; price: number; custom?: boolean }[]; quoteRequired?: boolean; whatsapp?: string; notificationOptIn?: boolean; price: number; quotedPrice?: number; originalPrice?: number; discountAmount?: number; discountCode?: string; receiptNo?: string; paidAmount?: number; paidAt?: string; paymentStatus?: "Unpaid" | "Partially paid (preview)" | "Paid (preview)"; dueDate: string; customerName: string; email: string; brief: string; status: string; createdAt: string; statusUpdatedAt?: string; messages?: AccountMessage[] };
 
 type DiscountClaim = { id: string; email: string; code: string; amount: number; lapTime: number; createdAt: string; status: "Available" | "Redeemed" };
 type Props = {
