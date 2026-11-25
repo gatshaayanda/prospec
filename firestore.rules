@@ -1,3 +1,4 @@
+// INHERITED FOUNDATION TEMPLATE — NOT APPROVED FOR PROSPEC. Do not deploy until the Prospec data model, Firebase project and access rules are explicitly reviewed.
 rules_version = '2';
 
 service cloud.firestore {
