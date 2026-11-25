@@ -11,7 +11,7 @@ type InstallPromptEvent = Event & {
 };
 type InstallState = "hidden" | "native" | "embedded";
 
-const INSTALL_DISMISSED_KEY = "prospec:install:dismissed-at:v4";
+const INSTALL_DISMISSED_KEY = "prospec:install:dismissed-at:v5";
 const INSTALL_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
 
 function environment() {
