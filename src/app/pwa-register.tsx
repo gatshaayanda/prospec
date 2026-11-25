@@ -11,7 +11,7 @@ type InstallPromptEvent = Event & {
 };
 type InstallState = "hidden" | "native" | "embedded";
 
-const INSTALL_DISMISSED_KEY = "prospec:install:dismissed-at:v5";
+const INSTALL_DISMISSED_KEY = "prospec:install:dismissed-at:v6";
 const INSTALL_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
 
 function environment() {
@@ -81,7 +81,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     setInstallCardDismissed(dismissedRecently());
     const embedded = initialEmbedded || env.embedded;
     setEmbeddedAndroid((initialEmbedded && initialAndroid) || (env.embedded && env.android));
-    setCanShowManualInstall(!env.standalone && !embedded);
+    setCanShowManualInstall(isIosSafari());
 
     let registration: ServiceWorkerRegistration | null = null;
     const inspect = () => {
@@ -145,7 +145,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
       }
       // Only iOS Safari needs manual guidance. On desktop/Android, do not replace
       // the browser-owned prompt with a custom explainer or fake install flow.
-      if (isIosSafari() || isAndroidChrome() || !current.embedded) {
+      if (current.ios && isIosSafari()) {
         setInstallHelpOpen(true);
         setInstallState("native");
       }
@@ -222,47 +222,27 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
   }, [installState, installHelpOpen]);
 
   async function install() {
-    const browser = navigator as Navigator & { install?: () => Promise<void> };
-    const nativeInstall = browser.install;
-    // Prefer the newer browser-owned Web Install API when available. It must be
-    // called from this user gesture; the browser still owns consent and UI.
-    if (typeof nativeInstall === "function") {
-      try {
-        await nativeInstall.call(navigator);
-        setCanShowManualInstall(false);
-        setInstallHelpOpen(false);
-        setInstallState("hidden");
-      } catch {
-        // A rejected browser install remains a browser decision. Keep a useful
-        // manual route available rather than pretending installation succeeded.
-        setInstallHelpOpen(true);
-        setInstallState("native");
-      }
-      return;
-    }
-
     const prompt = installPromptRef.current;
     if (!prompt) {
-      // Chromium only exposes beforeinstallprompt when it considers the app
-      // installable. Never fabricate a native prompt when the browser has not
-      // offered one; explain the real browser menu route instead.
-      if (isIosSafari() || isAndroidChrome() || !environment().embedded) {
+      // Chromium owns install eligibility. Only iOS Safari needs manual guidance.
+      if (isIosSafari()) {
         setInstallHelpOpen(true);
         setInstallState("native");
       }
       return;
     }
-    installPromptRef.current = null;
     try {
+      // Call the retained beforeinstallprompt event directly from the user's click.
       await prompt.prompt();
       const choice = await prompt.userChoice;
       if (choice.outcome === "dismissed") rememberDismissal();
-      if (choice.outcome === "accepted") setCanShowManualInstall(false);
     } catch {
-      setInstallHelpOpen(true);
-      setInstallState("native");
+      // The event is one-shot and browser-controlled. Never fake a Chrome prompt.
     } finally {
+      installPromptRef.current = null;
       setCanInstall(false);
+      setInstallHelpOpen(false);
+      setInstallState("hidden");
     }
   }
 
