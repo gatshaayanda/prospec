@@ -53,3 +53,11 @@ The sole public owner entry is the icon-only 💼 footer control. One access-wor
 ## Last verified checkpoint
 - Baseline clone and push: d94dd55; source commit and target baseline match.
 - Firebase integration: web client, persistent offline Firestore cache, anonymous customer identity, customer-owned enquiries/messages, public storefront listener, owner-session API and Firestore rules/index added. Firebase Console configuration and end-to-end QA remain acceptance gates.
+
+
+## Owner Briefcase UX contract
+- Main areas: Overview, Client work, Finance, Store & offers, Notes, Performance. These are clearer labels for existing sections, not feature removals.
+- Keep the four Prospec divisions visible as business context; do not invent division-specific workflow automation or claim it exists.
+- Preserve all existing owner controls and records: shift/session, availability, customers, enquiries, quotes, status, payment recording, expenses, receipts, Store identity/palette/catalogue/media/preview, announcements, sprint rewards, notes and insights.
+- Use progressive disclosure for specialist forms while keeping primary work areas visible. Prefer recognition over recall and Prospec operational language.
+- Owner text and form controls must be comfortably readable on desktop and mobile. Avoid micro-sized helper text and tiny navigation controls. Do not treat colour/contrast tweaks as a substitute for readable type, spacing and clear labels.
