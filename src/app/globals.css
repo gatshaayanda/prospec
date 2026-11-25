@@ -6895,3 +6895,110 @@ h1 em,
  .serviceDemo .sd-division-rail span {font-size:12px}
  .serviceDemo .sd-admin-head-actions {grid-template-columns:1fr}
 }
+
+
+/* Prospec storefront and Briefcase fit/readability correction. */
+.servicePreview .prospec-catalogue-heading p {
+  max-width: 58ch;
+  color: #eaf1f2 !important;
+  font-size: clamp(1rem, 1.6vw, 1.08rem) !important;
+  font-weight: 550;
+  line-height: 1.6 !important;
+}
+.servicePreview .prospec-product-grid {
+  align-items: stretch;
+  grid-auto-rows: 1fr;
+  gap: 14px;
+}
+.servicePreview .prospec-product-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+}
+.servicePreview .prospec-product-card .sd-service-media {
+  flex: 0 0 auto;
+  width: 100%;
+  height: auto !important;
+  aspect-ratio: 16 / 10;
+  min-height: 0;
+}
+.servicePreview .prospec-product-card .sd-service-info {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+  min-height: 176px;
+  box-sizing: border-box;
+  padding: 14px;
+}
+.servicePreview .prospec-product-card .sd-service-title {
+  min-height: 58px;
+  align-content: start;
+}
+.servicePreview .prospec-product-card .sd-service-title h3 {
+  min-height: 2.5em;
+  font-size: .98rem;
+  line-height: 1.28;
+}
+.servicePreview .prospec-product-card .sd-service-title strong {
+  font-size: .88rem;
+  line-height: 1.3;
+}
+.servicePreview .prospec-product-card .sd-service-info > p {
+  min-height: 2.8em;
+  margin: 0 0 10px;
+  color: #d1dcde;
+  font-size: .78rem;
+  line-height: 1.45;
+}
+.servicePreview .prospec-product-card .sd-order-button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  margin-top: auto;
+  font-size: .76rem;
+}
+.serviceDemo .sd-admin {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1180px;
+  min-width: 0;
+  margin-inline: auto;
+  overflow: clip;
+  border-radius: 12px;
+}
+.serviceDemo .sd-admin *,
+.serviceDemo .sd-admin *::before,
+.serviceDemo .sd-admin *::after {
+  box-sizing: border-box;
+}
+@media (max-width: 560px) {
+  .servicePreview .prospec-product-grid {
+    grid-auto-rows: auto;
+    gap: 10px;
+  }
+  .servicePreview .prospec-product-card .sd-service-info {
+    min-height: 174px;
+    padding: 10px;
+  }
+  .servicePreview .prospec-product-card .sd-service-title {
+    min-height: 56px;
+  }
+  .servicePreview .prospec-product-card .sd-service-title h3 {
+    font-size: .84rem;
+  }
+  .servicePreview .prospec-product-card .sd-service-title strong {
+    font-size: .76rem;
+  }
+  .servicePreview .prospec-product-card .sd-service-info > p {
+    font-size: .7rem;
+  }
+  .servicePreview .prospec-product-card .sd-order-button {
+    min-height: 40px;
+    font-size: .69rem;
+  }
+}

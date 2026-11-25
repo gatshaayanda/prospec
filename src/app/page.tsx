@@ -1407,7 +1407,7 @@ return <main className="servicePreview serviceDemo" style={{ "--studio-accent": 
     {view === "shop" && <>
       <section className="sd-services sd-wrap sd-digital-store sd-store-collection prospec-storefront" id="services">
         <div className="prospec-catalogue-heading" id="prospec-catalogue">
-          <div><span className="prospec-eyebrow">THE PROSPEC STORE</span><h2>Find it. <em>Request it.</em></h2><p>Choose a listed product or service. Fixed prices are shown in BWP; custom work is always welcome.</p></div>
+          <div><span className="prospec-eyebrow">THE PROSPEC STORE</span><h2>Find it. <em>Request it.</em></h2><p>Browse products and services. Fixed prices are in BWP. Need something custom? Send us a brief.</p></div>
           <span className="prospec-catalogue-count">{visibleServices.length} of {activeServices.length} items</span>
         </div>
         <div className="prospec-store-tools">
