@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { arrayUnion, doc, updateDoc } from "firebase/firestore";
+import { db, ensureCustomerAuth } from "@/lib/firebase/client";
 import ReceiptDocument, { type ReceiptProfile } from "@/app/ReceiptDocument";
 import { generateReactHelpers } from "@uploadthing/react";
 import type { OurFileRouter } from "@/app/api/uploadthing/core";
@@ -73,9 +75,10 @@ export default function AccountWorkspace({ businessName, currency, orders, disco
     const messageText = (drafts[order.id] || "").trim();
     if (!messageText && !attachment) { setUploadNotice("Write a message or attach a file before sending."); return; }
     const message: AccountMessage = { id: "MSG-" + Date.now().toString(36), from: "customer", text: messageText, createdAt: new Date().toISOString(), ...(attachment ? { attachment } : {}) };
-    onUpdateOrder(order.id, current => ({ ...current, messages: [...(current.messages || []), message] }), "Message saved in this browser preview. It appears in the Prospec Briefcase on this device only.");
+    void ensureCustomerAuth().then(() => updateDoc(doc(db, "prospecEnquiries", order.id), { messages: arrayUnion(message), updatedAt: message.createdAt })).catch(() => setUploadNotice("This message could not sync. Reconnect and try again."));
+    onUpdateOrder(order.id, current => ({ ...current, messages: [...(current.messages || []), message] }), "Message added to your Prospec request. It will sync when you are online.");
     setDrafts(current => ({ ...current, [order.id]: "" }));
-    setUploadNotice("Message added to this local preview conversation.");
+    setUploadNotice("Message added to your Prospec request. It will sync when you are online.");
     setOpenThread(order.id);
   }
 
@@ -86,7 +89,7 @@ export default function AccountWorkspace({ businessName, currency, orders, disco
     if (!accepted) { setUploadNotice("Choose an image, video or PDF file."); event.target.value = ""; return; }
     const max = file.type.startsWith("video/") ? 16 * 1024 * 1024 : 4 * 1024 * 1024;
     if (file.size > max) { setUploadNotice(file.type.startsWith("video/") ? "Videos must be 16 MB or smaller." : "Images and PDFs must be 4 MB or smaller."); event.target.value = ""; return; }
-    if (!online || !navigator.onLine) { setUploadNotice("Offline: text messages can still be saved locally, but file uploads need internet. Nothing was uploaded."); event.target.value = ""; return; }
+    if (!online || !navigator.onLine) { setUploadNotice("Offline: your text message can sync when the connection returns. File uploads need internet. Nothing was uploaded."); event.target.value = ""; return; }
     setUploadingOrder(order.id); setUploadProgress(0); setUploadNotice("Uploading attachment. Keep this page open.");
     try {
       const uploaded = await startUpload([file]);
@@ -94,7 +97,7 @@ export default function AccountWorkspace({ businessName, currency, orders, disco
       const url = result?.ufsUrl || result?.url;
       if (!url) { setUploadNotice("Upload completed without a file link. Please try again."); setUploadingOrder(null); return; }
       sendMessage(order, { name: file.name, url, type: file.type, size: file.size });
-      setUploadNotice("Attachment uploaded and added to the local preview conversation.");
+      setUploadNotice("Attachment uploaded and added to your Prospec request.");
     } catch {
       setUploadNotice("Upload failed. Check your connection and try again; the message was not sent.");
     } finally {
@@ -116,7 +119,7 @@ export default function AccountWorkspace({ businessName, currency, orders, disco
         <span className="sd-account-brand-mark" aria-hidden="true">{monogram}<span className="sd-account-heart">♥</span></span>
         <div><span className="sd-account-overline">{businessName}</span><strong>Customer account</strong></div>
       </div>
-      <span className="sd-account-ready"><span aria-hidden="true">●</span> On this device</span>
+      <span className="sd-account-ready"><span aria-hidden="true">●</span> Prospec account</span>
     </header>
 
     <div className="sd-account-compact-intro">
@@ -173,7 +176,7 @@ export default function AccountWorkspace({ businessName, currency, orders, disco
             <div id={"care-receipts-" + order.id}><ReceiptDocument businessName={businessName} currency={currency} accentColor={accentColor} receiptProfile={receiptProfile} order={order} /></div>
             {expanded && <section className="sd-account-conversation" id={"care-messages-" + order.id} aria-label={`Conversation for ${order.serviceName}`}>
               <div className="sd-account-conversation-heading"><div><span className="sd-kicker">YOUR CONVERSATION</span><h4>{order.serviceName}</h4></div></div>
-              <p className="sd-account-demo-explainer">Messages in this preview are saved in this browser only. They are not yet delivered to the Prospec team.</p>
+              <p className="sd-account-demo-explainer">Messages are linked to this request and synchronise with Prospec when connected.</p>
               <div className="sd-account-messages" aria-live="polite">{messages.length ? messages.map(message => <article key={message.id} className={`sd-account-message is-${message.from}`}><div><strong>{message.from === "customer" ? "You" : businessName}</strong><time>{prettyDate(message.createdAt)}</time></div>{message.text && <p>{message.text}</p>}{message.attachment && <a href={message.attachment.url} target="_blank" rel="noreferrer">↗ {message.attachment.name} · Open attachment</a>}</article>) : <p className="sd-account-message-empty">No messages yet. Send a question to start the conversation.</p>}</div>
               <form className="sd-account-composer" onSubmit={event => { event.preventDefault(); sendMessage(order); }}>
                 <label htmlFor={`account-message-${order.id}`}>Write a message<textarea id={`account-message-${order.id}`} rows={3} maxLength={1200} value={drafts[order.id] || ""} onChange={event => setDrafts(current => ({ ...current, [order.id]: event.target.value }))} placeholder="Ask a question about this request…" /></label>
@@ -191,9 +194,9 @@ export default function AccountWorkspace({ businessName, currency, orders, disco
     {announcementActive && announcement.trim() && <aside className="sd-account-announcement"><span className="sd-kicker">FROM {businessName.toUpperCase()}</span><h3>Business update</h3><p>{announcement}</p></aside>}
     {uploadNotice && <p className="sd-account-feedback" role="status">{uploadNotice}</p>}
 
-    <details className="sd-account-lookup-compact" open={lookupOpen} onToggle={event => setLookupOpen(event.currentTarget.open)}><summary>{normalizedEmail ? "Using " + email : "Find your account"} <b>Change email</b></summary><div><label htmlFor="account-email">Email used on your request</label><input id="account-email" type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="Enter your email address" autoComplete="email" /><p>Preview requests in this browser are matched to this email address.</p></div></details>
+    <details className="sd-account-lookup-compact" open={lookupOpen} onToggle={event => setLookupOpen(event.currentTarget.open)}><summary>{normalizedEmail ? "Using " + email : "Find your account"} <b>Change email</b></summary><div><label htmlFor="account-email">Email used on your request</label><input id="account-email" type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="Enter your email address" autoComplete="email" /><p>Your requests are linked to this device’s secure customer session, not just the email address.</p></div></details>
 
     {children && <details className="sd-account-collapsible sd-account-optional-feature"><summary><span>Optional rewards experience</span><b>Explore</b></summary><div>{children}</div></details>}
-    <p className="sd-account-boundary">This is a browser-local preview, not a secure sign-in or shared customer account. Requests and messages are stored on this device. Attachments upload to the configured file service when online; they are not queued offline.</p>
+    <p className="sd-account-boundary">Your Prospec customer session is stored on this device. Firestore keeps an offline cache and synchronises queued request and message changes when a connection returns. Attachments still require an internet connection.</p>
   </section>;
 }
