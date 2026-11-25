@@ -11,6 +11,8 @@ import RacingWarmup from "@/app/games/racing-warmup";
 import ReceiptDocument from "@/app/ReceiptDocument";
 import AdminMoneyInsights from "@/app/AdminMoneyInsights";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { collection, doc, onSnapshot, orderBy, query, setDoc, where } from "firebase/firestore";
+import { db, ensureCustomerAuth } from "@/lib/firebase/client";
 
 type Service = { id: string; name: string; industry?: string; price: number; description: string; media: string; mediaType: "image" | "video"; active: boolean; custom?: boolean };
 type PreviewOrder = { id: string; serviceId: string; serviceName: string; serviceItems?: { id: string; name: string; price: number; custom?: boolean }[]; quoteRequired?: boolean; price: number; dueDate: string; customerName: string; email: string; whatsapp?: string; notificationOptIn?: boolean; brief: string; status: string; createdAt: string; statusUpdatedAt?: string; messages?: AccountMessage[]; paymentStatus?: "Unpaid" | "Partially paid (preview)" | "Paid (preview)"; originalPrice?: number; quotedPrice?: number; discountAmount?: number; discountCode?: string; paidAmount?: number; paidAt?: string; receiptNo?: string; isTest?: boolean; completedAt?: string };
@@ -209,6 +211,8 @@ export default function Home() {
   const [isSharedExampleWorkspace, setIsSharedExampleWorkspace] = useState(false);
   const [shareLink, setShareLink] = useState("");
   const [ready, setReady] = useState(false);
+  const [firebaseCustomerUid, setFirebaseCustomerUid] = useState<string | null>(null);
+  const [cloudSyncStatus, setCloudSyncStatus] = useState<"connecting" | "synced" | "offline" | "error">("connecting");
   const [online, setOnline] = useState(true);
   const [offlineShellReady, setOfflineShellReady] = useState(false);
   const [view, setView] = useState<"shop" | "account" | "login" | "admin">("shop");
@@ -547,6 +551,50 @@ export default function Home() {
     if (params.get("view") === "account") setView("account");
     if (window.location.hash === "#admin" || window.location.hash === "#login") setView("login");
     return () => { window.removeEventListener("online", syncOnline); window.removeEventListener("offline", syncOnline); };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    let stopEnquiries: (() => void) | undefined;
+    let stopStorefront: (() => void) | undefined;
+    ensureCustomerAuth().then(user => {
+      if (!active) return;
+      setFirebaseCustomerUid(user.uid);
+      setCloudSyncStatus(navigator.onLine ? "synced" : "offline");
+      const enquiriesQuery = query(collection(db, "prospecEnquiries"), where("customerId", "==", user.uid), orderBy("createdAt", "desc"));
+      stopEnquiries = onSnapshot(enquiriesQuery, snapshot => {
+        if (!active) return;
+        const orders = snapshot.docs.map(item => ({ id: item.id, ...item.data() })) as PreviewOrder[];
+        setData(current => ({ ...current, orders }));
+        setCloudSyncStatus("synced");
+      }, () => { if (active) setCloudSyncStatus("error"); });
+      stopStorefront = onSnapshot(doc(db, "prospecPublic", "storefront"), snapshot => {
+        if (!active || !snapshot.exists()) return;
+        const remote = snapshot.data();
+        setData(current => ({
+          ...current,
+          services: Array.isArray(remote.services) ? remote.services as Service[] : current.services,
+          availability: remote.availability === "limited" || remote.availability === "unavailable" ? remote.availability : "available",
+          announcement: typeof remote.announcement === "string" ? remote.announcement : "",
+          announcementActive: remote.announcementActive === true,
+          announcementImage: typeof remote.announcementImage === "string" ? remote.announcementImage : "",
+          rewardActive: remote.rewardActive === true,
+          rewardTitle: typeof remote.rewardTitle === "string" ? remote.rewardTitle : "",
+          rewardDescription: typeof remote.rewardDescription === "string" ? remote.rewardDescription : "",
+        }));
+      }, () => { if (active) setCloudSyncStatus("error"); });
+    }).catch(() => { if (active) setCloudSyncStatus(navigator.onLine ? "error" : "offline"); });
+    const offline = () => setCloudSyncStatus("offline");
+    const online = () => setCloudSyncStatus(firebaseCustomerUid ? "synced" : "connecting");
+    window.addEventListener("offline", offline);
+    window.addEventListener("online", online);
+    return () => {
+      active = false;
+      stopEnquiries?.();
+      stopStorefront?.();
+      window.removeEventListener("offline", offline);
+      window.removeEventListener("online", online);
+    };
   }, []);
 
   useEffect(() => {
@@ -1078,7 +1126,7 @@ export default function Home() {
     const targetId = target === "services" ? "admin-service-tools" : target === "announcement" ? "admin-announcement-tools" : target === "requests" ? "admin-requests-tools" : "admin-tools";
     window.setTimeout(() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
   }
-  function submitOrder(event: React.FormEvent<HTMLFormElement>) {
+  async function submitOrder(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedServices.length) { setNotice("Choose at least one product or service for this request."); return; }
     if (!customerName.trim() || !email.trim() || !whatsapp.trim() || !brief.trim() || !dueDate) { setNotice("Add your name, email, WhatsApp number, project brief and requested timeline."); return; }
@@ -1090,7 +1138,16 @@ export default function Home() {
     const createdAt = new Date().toISOString();
     const id = "PR-" + Date.now().toString(36).toUpperCase();
     const order: PreviewOrder = { id, receiptNo: "REQ-" + createdAt.slice(0, 10).replaceAll("-", "") + "-" + id.slice(-5), serviceId: selectedServices[0].id, serviceName: selectedServices.map(service => service.name).join(" + "), serviceItems: selectedServices.map(({id,name,price,custom}) => ({id,name,price,custom:Boolean(custom || price <= 0)})), quoteRequired: selectedServices.some(service => Boolean(service.custom || service.price <= 0)), price: Math.max(0, servicesTotal - discountAmount), ...(discountAmount ? { originalPrice: servicesTotal, discountAmount, discountCode: claim!.code } : {}), dueDate, customerName: customerName.trim(), email: email.trim(), whatsapp: whatsapp.trim(), notificationOptIn, brief: brief.trim(), status: "New request", createdAt, paymentStatus: "Unpaid", paidAmount: 0 };
-    if (!commitData(current => ({ ...current, orders: [order, ...current.orders], discountClaims: claim ? (current.discountClaims || []).map(item => item.id === claim.id ? { ...item, status: "Redeemed" as const } : item) : current.discountClaims, events: [{ id: "EV-"+Date.now().toString(36), kind: "request", label: "Customer request received · "+order.serviceName, at: new Date().toISOString() }, ...(current.events || [])] }), "Order request saved on this device. No payment was taken.")) return;
+    try {
+      const customer = await ensureCustomerAuth();
+      await setDoc(doc(db, "prospecEnquiries", id), { ...order, customerId: customer.uid }, { merge: false });
+      setFirebaseCustomerUid(customer.uid);
+      setCloudSyncStatus(navigator.onLine ? "synced" : "offline");
+    } catch {
+      setNotice("Your customer session could not be established. Please reconnect and try again; your request has not been submitted.");
+      return;
+    }
+    if (!commitData(current => ({ ...current, orders: [order, ...current.orders], discountClaims: claim ? (current.discountClaims || []).map(item => item.id === claim.id ? { ...item, status: "Redeemed" as const } : item) : current.discountClaims, events: [{ id: "EV-"+Date.now().toString(36), kind: "request", label: "Customer request received · "+order.serviceName, at: new Date().toISOString() }, ...(current.events || [])] }), "Your request has been saved to your Prospec account. No payment was taken.")) return;
     recordJourneyEvent("request_submitted", { screen: "customer-account", serviceId: order.serviceId, serviceName: order.serviceName, orderId: order.id });
     setView("account"); setOrderFormOpen(false); setSelected(null); setSelectedServiceIds([]); setCustomSelections([]); setCatalogueQuery(""); setPromoCode("");
     try { window.localStorage.removeItem(getStorageKey(CUSTOMER_SELECTION_KEY)); } catch { /* selection state is already cleared in memory */ }
@@ -1308,7 +1365,7 @@ return <main className="servicePreview" style={{ "--studio-accent": themeColor, 
 
     {view === "login" && <section className="sd-admin sd-wrap"><div className="sd-admin-panel sd-admin-login-card" style={{maxWidth:480,margin:"clamp(28px,8vh,84px) auto",padding:24}}><span className="sd-kicker">PROSPEC GROUP / PRIVATE BRIEFCASE</span><h1 style={{fontSize:"clamp(1.8rem,5vw,2.5rem)",margin:"8px 0"}}>Open your <em>Briefcase.</em></h1><p className="sd-admin-help">This is the owner side of your business: customers, jobs, money, Store design and the records that keep everything together.</p><form className="sd-admin-form" onSubmit={submitAdminLogin}><label>Owner access word<input type="password" autoComplete="off" value={adminPassphrase} onChange={event=>setAdminPassphrase(event.target.value)} placeholder="Enter access word" required /></label><button className="sd-button sd-primary" type="submit">{adminLocked ? "Resume my Briefcase →" : "Unlock my Briefcase →"}</button></form><p className="sd-admin-help" style={{marginTop:12}}>Use the owner access word supplied to the Prospec team. Access is checked on the server; customer and enquiry records remain local preview data until the Prospec database connection is configured.</p><button className="sd-button sd-outline" type="button" onClick={() => { setView("shop"); setNotice(""); }}>← Back to Store</button></div></section>}
 
-    {view === "admin" && adminUnlocked && <section className="sd-admin sd-wrap" data-admin-current={adminTab} data-store-section={storeSection}><div className="sd-os-heading"><div><span className="sd-kicker">PROSPEC GROUP / OWNER BRIEFCASE</span><small className="sd-owner-greeting">{ownerGreeting}</small><h1>Your divisions. <em>One briefcase.</em></h1><p><strong>{businessName.trim() || "Prospec Group"}</strong> · Your workspace for customers, jobs, money and records</p></div><span className="sd-os-status" title="This prototype saves its preview records in this browser only">LOCAL PREVIEW · THIS DEVICE</span></div>
+    {view === "admin" && adminUnlocked && <section className="sd-admin sd-wrap" data-admin-current={adminTab} data-store-section={storeSection}><div className="sd-os-heading"><div><span className="sd-kicker">PROSPEC GROUP / OWNER BRIEFCASE</span><small className="sd-owner-greeting">{ownerGreeting}</small><h1>Your divisions. <em>One briefcase.</em></h1><p><strong>{businessName.trim() || "Prospec Group"}</strong> · Your workspace for customers, jobs, money and records</p></div><span className="sd-os-status" title="Customer enquiries sync through the Prospec Firebase project">PROSPEC OPERATIONS</span></div>
 <details className="sd-owner-shift-panel sd-owner-shift-details" data-admin-tab="today">
   <summary className="sd-owner-shift-title"><span className="sd-shift-clock" aria-hidden="true">◷</span><div><span className="sd-kicker">OWNER SHIFT</span><strong>Shift active</strong></div><span className="sd-shift-live"><i /> ACTIVE</span><span className="sd-shift-summary-hint">Manage shift</span></summary>
   <div className="sd-owner-shift-metrics"><div><small>Time on shift</small><strong>{shiftStartedAt ? new Date(Math.max(0,sessionNow-shiftStartedAt)).toISOString().slice(11,19) : "00:00:00"}</strong><span>Started {shiftStartedAt ? new Date(shiftStartedAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) : "just now"}</span></div><div><small>Session expires in</small><strong>{sessionExpiresAt ? (()=>{const ms=Math.max(0,sessionExpiresAt-sessionNow);return [Math.floor(ms/3600000),Math.floor(ms%3600000/60000),Math.floor(ms%60000/1000)].map(v=>String(v).padStart(2,"0")).join(":")})() : "12:00:00"}</strong><span>Automatic expiry</span></div></div>
