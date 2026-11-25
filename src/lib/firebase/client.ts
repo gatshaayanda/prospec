@@ -1,6 +1,6 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
-import { getAuth, setPersistence, browserLocalPersistence, signInAnonymously, type User } from "firebase/auth";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
+import { getAuth, setPersistence, browserLocalPersistence, signInAnonymously, type User, type Auth } from "firebase/auth";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, type Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDAr3rsLaFmEikskq1PEezvuPVtd5_S3yw",
@@ -13,20 +13,31 @@ const firebaseConfig = {
 };
 
 export const hasFirebaseWebConfig = true;
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
-});
-export { app };
+export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+let authInstance: Auth | undefined;
+let firestoreInstance: Firestore | undefined;
+
+export function getProspecAuth() {
+  if (typeof window === "undefined") throw new Error("Firebase Auth is available in the browser only.");
+  authInstance ||= getAuth(app);
+  return authInstance;
+}
+
+export function getProspecDb() {
+  if (typeof window === "undefined") throw new Error("Firestore is available in the browser only.");
+  firestoreInstance ||= initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+  });
+  return firestoreInstance;
+}
 
 /**
- * Gives each customer a persistent Firebase identity without forcing a password
- * sign-up. Firebase Auth persists this identity across reloads; Firestore queues
- * writes made while offline and synchronises them when connectivity returns.
+ * A persistent anonymous Firebase identity keeps the customer experience
+ * passwordless. Firestore caches reads and queues supported writes offline.
  */
 let customerAuthPromise: Promise<User> | null = null;
 export function ensureCustomerAuth(): Promise<User> {
+  const auth = getProspecAuth();
   if (auth.currentUser) return Promise.resolve(auth.currentUser);
   if (!customerAuthPromise) {
     customerAuthPromise = (async () => {
