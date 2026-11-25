@@ -9,3 +9,16 @@
 .i13-install-action{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:44px;padding:11px 13px;border:0;border-radius:10px;background:#155eef;color:#fff;font:inherit;font-size:.86rem;font-weight:850;cursor:pointer}
 .i13-install-action:focus-visible,.i13-install-close:focus-visible{outline:3px solid #7da5ff;outline-offset:3px}
 @media(min-width:700px){.i13-install-card{width:350px}}
+
+/* User-controlled compact/collapsed presentation; the native install lifecycle is unchanged. */
+.i13-install-collapse{position:absolute;right:40px;top:7px;width:28px;height:28px;border:0;border-radius:50%;background:#eef8f9;color:#075b63;font-size:1.1rem;line-height:1;cursor:pointer}
+.i13-install-collapse:focus-visible{outline:3px solid #00b9c7;outline-offset:3px}
+.i13-install-card.is-collapsed{grid-template-columns:minmax(0,1fr) auto;gap:0;padding:8px 42px 8px 9px;min-height:58px}
+.i13-install-card.is-collapsed .i13-install-brand{gap:8px;padding-right:4px}
+.i13-install-card.is-collapsed .i13-install-mark{flex-basis:34px;width:34px;height:34px;border-radius:9px}
+.i13-install-card.is-collapsed .i13-install-brand strong{font-size:.7rem}
+.i13-install-card.is-collapsed .i13-install-brand small{font-size:.58rem}
+.i13-install-card.is-collapsed .i13-install-action{grid-column:2;grid-row:1;width:auto;min-width:84px;min-height:36px;padding:7px 9px;border-radius:8px;font-size:.72rem}
+.i13-install-card.is-collapsed .i13-install-collapse{right:40px;top:50%;transform:translateY(-50%)}
+.i13-install-card.is-collapsed .i13-install-close{right:7px;top:50%;transform:translateY(-50%)}
+@media(max-width:420px){.i13-install-card.is-collapsed{width:calc(100% - 16px);padding-left:8px}.i13-install-card.is-collapsed .i13-install-action{min-width:72px;font-size:.68rem}}
