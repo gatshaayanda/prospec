@@ -33,8 +33,9 @@ check(layout.includes('strategy="beforeInteractive"') && layout.includes("event.
 check(pwaRegister.includes("await prompt.prompt()") && pwaRegister.includes("await prompt.userChoice"), "branded install action must invoke and await the native browser prompt");
 check(pwaRegister.includes("i13-install-card") && pwaRegister.includes('className="i13-install-close"') && pwaRegister.includes("setInstallCardDismissed(true)") && pwaRegister.includes("aria-expanded={!installCardCollapsed}"), "compact collapsible and dismissible install card must remain intact");
 check(pwaRegister.includes("function isIosSafari()") && pwaRegister.includes("Share</b>, choose <b>Add to Home Screen</b>"), "iOS Safari installation guidance must remain intact");
-check(pwaRegister.includes("function isAndroidChrome()") && pwaRegister.includes("ANDROID · CHROME") && pwaRegister.includes("Install app"), "Android Chrome install card and browser-owned manual guidance must remain available");
-check(pwaRegister.includes('prospec:install:dismissed-at:v5'), "new install-card release must not inherit stale dismissal from the previous card version");
+check(pwaRegister.includes("setCanInstall(true)") && pwaRegister.includes("(canInstall || canShowManualInstall)") && pwaRegister.includes("await prompt.prompt()"), "Android Chrome install card must appear when Chromium supplies its native prompt and invoke that browser-owned prompt");
+check(!pwaRegister.includes("function isAndroidChrome()") && !pwaRegister.includes("ANDROID · CHROME"), "Chrome must not be shown a fake manual install guide when the browser has not supplied an install prompt");
+check(pwaRegister.includes('prospec:install:dismissed-at:v6'), "new install-card release must use the current versioned dismissal key");
 check(page.includes('"Offline ready"') && !page.includes('"App shell saved"'), "customer-facing offline status must avoid technical app-shell wording");
 check(pwaRegister.includes('installState === "embedded"') && pwaRegister.includes("function openBrowser()"), "embedded-browser handoff must remain intact");
 check(pwaRegister.includes('register("/sw.js", { updateViaCache: "none" })') && pwaRegister.includes("SKIP_WAITING") && pwaRegister.includes('className="pwaUpdate"'), "service-worker update lifecycle must remain intact");
