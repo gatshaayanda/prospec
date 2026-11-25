@@ -213,6 +213,7 @@ export default function Home() {
   const [ready, setReady] = useState(false);
   const [firebaseCustomerUid, setFirebaseCustomerUid] = useState<string | null>(null);
   const [cloudSyncStatus, setCloudSyncStatus] = useState<"connecting" | "synced" | "offline" | "error">("connecting");
+  const [ownerCloudReady, setOwnerCloudReady] = useState(false);
   const [online, setOnline] = useState(true);
   const [offlineShellReady, setOfflineShellReady] = useState(false);
   const [view, setView] = useState<"shop" | "account" | "login" | "admin">("shop");
@@ -323,6 +324,63 @@ export default function Home() {
       window.clearInterval(timer);
     };
   }, [adminUnlocked, view]);
+
+  useEffect(() => {
+    if (!adminUnlocked || view !== "admin") { setOwnerCloudReady(false); return; }
+    let active = true;
+    fetch("/api/admin/workspace", { credentials: "same-origin", cache: "no-store" })
+      .then(async response => {
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Owner workspace is not connected.");
+        if (!active) return;
+        const storefront = payload.storefront || {};
+        const orders = Array.isArray(payload.enquiries) ? payload.enquiries as PreviewOrder[] : [];
+        setData(current => ({
+          ...current,
+          services: Array.isArray(storefront.services) ? storefront.services as Service[] : current.services,
+          availability: storefront.availability === "limited" || storefront.availability === "unavailable" ? storefront.availability : "available",
+          announcement: typeof storefront.announcement === "string" ? storefront.announcement : "",
+          announcementActive: storefront.announcementActive === true,
+          announcementImage: typeof storefront.announcementImage === "string" ? storefront.announcementImage : "",
+          rewardActive: storefront.rewardActive === true,
+          rewardTitle: typeof storefront.rewardTitle === "string" ? storefront.rewardTitle : "",
+          rewardDescription: typeof storefront.rewardDescription === "string" ? storefront.rewardDescription : "",
+          orders,
+        }));
+        setOwnerCloudReady(true);
+      })
+      .catch(error => { if (active) { setOwnerCloudReady(false); setNotice(error instanceof Error ? error.message : "Owner workspace could not connect to Firebase."); } });
+    return () => { active = false; };
+  }, [adminUnlocked, view]);
+
+  useEffect(() => {
+    if (!ownerCloudReady || !adminUnlocked || view !== "admin") return;
+    const storefront = {
+      services: data.services,
+      availability: data.availability || "available",
+      announcement: data.announcement,
+      announcementActive: data.announcementActive === true,
+      announcementImage: data.announcementImage || "",
+      rewardActive: data.rewardActive === true,
+      rewardTitle: data.rewardTitle || "",
+      rewardDescription: data.rewardDescription || "",
+    };
+    void fetch("/api/admin/workspace", {
+      method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "storefront", storefront }),
+    }).then(response => { if (!response.ok) setNotice("Store changes could not sync to the Prospec database."); });
+  }, [ownerCloudReady, adminUnlocked, view, data.services, data.availability, data.announcement, data.announcementActive, data.announcementImage, data.rewardActive, data.rewardTitle, data.rewardDescription]);
+
+  useEffect(() => {
+    if (!ownerCloudReady || !adminUnlocked || view !== "admin") return;
+    for (const order of data.orders) {
+      const { id, ...patch } = order;
+      void fetch("/api/admin/workspace", {
+        method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "enquiry", id, patch }),
+      }).then(response => { if (!response.ok) setNotice("A request update could not sync to the Prospec database."); });
+    }
+  }, [ownerCloudReady, adminUnlocked, view, data.orders]);
 
   const [selected, setSelected] = useState<string | null>(null);
   const [orderFormOpen, setOrderFormOpen] = useState(false);
