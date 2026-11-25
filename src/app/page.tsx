@@ -739,10 +739,10 @@ export default function Home() {
         // The app's initial hydration can create an empty visitor-local record before the visitor opens the shared example.
         // Treat that untouched empty record as first visit so the catalogue embedded in the link is not shadowed.
         // The original shared example is the source of truth on first launch.
-        const isInjectedTrailWiseSeed = false;
+        const isInjectedLegacySeed = false;
         const hasNoVisitorActivity = !Array.isArray(parsed.orders) || parsed.orders.length === 0;
         const useSharedSnapshot = sharedServices.length > 0 && hasNoVisitorActivity &&
-          (savedServices.length === 0 || isInjectedTrailWiseSeed);
+          (savedServices.length === 0 || isInjectedLegacySeed);
         exampleData = useSharedSnapshot
           ? { ...emptyData, ...sharedExample.data, services: sharedServices, orders: [], events: [], views: 0, receiptProfile: { ...emptyData.receiptProfile! } }
           : { ...emptyData, ...parsed, services: savedServices, orders: Array.isArray(parsed.orders) ? parsed.orders : [], events: Array.isArray(parsed.events) ? parsed.events : [], receiptProfile: { ...emptyData.receiptProfile!, ...(parsed.receiptProfile || {}) } };
