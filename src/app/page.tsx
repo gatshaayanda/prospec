@@ -216,6 +216,8 @@ export default function Home() {
   const [online, setOnline] = useState(true);
   const [offlineShellReady, setOfflineShellReady] = useState(false);
   const [view, setView] = useState<"shop" | "account" | "login" | "admin">("shop");
+  const viewRef = useRef<"shop" | "account" | "login" | "admin">("shop");
+  useEffect(() => { viewRef.current = view; }, [view]);
   const [launchingBriefcase, setLaunchingBriefcase] = useState(false);
   const [previewJourney, setPreviewJourney] = useState<string[]>(["Storefront preview"]);
 
@@ -620,8 +622,10 @@ export default function Home() {
       const enquiriesQuery = query(collection(db, "prospecEnquiries"), where("customerId", "==", user.uid), orderBy("createdAt", "desc"));
       stopEnquiries = onSnapshot(enquiriesQuery, snapshot => {
         if (!active) return;
-        const orders = snapshot.docs.map(item => ({ id: item.id, ...item.data() })) as PreviewOrder[];
-        setData(current => ({ ...current, orders }));
+        if (viewRef.current !== "admin") {
+          const orders = snapshot.docs.map(item => ({ id: item.id, ...item.data() })) as PreviewOrder[];
+          setData(current => ({ ...current, orders }));
+        }
         setCloudSyncStatus("synced");
       }, () => { if (active) setCloudSyncStatus("error"); });
       stopStorefront = onSnapshot(doc(db, "prospecPublic", "storefront"), snapshot => {
