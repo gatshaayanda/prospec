@@ -12,7 +12,7 @@ import ReceiptDocument from "@/app/ReceiptDocument";
 import AdminMoneyInsights from "@/app/AdminMoneyInsights";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { collection, doc, onSnapshot, orderBy, query, setDoc, where } from "firebase/firestore";
-import { db, ensureCustomerAuth } from "@/lib/firebase/client";
+import { getProspecDb, ensureCustomerAuth } from "@/lib/firebase/client";
 
 type Service = { id: string; name: string; industry?: string; price: number; description: string; media: string; mediaType: "image" | "video"; active: boolean; custom?: boolean };
 type PreviewOrder = { id: string; serviceId: string; serviceName: string; serviceItems?: { id: string; name: string; price: number; custom?: boolean }[]; quoteRequired?: boolean; price: number; dueDate: string; customerName: string; email: string; whatsapp?: string; notificationOptIn?: boolean; brief: string; status: string; createdAt: string; statusUpdatedAt?: string; messages?: AccountMessage[]; paymentStatus?: "Unpaid" | "Partially paid (preview)" | "Paid (preview)"; originalPrice?: number; quotedPrice?: number; discountAmount?: number; discountCode?: string; paidAmount?: number; paidAt?: string; receiptNo?: string; isTest?: boolean; completedAt?: string };
@@ -619,6 +619,7 @@ export default function Home() {
     ensureCustomerAuth().then(user => {
       if (!active) return;
       setCloudSyncStatus(navigator.onLine ? "synced" : "offline");
+      const db = getProspecDb();
       const enquiriesQuery = query(collection(db, "prospecEnquiries"), where("customerId", "==", user.uid), orderBy("createdAt", "desc"));
       stopEnquiries = onSnapshot(enquiriesQuery, snapshot => {
         if (!active) return;
@@ -1201,7 +1202,7 @@ export default function Home() {
     try {
       const customer = await ensureCustomerAuth();
       const { id: _localId, ...enquiryRecord } = order;
-      void setDoc(doc(db, "prospecEnquiries", id), { ...enquiryRecord, customerId: customer.uid }, { merge: false }).catch(() => setCloudSyncStatus("error"));
+      void setDoc(doc(getProspecDb(), "prospecEnquiries", id), { ...enquiryRecord, customerId: customer.uid }, { merge: false }).catch(() => setCloudSyncStatus("error"));
       setCloudSyncStatus(navigator.onLine ? "synced" : "offline");
     } catch {
       setNotice("Your customer session could not be established. Please reconnect and try again; your request has not been submitted.");
