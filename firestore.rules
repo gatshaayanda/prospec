@@ -30,7 +30,7 @@ service cloud.firestore {
           "customerId", "customerName", "email", "whatsapp", "notificationOptIn",
           "serviceId", "serviceName", "serviceItems", "quoteRequired", "price",
           "dueDate", "brief", "status", "createdAt", "statusUpdatedAt",
-          "messages", "paymentStatus", "originalPrice", "quotedPrice", "paidAmount",
+          "messages", "paymentStatus", "originalPrice", "discountAmount", "discountCode", "quotedPrice", "paidAmount",
           "paidAt", "receiptNo", "completedAt"
         ])
         && request.resource.data.status == "New request"
