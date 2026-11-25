@@ -141,6 +141,15 @@ const serviceEmoji = (name: string) => {
   if (/consult|strategy|business|service/.test(label)) return "💼";
   return "✨";
 };
+function prospecPlaceholderFor(service: Service): string {
+  const name=service.name.toLowerCase();
+  if(service.industry==="Prospec AG") return "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=80";
+  if(service.industry==="Prospec Supplies") return "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=900&q=80";
+  if(service.industry==="Prospec NFC") return "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=900&q=80";
+  if(/shirt|hat|apparel|embroidery|football kit/.test(name)) return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80";
+  if(/flyer|vinyl|label|print|banner|gazebo|signage/.test(name)) return "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=900&q=80";
+  return "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80";
+}
 const accentInk = (hex: string) => {
   const values = hex.match(/[0-9a-f]{2}/gi)?.map(value => parseInt(value, 16) / 255) || [0.3, 0.3, 0.3];
   const luminance = values.map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4).reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0);
@@ -430,6 +439,7 @@ export default function Home() {
   const [customSelections, setCustomSelections] = useState<Service[]>([]);
   const [catalogueQuery, setCatalogueQuery] = useState("");
   const [catalogueDivision, setCatalogueDivision] = useState("All");
+  const [storeSearch, setStoreSearch] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [brief, setBrief] = useState("");
   const [promoCode, setPromoCode] = useState("");
@@ -759,7 +769,7 @@ export default function Home() {
   }
 
   const activeServices = data.services.filter(service => service.active);
-  const visibleServices = catalogueDivision === "All" ? activeServices : activeServices.filter(service => service.industry === catalogueDivision);
+  const visibleServices = activeServices.filter(service => (catalogueDivision === "All" || service.industry === catalogueDivision) && (!storeSearch.trim() || `${service.name} ${service.industry || ""} ${service.description}`.toLowerCase().includes(storeSearch.trim().toLowerCase())));
   const announcementIsActive = data.announcementActive ?? Boolean(data.announcement.trim() || data.announcementImage);
   const currentHour = new Date().getHours();
   const ownerGreeting = currentHour < 12 ? "Good morning" : currentHour < 17 ? "Good afternoon" : "Good evening";
@@ -1393,27 +1403,67 @@ return <main className="servicePreview" style={{ "--studio-accent": themeColor, 
 
 
     {view === "shop" && <>
-      <section className="prospec-hero sd-wrap" aria-labelledby="prospec-hero-title"><div className="prospec-hero-copy"><span className="prospec-eyebrow">PROSPEC GROUP · BOTSWANA · 100% YOUTH CITIZEN-OWNED</span><h1 id="prospec-hero-title">We keep our noses in <em>other people&apos;s business.</em></h1><p>Four specialist divisions. One sharp team. We build brands, source what you need, connect people and put your name where it belongs.</p><div className="prospec-hero-actions"><button type="button" onClick={() => document.getElementById("prospec-divisions")?.scrollIntoView({behavior:"smooth"})}>Meet the divisions <span aria-hidden="true">↘</span></button><button type="button" className="is-secondary" onClick={() => { setView("account"); setNotice("Tell Prospec what you need and we’ll route your enquiry to the right division."); }}>Start an enquiry <span aria-hidden="true">↗</span></button></div><div className="prospec-hero-signoff"><strong>PITBULLS OF BRANDING</strong><span>QWERTY by nature · strategic by design</span></div></div><div className="prospec-hero-stamp" aria-label="Prospec vision: Annihilate"><span>OUR VISION</span><strong>ANNIHILATE.</strong><i>THE ORDINARY</i></div></section>
-      <section className="prospec-divisions sd-wrap" id="prospec-divisions" aria-labelledby="prospec-divisions-title"><div className="prospec-section-heading"><div><span className="prospec-eyebrow">FOUR DIVISIONS · ONE PROSPEC</span><h2 id="prospec-divisions-title">Different lanes. <em>Same bite.</em></h2></div><p>Pick a division to see what we can get moving.</p></div><div className="prospec-division-grid">{prospecDivisions.map((division,index)=><button type="button" className="prospec-division" key={division.name} onClick={()=>{setCatalogueDivision(division.name);document.getElementById("prospec-catalogue")?.scrollIntoView({behavior:"smooth"});}}><span className="prospec-division-index">0{index+1}</span><span className="prospec-division-mark">{division.marker}</span><strong>{division.name}</strong><small>{division.subtitle}</small><p>{division.detail}</p><b>Explore division <span aria-hidden="true">↗</span></b></button>)}</div></section>
-      <section className="sd-services sd-wrap sd-digital-store sd-store-collection" id="services">
-        <div className="prospec-catalogue-heading" id="prospec-catalogue"><div><span className="prospec-eyebrow">THE PROSPEC CATALOGUE</span><h2>Make something <em>happen.</em></h2><p>Published prices are shown in Pula. Items marked quote on request can still be selected and sent to the team.</p></div><span className="prospec-catalogue-count">{activeServices.length} listings</span></div><div className="prospec-division-filters" role="group" aria-label="Filter catalogue by division"><button type="button" aria-pressed={catalogueDivision==="All"} onClick={()=>setCatalogueDivision("All")}>All divisions</button>{prospecDivisions.map(item=><button key={item.name} type="button" aria-pressed={catalogueDivision===item.name} onClick={()=>setCatalogueDivision(item.name)}>{item.name}</button>)}</div><div className="sd-storefront-bar">
-          <div className="sd-storefront-title"><div><span className="sd-kicker">THE STORE</span><StoreAnnouncementSlot active={announcementIsActive && Boolean(data.announcement.trim() || data.announcementImage)} message={data.announcement} image={data.announcementImage} /></div></div>
-          <div className="sd-storefront-signals"><span className={"sd-store-availability is-"+(data.availability || "available")}><i aria-hidden="true"/>{data.availability === "limited" ? "Limited availability" : data.availability === "unavailable" ? "Currently unavailable" : "Available now"}</span></div>
+      <section className="prospec-hero prospec-hero-refined sd-wrap" aria-labelledby="prospec-hero-title">
+        <div className="prospec-hero-copy">
+          <span className="prospec-eyebrow">PROSPEC GROUP · BOTSWANA ROOTS · GLOBAL REACH</span>
+          <h1 id="prospec-hero-title">We keep our noses in <em>other people&apos;s business.</em></h1>
+          <p>One sharp team for brands, sourcing, digital identity and print. Tell us what you need; we&apos;ll get the right people on it.</p>
+          <div className="prospec-hero-actions">
+            <button type="button" onClick={() => document.getElementById("prospec-catalogue")?.scrollIntoView({behavior:"smooth"})}>Shop services &amp; products <span aria-hidden="true">↓</span></button>
+            <button type="button" className="is-secondary" onClick={() => { setView("account"); setNotice("Tell Prospec what you need and we’ll route your enquiry to the right division."); }}>Start a request <span aria-hidden="true">↗</span></button>
+          </div>
+          <div className="prospec-hero-signoff"><strong>PITBULLS OF BRANDING</strong><span>QWERTY by nature · strategic by design</span></div>
         </div>
-        <div className={"sd-service-grid sd-store-grid "+(visibleServices.length === 1 ? "has-featured-item" : visibleServices.length > 4 ? "has-catalogue" : "has-small-catalogue")}>
-          {visibleServices.length ? visibleServices.map((service,index)=><article className="sd-service-card sd-store-card" key={service.id}>
-            <div className={"sd-service-media sd-media-"+(index%4)+(service.mediaType==="video"?" is-video":"")}>
-              
-              <div className="sd-media-placeholder" hidden={Boolean(service.media)} aria-hidden="true"><span>{businessName || "THE STORE"}</span><strong>{service.name}</strong><i/></div>
-              {service.media&&service.mediaType==="video"?<StoreVideoPreview src={service.media} />:service.media?<StoreMediaImage src={service.media} alt={service.name+" preview"} />:null}
-              {service.media&&service.mediaType==="video"&&<span className="sd-service-media-badge">VIDEO PREVIEW</span>}
-            </div>
-            <div className="sd-service-info">{service.industry && <div className="sd-service-meta"><span>{service.industry}</span></div>}<div className="sd-service-title"><h3>{service.name}</h3><strong>{service.custom || service.price <= 0 ? "Quote on request" : money(service.price)}</strong></div><p>{service.description}</p><button className="sd-order-button" onClick={()=>beginOrder(service)}>Enquire about this item <span aria-hidden="true">↗</span></button></div>
-          </article>) : <div className="sd-store-empty"><span aria-hidden="true">🛍️</span><strong>Something is being prepared.</strong><p>Products and services will appear here when the business publishes its catalogue.</p></div>}
+        <div className="prospec-hero-stamp" aria-label="Prospec vision: Annihilate"><span>OUR VISION</span><strong>ANNIHILATE.</strong><i>THE ORDINARY</i></div>
+      </section>
+      <section className="prospec-divisions prospec-divisions-compact sd-wrap" id="prospec-divisions" aria-labelledby="prospec-divisions-title">
+        <div className="prospec-section-heading"><div><span className="prospec-eyebrow">FOUR SPECIALIST DEPARTMENTS</span><h2 id="prospec-divisions-title">Find your <em>lane.</em></h2></div><p>Open a department to see what Prospec can do.</p></div>
+        <div className="prospec-department-list">
+          {prospecDivisions.map((division,index)=>{
+            const count=activeServices.filter(service=>service.industry===division.name).length;
+            return <details className="prospec-department" key={division.name}>
+              <summary><span className="prospec-department-index">0{index+1}</span><span className="prospec-department-mark">{division.marker}</span><span className="prospec-department-copy"><strong>{division.name}</strong><small>{division.subtitle}</small></span><span className="prospec-department-count">{count} items</span><span className="prospec-department-chevron" aria-hidden="true">＋</span></summary>
+              <div className="prospec-department-details"><p>{division.detail}</p><button type="button" onClick={()=>{setCatalogueDivision(division.name);setStoreSearch("");document.getElementById("prospec-catalogue")?.scrollIntoView({behavior:"smooth"});}}>View {division.name} offerings <span aria-hidden="true">→</span></button></div>
+            </details>;
+          })}
         </div>
       </section>
-
-    <section className="prospec-contact sd-wrap" aria-labelledby="prospec-contact-title"><div><span className="prospec-eyebrow">LET&apos;S GET INTO IT</span><h2 id="prospec-contact-title">Got a brief? <em>Bring it.</em></h2><p>Choose a listing above or send a general enquiry. Every request is reviewed by the Prospec team and routed to the right division.</p><a href="https://wa.me/26771215185?text=Hello%20Prospec%20Group%2C%20I%27d%20like%20to%20make%20an%20enquiry." target="_blank" rel="noreferrer">WhatsApp Prospec <span aria-hidden="true">↗</span></a></div><div className="prospec-contact-details"><strong>Head office</strong><span>Plot 20643 Unit 1, Block 3 Industrial, Gaborone, Botswana</span><strong>Branch</strong><span>Tribal Lot 4216 Unit 6B, Supasave Mall, Mogoditshane, Botswana</span><a href="tel:+26776609311">+267 76 609 311</a><a href="tel:+26772647807">+267 72 647 807</a><a href="mailto:info@prospecagency.com">info@prospecagency.com</a></div></section>
+      <section className="sd-services sd-wrap sd-digital-store sd-store-collection prospec-storefront" id="services">
+        <div className="prospec-catalogue-heading" id="prospec-catalogue">
+          <div><span className="prospec-eyebrow">THE PROSPEC STORE</span><h2>Find it. <em>Request it.</em></h2><p>Choose a listed product or service. Fixed prices are shown in BWP; custom work is always welcome.</p></div>
+          <span className="prospec-catalogue-count">{visibleServices.length} of {activeServices.length} items</span>
+        </div>
+        <div className="prospec-store-tools">
+          <label className="prospec-store-search"><span aria-hidden="true">⌕</span><input type="search" value={storeSearch} onChange={event=>setStoreSearch(event.target.value)} placeholder="Search products and services" aria-label="Search products and services"/>{storeSearch&&<button type="button" onClick={()=>setStoreSearch("")} aria-label="Clear search">×</button>}</label>
+          <div className="prospec-division-filters" role="group" aria-label="Filter catalogue by department">
+            <button type="button" aria-pressed={catalogueDivision==="All"} onClick={()=>setCatalogueDivision("All")}>Everything</button>
+            {prospecDivisions.map(item=><button key={item.name} type="button" aria-pressed={catalogueDivision===item.name} onClick={()=>setCatalogueDivision(item.name)}>{item.marker}</button>)}
+          </div>
+        </div>
+        <div className="sd-storefront-bar prospec-store-status">
+          <div className="sd-storefront-title"><div><span className="sd-kicker">A CLEAR NEXT STEP</span><StoreAnnouncementSlot active={announcementIsActive && Boolean(data.announcement.trim() || data.announcementImage)} message={data.announcement} image={data.announcementImage}/></div></div>
+          <div className="sd-storefront-signals"><span className={"sd-store-availability is-"+(data.availability || "available")}><i aria-hidden="true"/>{data.availability==="limited"?"Limited availability":data.availability==="unavailable"?"Temporarily unavailable":"Taking requests"}</span></div>
+        </div>
+        <div className={"sd-service-grid sd-store-grid prospec-product-grid "+(visibleServices.length===1?"has-featured-item":visibleServices.length>4?"has-catalogue":"has-small-catalogue")}>
+          {visibleServices.length ? visibleServices.map((service,index)=><article className="sd-service-card sd-store-card prospec-product-card" key={service.id}>
+            <div className={"sd-service-media sd-media-"+(index%4)+(service.mediaType==="video"?" is-video":"")}>
+              {!service.media&&<><img className="prospec-placeholder-photo" src={prospecPlaceholderFor(service)} alt="" loading="lazy"/><span className="prospec-image-note">Illustrative image</span></>}
+              {service.media&&service.mediaType==="video"?<StoreVideoPreview src={service.media}/>:service.media?<StoreMediaImage src={service.media} alt={service.name+" preview"}/>:null}
+              {service.media&&service.mediaType==="video"&&<span className="sd-service-media-badge">VIDEO PREVIEW</span>}
+            </div>
+            <div className="sd-service-info">
+              {service.industry&&<div className="sd-service-meta"><span>{service.industry}</span></div>}
+              <div className="sd-service-title"><h3 title={service.name}>{service.name}</h3><strong>{service.custom||service.price<=0?"Quote on request":money(service.price)}</strong></div>
+              <p>{service.description}</p>
+              <button className="sd-order-button" onClick={()=>beginOrder(service)}>Request this item <span aria-hidden="true">↗</span></button>
+            </div>
+          </article>) : <div className="sd-store-empty"><span aria-hidden="true">⌕</span><strong>No matches just yet.</strong><p>Try another search or choose a different department.</p><button type="button" onClick={()=>{setStoreSearch("");setCatalogueDivision("All");}}>Show all offerings</button></div>}
+        </div>
+      </section>
+      <section className="prospec-contact prospec-contact-refined sd-wrap" aria-labelledby="prospec-contact-title">
+        <div><span className="prospec-eyebrow">YOUR NEXT MOVE</span><h2 id="prospec-contact-title">Got a brief? <em>Bring it.</em></h2><p>Choose an offering or send a general request. Your Prospec Account keeps the conversation and updates together.</p><button type="button" onClick={()=>{setView("account");setNotice("Tell Prospec what you need and we’ll route your enquiry to the right division.");}}>Start your request <span aria-hidden="true">↗</span></button></div>
+        <div className="prospec-contact-details"><strong>Rooted in Botswana. Ready beyond.</strong><span>Prospec Group serves customers from its Botswana base, with local and international sourcing and services.</span><strong>Head office</strong><span>Plot 20643 Unit 1, Block 3 Industrial, Gaborone, Botswana</span><a href="mailto:info@prospecagency.com">info@prospecagency.com</a><a href="https://www.facebook.com/468612199989878/" target="_blank" rel="noreferrer">Follow Prospec on Facebook ↗</a></div>
+      </section>
 </>}
 
     
