@@ -2,7 +2,7 @@ import { createUploadthing, type FileRouter } from "uploadthing/next";
 
 const f = createUploadthing();
 
-// Match the proven Admin Hub / Sparkle Legacy UploadThing setup.
+// Prospec customer Account attachments use UploadThing; Firebase Storage is not used.
 // Keep the client-side validation in request-form.tsx in sync with these limits.
 export const ourFileRouter = {
   fileUploader: f({
@@ -10,7 +10,7 @@ export const ourFileRouter = {
     video: { maxFileSize: "16MB", maxFileCount: 1 },
     pdf: { maxFileSize: "4MB", maxFileCount: 1 },
   }).onUploadComplete(async ({ file }) => {
-    console.info("[Iteration 13] account/service attachment uploaded", {
+    console.info("[Prospec] account/enquiry attachment uploaded", {
       name: file.name,
       size: file.size,
       type: file.type,
