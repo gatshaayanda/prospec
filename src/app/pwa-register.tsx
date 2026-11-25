@@ -222,28 +222,47 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
   }, [installState, installHelpOpen]);
 
   async function install() {
-    const prompt = installPromptRef.current;
-    if (!prompt) {
-      // Never manufacture a replacement prompt. Manual steps are only valid for
-      // iOS Safari, where beforeinstallprompt is not available.
-      if (isIosSafari() || isAndroidChrome()) {
+    const browser = navigator as Navigator & { install?: () => Promise<void> };
+    const nativeInstall = browser.install;
+    // Prefer the newer browser-owned Web Install API when available. It must be
+    // called from this user gesture; the browser still owns consent and UI.
+    if (typeof nativeInstall === "function") {
+      try {
+        await nativeInstall.call(navigator);
+        setCanShowManualInstall(false);
+        setInstallHelpOpen(false);
+        setInstallState("hidden");
+      } catch {
+        // A rejected browser install remains a browser decision. Keep a useful
+        // manual route available rather than pretending installation succeeded.
         setInstallHelpOpen(true);
         setInstallState("native");
       }
       return;
     }
+
+    const prompt = installPromptRef.current;
+    if (!prompt) {
+      // Chromium only exposes beforeinstallprompt when it considers the app
+      // installable. Never fabricate a native prompt when the browser has not
+      // offered one; explain the real browser menu route instead.
+      if (isIosSafari() || isAndroidChrome() || !environment().embedded) {
+        setInstallHelpOpen(true);
+        setInstallState("native");
+      }
+      return;
+    }
+    installPromptRef.current = null;
     try {
       await prompt.prompt();
       const choice = await prompt.userChoice;
       if (choice.outcome === "dismissed") rememberDismissal();
+      if (choice.outcome === "accepted") setCanShowManualInstall(false);
     } catch {
-      // The event is one-shot and browser-controlled. Do not replace it with
-      // generic Chrome-menu instructions when the native prompt fails.
+      setInstallHelpOpen(true);
+      setInstallState("native");
     } finally {
-      installPromptRef.current = null;
       setCanInstall(false);
-      setInstallHelpOpen(false);
-      setInstallState("hidden");
     }
   }
 
@@ -316,16 +335,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
         </div>
         <button className="i13-install-collapse" type="button" aria-label={installCardCollapsed ? "Expand install options" : "Collapse install options"} aria-expanded={!installCardCollapsed} onClick={() => setInstallCardCollapsed(value => !value)}>{installCardCollapsed ? "＋" : "−"}</button>
         <button className="i13-install-close" type="button" aria-label="Dismiss install prompt for seven days" onClick={dismissInstall}>×</button>
-        <button className="i13-install-action" type="button" onClick={() => {
-          if (installPromptRef.current) {
-            void install();
-            return;
-          }
-          if (isIosSafari() || isAndroidChrome() || !environment().embedded) {
-            setInstallHelpOpen(true);
-            setInstallState("native");
-          }
-        }}>{installCardCollapsed ? "Install" : canInstall ? "Install Prospec Group" : "Add to Home Screen"} <span aria-hidden="true">↗</span></button>
+        <button className="i13-install-action" type="button" onClick={() => { void install(); }}>{installCardCollapsed ? "Install" : "Install Prospec Group"} <span aria-hidden="true">↗</span></button>
       </aside>
     )}
     {installCard}
