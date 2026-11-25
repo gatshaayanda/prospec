@@ -28,6 +28,7 @@ type Props = {
   email: string;
   setEmail: (email: string) => void;
   online: boolean;
+  syncStatus: "connecting" | "synced" | "offline" | "error";
   announcement: string;
   announcementActive: boolean;
   onBrowse: () => void;
@@ -42,7 +43,7 @@ type Props = {
 
 const prettyDate = (value: string) => { try { return new Date(value).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }); } catch { return value; } };
 
-export default function AccountWorkspace({ businessName, currency, orders, discountClaims, receiptProfile, accentColor, secondaryColor, highlightColor, availability, customerName, email, setEmail, online, announcement, announcementActive, onBrowse, onUpdateOrder, children, requestForm, onNewRequest, selectedServices, onRemoveSelected, onContinueRequest }: Props) {
+export default function AccountWorkspace({ businessName, currency, orders, discountClaims, receiptProfile, accentColor, secondaryColor, highlightColor, availability, customerName, email, setEmail, online, syncStatus, announcement, announcementActive, onBrowse, onUpdateOrder, children, requestForm, onNewRequest, selectedServices, onRemoveSelected, onContinueRequest }: Props) {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [uploadingOrder, setUploadingOrder] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -119,7 +120,7 @@ export default function AccountWorkspace({ businessName, currency, orders, disco
         <span className="sd-account-brand-mark" aria-hidden="true">{monogram}<span className="sd-account-heart">♥</span></span>
         <div><span className="sd-account-overline">{businessName}</span><strong>Customer account</strong></div>
       </div>
-      <span className="sd-account-ready"><span aria-hidden="true">●</span> Prospec account</span>
+      <span className="sd-account-ready"><span aria-hidden="true">●</span> {syncStatus === "synced" ? "Synced with Prospec" : syncStatus === "offline" ? "Offline · will sync" : syncStatus === "connecting" ? "Connecting account…" : "Sync needs attention"}</span>
     </header>
 
     <div className="sd-account-compact-intro">
