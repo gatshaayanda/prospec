@@ -11,7 +11,7 @@ type InstallPromptEvent = Event & {
 };
 type InstallState = "hidden" | "native" | "embedded";
 
-const INSTALL_DISMISSED_KEY = "prospec:install:dismissed-at:v2";
+const INSTALL_DISMISSED_KEY = "prospec:install:dismissed-at:v3";
 const INSTALL_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
 
 function environment() {
@@ -81,7 +81,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     setInstallCardDismissed(dismissedRecently());
     const embedded = initialEmbedded || env.embedded;
     setEmbeddedAndroid((initialEmbedded && initialAndroid) || (env.embedded && env.android));
-    setCanShowManualInstall(isIosSafari() || isAndroidChrome());
+    setCanShowManualInstall(!env.standalone && !embedded);
 
     let registration: ServiceWorkerRegistration | null = null;
     const inspect = () => {
@@ -145,7 +145,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
       }
       // Only iOS Safari needs manual guidance. On desktop/Android, do not replace
       // the browser-owned prompt with a custom explainer or fake install flow.
-      if ((current.ios && isIosSafari()) || isAndroidChrome()) {
+      if (isIosSafari() || isAndroidChrome() || !current.embedded) {
         setInstallHelpOpen(true);
         setInstallState("native");
       }
@@ -283,13 +283,13 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
 
   const installShellStyle: CSSProperties = { position: "fixed", left: 16, right: 16, bottom: 16, zIndex: 1000, maxWidth: 720, margin: "0 auto", padding: 16, borderRadius: 18, background: "#FFFFFF", color: "#111318", boxShadow: "0 12px 40px rgba(0,0,0,.18)", border: "1px solid rgba(17,19,24,.12)" };
   const embeddedInstallStyle: CSSProperties = { position: "fixed", inset: 0, zIndex: 2147483647, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(0,0,0,.82)", backdropFilter: "blur(4px)", overscrollBehavior: "contain" };
-  const installCard = installState === "native" && installHelpOpen && (isIosSafari() || isAndroidChrome()) ? (
+  const installCard = installState === "native" && installHelpOpen && !environment().embedded ? (
     <div style={installShellStyle} role="presentation">
       <section className="plugInstallModal" role="dialog" aria-modal="false" aria-labelledby="plug-install-title" aria-describedby="plug-install-message">
         <div className="plugInstallTop"><span className="plugInstallMark">P</span><span className="plugInstallTag">PROSPEC GROUP · PITBULLS OF BRANDING</span><button type="button" className="plugInstallClose" aria-label="Close install guidance" onClick={dismissInstall}>×</button></div>
-        <div className="plugInstallKicker">{isIosSafari() ? "IPHONE & IPAD" : "ANDROID · CHROME"}</div>
+        <div className="plugInstallKicker">{isIosSafari() ? "IPHONE & IPAD" : isAndroidChrome() ? "ANDROID · CHROME" : "BROWSER INSTALL"}</div>
         <h2 id="plug-install-title">{isIosSafari() ? "Add to Home Screen." : "Install Prospec Group."}</h2>
-        <p id="plug-install-message">{isIosSafari() ? <>In Safari, tap <b>Share</b>, choose <b>Add to Home Screen</b>, then tap <b>Add</b>. Open the new Home Screen icon to launch the installed app.</> : <>In Chrome, open the <b>⋮ menu</b> and choose <b>Install app</b> or <b>Add to Home screen</b> if shown. If neither option appears, Chrome has not yet marked this page as installable. The native Install action will appear here when Chrome makes it available.</>}</p>
+        <p id="plug-install-message">{isIosSafari() ? <>In Safari, tap <b>Share</b>, choose <b>Add to Home Screen</b>, then tap <b>Add</b>. Open the new Home Screen icon to launch the installed app.</> : isAndroidChrome() ? <>In Chrome, open the <b>⋮ menu</b> and choose <b>Install app</b> or <b>Add to Home screen</b>. If Chrome offers native installation, the Install button on this card will use it.</> : <>In your browser menu, choose <b>Install Prospec Group</b> or <b>Add to Home Screen</b> if available. When the browser provides a native install prompt, the Install button will use that prompt.</>}</p>
         <button type="button" className="plugInstallPrimary" onClick={dismissInstall}>Continue on the website</button>
       </section>
     </div>
