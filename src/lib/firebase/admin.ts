@@ -17,7 +17,7 @@ function getAppInstance() {
   }
   if (parsed.project_id !== "theworks-f4957") throw new Error("Firebase Admin credential project does not match the configured Prospec project.");
   prospecAdminApp = initializeApp({
-    credential: cert({ ...parsed, private_key: parsed.private_key.replace(/\\n/g, "\n") }),
+    credential: cert({ projectId: parsed.project_id, clientEmail: parsed.client_email, privateKey: parsed.private_key.replace(/\\n/g, "\n") }),
     projectId: "theworks-f4957",
   }, "prospec-admin");
   return prospecAdminApp;
