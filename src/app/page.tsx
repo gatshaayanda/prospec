@@ -261,13 +261,6 @@ export default function Home() {
 
   const [adminTab, setAdminTab] = useState<"today" | "work" | "money" | "store" | "notes" | "insights">("today");
   const [storeSection, setStoreSection] = useState<"identity" | "offerings" | "announcement">("offerings");
-  const [estimatedRecordKb, setEstimatedRecordKb] = useState(16);
-  const [functionCallsPerCustomer, setFunctionCallsPerCustomer] = useState(4);
-  const [activeCpuMsPerCustomer, setActiveCpuMsPerCustomer] = useState(500);
-  const [functionRuntimeSecondsPerCustomer, setFunctionRuntimeSecondsPerCustomer] = useState(1);
-  const [dailyEnquiries, setDailyEnquiries] = useState(1000);
-  const [automationCoverage, setAutomationCoverage] = useState(75);
-  const [manualMinutesPerEnquiry, setManualMinutesPerEnquiry] = useState(3);
   const [promoAssignEmail, setPromoAssignEmail] = useState("");
   const [adminUnlocked, setAdminUnlocked] = useState(false);
   const [adminPassphrase, setAdminPassphrase] = useState("");
@@ -391,8 +384,8 @@ export default function Home() {
   const [announcementImageDraft, setAnnouncementImageDraft] = useState("");
   const [announcementEnabledDraft, setAnnouncementEnabledDraft] = useState(false);
   const [announcementImageUploading, setAnnouncementImageUploading] = useState(false);
-  const [rewardTitleDraft, setRewardTitleDraft] = useState(emptyData.rewardTitle || "Race for a discount.");
-  const [rewardDescriptionDraft, setRewardDescriptionDraft] = useState(emptyData.rewardDescription || "Drive for eight seconds. Keep it clean to unlock the published discount on your next request.");
+  const [rewardTitleDraft, setRewardTitleDraft] = useState(emptyData.rewardTitle || "");
+  const [rewardDescriptionDraft, setRewardDescriptionDraft] = useState(emptyData.rewardDescription || "");
   const [rewardImageDraft, setRewardImageDraft] = useState("");
   const [rewardDiscountDraft, setRewardDiscountDraft] = useState("5");
   const [rewardImageUploading, setRewardImageUploading] = useState(false);
@@ -948,33 +941,12 @@ export default function Home() {
       return total;
     } catch { return null; }
   }, [data, ownerNotes, businessName, brandColors, businessCurrency]);
-  const firebaseCapacityBytes = 25 * 1024 * 1024 * 1024;
-  const localCapacityPercent = localStorageBytes === null ? null : Math.min(100, (localStorageBytes / firebaseCapacityBytes) * 100);
-  const localCapacityPercentLabel = localCapacityPercent === null ? "Unavailable" : localCapacityPercent < 0.000001 ? "<0.000001%" : `${localCapacityPercent.toFixed(6)}%`;
-  const estimatedPayloadBytes = estimatedRecordKb * 1024;
-  const estimatedRecordsInAdminTarget = Math.floor(firebaseCapacityBytes / estimatedPayloadBytes);
-  const hobbyMonthlyInvocations = 1_000_000;
-  const hobbyMonthlyActiveCpuSeconds = 4 * 60 * 60;
-  const hobbyMonthlyProvisionedMemoryGbHours = 360;
-  const dailyInvocationBudget = hobbyMonthlyInvocations / 30;
-  const dailyActiveCpuBudgetSeconds = hobbyMonthlyActiveCpuSeconds / 30;
-  const dailyProvisionedMemoryBudgetGbHours = hobbyMonthlyProvisionedMemoryGbHours / 30;
-  const estimatedDailyByInvocations = Math.floor(dailyInvocationBudget / Math.max(1, functionCallsPerCustomer));
-  const estimatedDailyByCpu = Math.floor(dailyActiveCpuBudgetSeconds / Math.max(0.001, activeCpuMsPerCustomer / 1000));
-  const estimatedDailyByMemory = Math.floor(dailyProvisionedMemoryBudgetGbHours / (2 * Math.max(0.1, functionRuntimeSecondsPerCustomer) / 3600));
-  const estimatedCustomersPerDay = Math.max(0, Math.min(estimatedDailyByInvocations, estimatedDailyByCpu, estimatedDailyByMemory));
-  const estimatedCustomersHandledWithoutOwner = Math.min(dailyEnquiries, estimatedCustomersPerDay) * automationCoverage / 100;
-  const estimatedOwnerHoursReleased = estimatedCustomersHandledWithoutOwner * manualMinutesPerEnquiry / 60;
-  const limitingResource = estimatedCustomersPerDay === estimatedDailyByInvocations ? "Function invocations" : estimatedCustomersPerDay === estimatedDailyByCpu ? "Active CPU" : "Provisioned memory";
   const localEvents = data.events || [];
   const recordedVisits = Math.max(data.views || 0, localEvents.filter(event => event.kind === "visit").length);
   const serviceSelections = localEvents.filter(event => event.kind === "service").length;
   const accountOpens = localEvents.filter(event => event.kind === "account").length;
   const recentLocalEvents = localEvents.slice(0, 6);
   const localRequestsRecorded = data.orders.length;
-  const localActivityCount = localEvents.length;
-  const localWorkloadProgress = Math.min(100, (localRequestsRecorded / Math.max(1, estimatedCustomersPerDay)) * 100);
-  const localWorkloadProgressLabel = localRequestsRecorded > estimatedCustomersPerDay ? "Daily scenario exceeded" : "Within the daily scenario";
 
   function beginOrder(service: Service) {
     recordActivity("service", "Product / service selected · " + service.name);
@@ -1415,80 +1387,8 @@ return <main className="servicePreview" style={{ "--studio-accent": themeColor, 
   </div>
   <div className="sd-local-analytics-columns">
     <article className="sd-local-footprint-card"><span className="sd-kicker">LOCAL DATA FOOTPRINT</span><strong>{formatLocalBytes(localStorageBytes)}</strong><p>Approximate saved data measured in this browser, including business setup, notes and preview records.</p><span className="sd-local-pill">Measured locally · this device</span></article>
-    <article className="sd-firebase-capacity-card"><span className="sd-kicker">ADMIN HUB CAPACITY TARGET</span><strong>25 GB / month</strong><p>Compare this browser&apos;s saved data with the monthly cloud capacity maintained by the Admin Hub.</p><div className="sd-capacity-comparison"><div className="sd-capacity-comparison-labels"><strong>{formatLocalBytes(localStorageBytes)} used locally</strong><strong>{localCapacityPercentLabel} of capacity</strong></div><div className="sd-capacity-scale" role="img" aria-label={localCapacityPercent === null ? "Local data size unavailable; Admin Hub capacity target is 25 gigabytes" : `${formatLocalBytes(localStorageBytes)} local data, ${localCapacityPercentLabel} of the 25 gigabyte Admin Hub capacity target`}><div className="sd-capacity-scale-fill" style={{ width: `${localCapacityPercent ?? 0}%` }} /></div><div className="sd-capacity-scale-labels"><span>0 GB</span><span>25 GB target</span></div></div><small className="sd-capacity-scale-note">This compares this browser’s local preview data with the Admin Hub’s 25 GB planning target. It is not live cloud metering; Firebase is not connected to this prototype.</small></article>
+    <article className="sd-data-connection-card"><span className="sd-kicker">SHARED DATA</span><strong>Database connection pending</strong><p>The Prospec database is not yet wired into this preview. Enquiries and owner edits remain on this browser until shared persistence and access rules are connected.</p><span className="sd-local-pill">Preview only · this device</span></article>
   </div>
-  <details className="sd-insights-deep-dive"><summary><span><strong>Infrastructure & capacity planning</strong><small>Hosting, database, storage assumptions and workload calculator</small></span><b>Explore details</b></summary>
-  <section className="sd-infrastructure-panel" aria-labelledby="sd-infrastructure-title">
-    <div className="sd-infrastructure-heading">
-      <div><span className="sd-kicker">THE OPERATING MODEL</span><h3 id="sd-infrastructure-title">From public visit to business record</h3></div>
-      <span className="sd-infrastructure-status">CURRENTLY LOCAL · CLOUD PATH PLANNED</span>
-    </div>
-    <p className="sd-infrastructure-intro">A domain is the address, not the computer. DNS points that address to Vercel, whose managed infrastructure delivers the app. A connected database would then keep customer and business records in the cloud.</p>
-    <div className="sd-infrastructure-flow">
-      <article className="sd-infrastructure-node is-current">
-        <span className="sd-infrastructure-step">01 · CUSTOMER</span><strong>Visitor&apos;s browser</strong><p>Opens the Store, browses services and chooses an item. In this preview, clicks and saved requests are handled here.</p><span className="sd-infrastructure-tag">Browser activity · measured locally</span>
-      </article>
-      <span className="sd-infrastructure-arrow" aria-hidden="true">→</span>
-      <article className="sd-infrastructure-node is-current">
-        <span className="sd-infrastructure-step">02 · HOSTING</span><strong>Vercel CDN / edge</strong><p>Delivers cached pages, images, scripts and styles from its global network when the public site is deployed.</p><span className="sd-infrastructure-tag">Hosting layer · not metered here</span>
-      </article>
-      <span className="sd-infrastructure-arrow" aria-hidden="true">→</span>
-      <article className="sd-infrastructure-node is-planned">
-        <span className="sd-infrastructure-step">03 · COMPUTE</span><strong>Vercel Functions</strong><p>Runs server-side work when a real cloud action needs it—such as validating and saving an enquiry. Functions scale with demand and can scale down when idle.</p><span className="sd-infrastructure-tag">Future connection · not active in preview</span>
-      </article>
-      <span className="sd-infrastructure-arrow" aria-hidden="true">→</span>
-      <article className="sd-infrastructure-node is-planned">
-        <span className="sd-infrastructure-step">04 · DATABASE</span><strong>Firebase / Firestore</strong><p>Would store shared customer accounts, enquiries, service records and owner updates in the Johannesburg region.</p><span className="sd-infrastructure-tag">Target region · africa-south1</span>
-      </article>
-    </div>
-    <div className="sd-infrastructure-footnotes">
-      <div><strong>Available around the clock</strong><p>The public site can be reachable 24/7. That does not mean one app server is burning CPU at full power all day: cached content is served by the CDN, while serverless compute runs when invoked.</p></div>
-      <div><strong>Where the machines are</strong><p>Google lists Firestore&apos;s Johannesburg region. Vercel Functions default to Washington, D.C. unless configured; Cape Town is its listed South African compute region. A future deployment should deliberately choose the closest supported compute region and test database latency. Neither connection is active here.</p></div>
-      <div><strong>Real-world infrastructure</strong><p>Data centres use physical servers, networking, electricity, cooling and backup systems. This prototype has no provider-side energy or live resource telemetry, so it does not invent those measurements.</p></div>
-      <div><strong>Public visitor or owner?</strong><p>Public browsing stays anonymous. A customer becomes an account holder through an explicit account flow; an owner signs in separately. The cloud version must enforce roles at the server and database rules—not trust a browser label. This preview&apos;s owner passphrase is not production authentication.</p></div>
-    </div>
-  </section>
-  <section className="sd-capacity-playground" aria-labelledby="sd-capacity-playground-title">
-    <div className="sd-infrastructure-heading"><div><span className="sd-kicker">THE BUSINESS OWNER&apos;S TIME BACK</span><h3 id="sd-capacity-playground-title">How many customer conversations can the system carry?</h3></div><span className="sd-infrastructure-status">HOBBY-PLAN PLANNING MODEL</span></div>
-    <p className="sd-infrastructure-intro">This joins your Admin Hub 25 GB storage target with Vercel Hobby&apos;s monthly compute allowance. Storage and compute are different limits: the 25 GB target estimates how much record data can accumulate; Vercel resources estimate how much server-side work can be processed. The customer/day result is a scenario, not a load-test result.</p>
-    <div className="sd-capacity-business-results"><span className="sd-kicker">SCENARIO OUTPUT · NOT LIVE TELEMETRY</span><div className="sd-capacity-hero-metric"><strong>{estimatedCustomersPerDay.toLocaleString()}</strong><span>estimated customer journeys/day within the tightest Hobby compute budget</span></div><div className="sd-capacity-limit-breakdown"><div><span>Invocation allowance</span><strong>{estimatedDailyByInvocations.toLocaleString()} / day</strong></div><div><span>Active CPU allowance</span><strong>{estimatedDailyByCpu.toLocaleString()} / day</strong></div><div><span>Provisioned memory allowance</span><strong>{estimatedDailyByMemory.toLocaleString()} / day</strong></div><p>Current model bottleneck: <strong>{limitingResource}</strong>. Monthly Hobby allowances are spread evenly across 30 days.</p></div><div className="sd-capacity-labour-result"><strong>{Math.round(estimatedCustomersHandledWithoutOwner).toLocaleString()}</strong><span>routine conversations potentially handled without the owner replying</span><strong>{estimatedOwnerHoursReleased.toFixed(1)} hours</strong><span>equivalent staff-hours of repetitive handling represented per day</span></div><p>This is labour-equivalent time, not a claim that one person works more than 24 hours. It illustrates how much repetitive handling could be absorbed so the owner can take time away and return for exceptions, qualified opportunities and human decisions.</p></div>
-    <section className="sd-live-work-snapshot" aria-label="Recorded activity in this browser">
-      <div className="sd-live-work-heading"><div><span className="sd-kicker">📍 WHAT HAS ACTUALLY HAPPENED</span><h4>This preview&apos;s activity so far</h4><p>Real counts saved in this browser — not estimated cloud usage.</p></div><span className="sd-live-local-tag">💻 THIS DEVICE ONLY</span></div>
-      <div className="sd-live-work-grid">
-        <article><span aria-hidden="true">👀</span><strong>{recordedVisits.toLocaleString()}</strong><b>Store visits</b><small>Times the local preview recorded a visit</small></article>
-        <article><span aria-hidden="true">🛍️</span><strong>{serviceSelections.toLocaleString()}</strong><b>Services explored</b><small>Product / service selections recorded</small></article>
-        <article><span aria-hidden="true">📨</span><strong>{localRequestsRecorded.toLocaleString()}</strong><b>Requests saved</b><small>Customer enquiries saved in this browser</small></article>
-        <article><span aria-hidden="true">👤</span><strong>{accountOpens.toLocaleString()}</strong><b>Account visits</b><small>Account openings recorded locally</small></article>
-        <article><span aria-hidden="true">⚡</span><strong>{localActivityCount.toLocaleString()}</strong><b>Recorded actions</b><small>All tracked local activity events</small></article>
-      </div>
-      <div className="sd-live-work-meter sd-live-storage-meter">
-        <div><strong>💾 Saved data vs. Admin Hub 25 GB target</strong><span>{formatLocalBytes(localStorageBytes)} of 25 GB · {localCapacityPercentLabel}</span></div>
-        <div className="sd-live-work-track" role="img" aria-label={`${formatLocalBytes(localStorageBytes)} saved locally, ${localCapacityPercentLabel} of the Admin Hub 25 GB planning target`}><span style={{width:(localCapacityPercent ?? 0)+"%"}} /></div>
-        <small>This is the actual local browser footprint. It is not live Firebase usage or a claim about Firebase&apos;s free quota.</small>
-      </div>
-      <div className="sd-live-work-meter">
-        <div><strong>📊 Requests recorded vs. daily planning scenario</strong><span>{localRequestsRecorded.toLocaleString()} of {estimatedCustomersPerDay.toLocaleString()} estimated customer journeys</span></div>
-        <div className="sd-live-work-track" role="progressbar" aria-label="Locally saved requests compared with estimated daily customer journey capacity" aria-valuemin={0} aria-valuemax={estimatedCustomersPerDay} aria-valuenow={Math.min(localRequestsRecorded,estimatedCustomersPerDay)}><span style={{width:localWorkloadProgress+"%"}} /></div>
-        <small>{localWorkloadProgressLabel} · This compares local saved requests with a modelled daily workload. It does not measure Vercel Function invocations.</small>
-      </div>
-      <div className="sd-live-work-eli5"><span aria-hidden="true">🧒</span><p><strong>ELI5 — think of it like a shop assistant.</strong> 👋 The visit counter tells you how many people looked around. Service selections show what caught their eye. Requests show how many asked the business to do something. The capacity estimate is how many customer journeys the hosting budget might support in a day. They are different counters, so we show them side by side instead of pretending every click uses one server request.</p></div>
-    </section>
-    <div className="sd-capacity-simulator">
-      <div className="sd-capacity-simulator-control"><span className="sd-kicker">01 · ADMIN HUB DATA TARGET</span><label htmlFor="sd-record-size">Estimated saved data per customer record</label><div className="sd-capacity-simulator-value"><strong>{estimatedRecordKb} KB</strong><span>per enquiry record · no attachments</span></div><input id="sd-record-size" type="range" min="4" max="64" step="4" value={estimatedRecordKb} onChange={event=>setEstimatedRecordKb(Number(event.target.value))}/><div className="sd-capacity-slider-labels"><span>4 KB · lightweight</span><span>64 KB · detailed</span></div><div className="sd-capacity-primary-result"><strong>{estimatedRecordsInAdminTarget.toLocaleString()}</strong><span>estimated records represented by the 25 GB Admin Hub target</span></div><p>Your 25 GB benchmark remains your project&apos;s own planning target. This is not being presented as Firebase&apos;s free Firestore quota. Files, indexes, backups and other data use separate capacity.</p></div>
-      <div className="sd-capacity-simulator-control sd-hobby-controls"><span className="sd-kicker">02 · VERCEL HOBBY WORKLOAD ASSUMPTIONS</span><label htmlFor="sd-function-calls">Function calls per customer journey</label><div className="sd-capacity-simulator-value"><strong>{functionCallsPerCustomer}</strong><span>server-side requests per customer</span></div><input id="sd-function-calls" type="range" min="1" max="20" value={functionCallsPerCustomer} onChange={event=>setFunctionCallsPerCustomer(Number(event.target.value))}/><label htmlFor="sd-cpu-ms">Active CPU per customer journey</label><div className="sd-capacity-simulator-value"><strong>{activeCpuMsPerCustomer} ms</strong><span>actual processing time, excluding database/network waiting</span></div><input id="sd-cpu-ms" type="range" min="100" max="2000" step="100" value={activeCpuMsPerCustomer} onChange={event=>setActiveCpuMsPerCustomer(Number(event.target.value))}/><label htmlFor="sd-runtime">Total Function-instance time per customer</label><div className="sd-capacity-simulator-value"><strong>{functionRuntimeSecondsPerCustomer} sec</strong><span>assumed time consuming provisioned memory</span></div><input id="sd-runtime" type="range" min="1" max="10" value={functionRuntimeSecondsPerCustomer} onChange={event=>setFunctionRuntimeSecondsPerCustomer(Number(event.target.value))}/><p>These are editable assumptions because this prototype has no live Vercel Function telemetry. Fluid Compute can reuse instances across concurrent requests; actual usage must be measured after cloud workflows are connected.</p></div>
-    </div>
-    <div className="sd-platform-capacity sd-hobby-resource-grid">
-      <div><span className="sd-kicker">VERCEL HOBBY · MONTHLY INCLUDED</span><strong>1,000,000 Function invocations</strong><p>Each server-side Function request counts, including unsuccessful invocations.</p></div>
-      <div><span className="sd-kicker">ACTIVE CPU</span><strong>4 hours</strong><p>CPU processing time per month. Waiting on I/O is not active CPU time.</p></div>
-      <div><span className="sd-kicker">PROVISIONED MEMORY</span><strong>360 GB-hours</strong><p>Memory allocated to running Function instances over time.</p></div>
-      <div><span className="sd-kicker">FUNCTION SIZE</span><strong>2 GB · 1 vCPU</strong><p>Hobby&apos;s standard Function memory/CPU configuration.</p></div>
-      <div><span className="sd-kicker">MAXIMUM DURATION</span><strong>5 minutes</strong><p>Maximum duration for a Hobby Function with Fluid Compute.</p></div>
-      <div><span className="sd-kicker">CONCURRENCY</span><strong>Up to 30,000</strong><p>Published platform ceiling for Hobby and Pro. It is not 30,000 customers; monthly usage budgets can be reached first.</p></div>
-    </div>
-    <div className="sd-capacity-business-model"><div className="sd-capacity-business-controls"><span className="sd-kicker">03 · THE OWNER&apos;S WORKDAY</span><label htmlFor="sd-daily-enquiries">Incoming enquiries / customer conversations per day</label><div className="sd-capacity-simulator-value"><strong>{dailyEnquiries.toLocaleString()}</strong><span>calls, social messages and website enquiries</span></div><input id="sd-daily-enquiries" type="range" min="100" max="3000" step="100" value={dailyEnquiries} onChange={event=>setDailyEnquiries(Number(event.target.value))}/><label htmlFor="sd-automation-coverage">Share the system can handle without an owner reply</label><div className="sd-capacity-simulator-value"><strong>{automationCoverage}%</strong><span>routine discovery, FAQs, service details, intake and status visibility</span></div><input id="sd-automation-coverage" type="range" min="25" max="95" step="5" value={automationCoverage} onChange={event=>setAutomationCoverage(Number(event.target.value))}/><label htmlFor="sd-manual-minutes">Human handling time normally spent per conversation</label><div className="sd-capacity-simulator-value"><strong>{manualMinutesPerEnquiry} minutes</strong><span>reading, answering, collecting details and organising follow-up</span></div><input id="sd-manual-minutes" type="range" min="1" max="15" value={manualMinutesPerEnquiry} onChange={event=>setManualMinutesPerEnquiry(Number(event.target.value))}/></div>
-      </div>
-    <p className="sd-capacity-model-note">This is a planning calculator, not a crash prediction or guarantee. It assumes each customer journey consumes the selected Function calls, active CPU and provisioned-memory runtime. It excludes CDN bandwidth/request limits, database reads/writes and contention, file uploads, third-party messaging, bot traffic, peak bursts, retries, caching and other projects sharing the Vercel team. Static pages and cached assets can serve visitors without invoking a Function on every view. Actual capacity requires production workflows, provider telemetry and load testing. Hobby is intended for personal, non-commercial use; a live commercial customer deployment should use an appropriate commercial plan.</p>
-  </section></details>
   <details className="sd-insights-activity"><summary><span><strong>Recent recorded work</strong><small>{recentLocalEvents.length} latest events · this browser</small></span><b>View activity</b></summary>
   <div className="sd-local-activity-feed">
     <div className="sd-local-activity-heading"><div><span className="sd-kicker">RECENT RECORDED WORK</span><h3>Activity trail</h3></div><span>{recentLocalEvents.length} latest events</span></div>
