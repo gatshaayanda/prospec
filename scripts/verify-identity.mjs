@@ -32,7 +32,7 @@ if (!layout.includes('<PwaRegister initialEmbedded={embedded} initialAndroid={an
 if (!/\.i13-install-card\s*\{[^}]*position:\s*relative[^}]*max-width:\s*390px[^}]*margin:\s*12px auto 0/s.test(installCss)) failures.push("PWA install card: protected inline compact placement changed");
 if (!pwaRegister.includes("await prompt.prompt()") || !pwaRegister.includes("setCanInstall(true)")) failures.push("PWA install: native prompt no longer connected to explicit action");
 if (!pwaRegister.includes("(canInstall || canShowManualInstall)") || !pwaRegister.includes("isIosSafari()")) failures.push("PWA install: native prompt / iOS Safari visibility gate changed");
-if (!pwaRegister.includes('className="i13-install-card"') || !pwaRegister.includes('className="i13-install-close"') || !pwaRegister.includes("setInstallCardDismissed(true)")) failures.push("PWA install: dismissible branded card missing");
+if (!pwaRegister.includes('className={`i13-install-card') || !pwaRegister.includes('className="i13-install-close"') || !pwaRegister.includes("setInstallCardDismissed(true)")) failures.push("PWA install: dismissible branded card missing");
 if (!pwaRegister.includes("PROSPEC GROUP")) failures.push("PWA install: Prospec branding missing");
 if (!pwaRegister.includes("installCardCollapsed") || !pwaRegister.includes("aria-expanded={!installCardCollapsed}")) failures.push("PWA install: accessible collapsible card state missing");
 if (!pwaRegister.includes("onClick={dismissInstall}") || !pwaRegister.includes("rememberDismissal();")) failures.push("PWA install: persistent user dismissal missing");
