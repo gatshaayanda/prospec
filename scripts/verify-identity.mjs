@@ -43,6 +43,8 @@ function walk(dir) {
     const full = path.join(dir,entry.name);
     if (entry.isDirectory()) walk(full);
     else if (/\.(?:ts|tsx|js|mjs|css|json|webmanifest|md|yml|yaml|txt|html|svg)$/i.test(entry.name)) {
+      const relative = path.relative(root,full);
+      if (relative === "scripts/verify-identity.mjs") continue;
       const content = fs.readFileSync(full,"utf8");
       if (/boemo-joos-food-deals|namane-tyres\.vercel\.app|yusuf-clothing-line\.vercel\.app|BOEMO_REMINDER_CRON_SECRET|boemoMedia|the-plug-pearl\.vercel\.app|plug-icon\.svg|THE_PLUG_PUBLIC_URL/i.test(content)) failures.push(path.relative(root,full)+": inherited client identity, credential, storage path or production URL remains");
     }
