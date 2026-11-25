@@ -31,7 +31,7 @@ check(account.includes("Firestore keeps an offline cache") || account.includes("
 check(offline.includes("Prospec Group") && offline.includes("preview"), "offline page must use Prospec identity and explain offline behavior");
 check(layout.includes('strategy="beforeInteractive"') && layout.includes("event.preventDefault()") && layout.includes("window.__iteration13InstallPrompt = event"), "early native install-prompt capture must remain intact");
 check(pwaRegister.includes("await prompt.prompt()") && pwaRegister.includes("await prompt.userChoice"), "branded install action must invoke and await the native browser prompt");
-check(pwaRegister.includes('className="i13-install-card"') && pwaRegister.includes('className="i13-install-close"') && pwaRegister.includes("setInstallCardDismissed(true)"), "compact dismissible install card must remain intact");
+check(pwaRegister.includes("i13-install-card") && pwaRegister.includes('className="i13-install-close"') && pwaRegister.includes("setInstallCardDismissed(true)") && pwaRegister.includes("aria-expanded={!installCardCollapsed}"), "compact collapsible and dismissible install card must remain intact");
 check(pwaRegister.includes("function isIosSafari()") && pwaRegister.includes("Share</b>, choose <b>Add to Home Screen</b>"), "iOS Safari installation guidance must remain intact");
 check(pwaRegister.includes('installState === "embedded"') && pwaRegister.includes("function openBrowser()"), "embedded-browser handoff must remain intact");
 check(pwaRegister.includes('register("/sw.js", { updateViaCache: "none" })') && pwaRegister.includes("SKIP_WAITING") && pwaRegister.includes('className="pwaUpdate"'), "service-worker update lifecycle must remain intact");
