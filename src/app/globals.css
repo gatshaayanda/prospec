@@ -6227,3 +6227,92 @@ h1 em,
 @media(prefers-reduced-motion:reduce){.prospec-division{transition:none}.prospec-division:hover{transform:none}}
 
 .sd-data-connection-card{display:flex;flex-direction:column;gap:9px;align-items:flex-start;padding:18px;border:1px solid #3A4A50;border-radius:12px;background:#20292F;color:#DCE7E9}.sd-data-connection-card strong{font-size:1.05rem;color:#fff}.sd-data-connection-card p{max-width:52ch;margin:0;color:#AFC0C3;font-size:.8rem;line-height:1.55}
+
+
+/* Prospec customer storefront refinement: quieter hierarchy, progressive disclosure and clear actions. */
+.prospec-hero-refined{padding-top:clamp(28px,5vw,54px);padding-bottom:34px;gap:22px}
+.prospec-hero-refined .prospec-hero-copy>p{max-width:54ch;font-size:1rem;line-height:1.55}
+.prospec-hero-refined .prospec-hero-stamp{width:min(100%,190px);padding:20px}
+.prospec-divisions-compact{padding-top:12px;padding-bottom:28px}
+.prospec-divisions-compact .prospec-section-heading{margin-bottom:12px}
+.prospec-divisions-compact .prospec-section-heading h2{font-size:clamp(1.55rem,3.4vw,2.35rem)}
+.prospec-department-list{display:grid;gap:7px}
+.prospec-department{overflow:hidden;border:1px solid #34434a;border-radius:11px;background:#1b2429}
+.prospec-department>summary{display:flex;align-items:center;gap:12px;min-height:66px;padding:10px 14px;cursor:pointer;list-style:none}
+.prospec-department>summary::-webkit-details-marker{display:none}
+.prospec-department>summary:focus-visible{outline:2px solid #00b9c7;outline-offset:-3px}
+.prospec-department-index{color:#8da2a7;font-size:.68rem;font-weight:900}
+.prospec-department-mark{display:grid;place-items:center;min-width:42px;height:32px;padding:0 7px;border-radius:6px;background:#00b9c7;color:#10191d;font-size:.65rem;font-weight:950}
+.prospec-department-copy{display:grid;gap:3px;min-width:0;flex:1}
+.prospec-department-copy strong{font-size:.9rem;line-height:1.2}
+.prospec-department-copy small{overflow:hidden;color:#a9b9bc;font-size:.7rem;text-overflow:ellipsis;white-space:nowrap}
+.prospec-department-count{color:#9eb1b5;font-size:.68rem;white-space:nowrap}
+.prospec-department-chevron{display:grid;place-items:center;width:28px;height:28px;border:1px solid #45565b;border-radius:50%;color:#00b9c7;font-size:1rem}
+.prospec-department[open] .prospec-department-chevron{transform:rotate(45deg)}
+.prospec-department-details{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 14px 13px 68px}
+.prospec-department-details p{margin:0;color:#b6c5c8;font-size:.76rem;line-height:1.45}
+.prospec-department-details button,.sd-store-empty button{flex:none;border:0;background:none;color:#00d0dc;font-size:.74rem;font-weight:900;cursor:pointer}
+.prospec-storefront{padding-top:24px}
+.prospec-catalogue-heading{align-items:flex-end;margin-bottom:14px}
+.prospec-catalogue-heading h2{font-size:clamp(1.8rem,4vw,2.8rem)}
+.prospec-catalogue-heading p{max-width:52ch;font-size:.8rem}
+.prospec-store-tools{display:grid;gap:10px;margin-bottom:12px}
+.prospec-store-search{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 13px;border:1px solid #405158;border-radius:9px;background:#20292f;color:#9db0b4}
+.prospec-store-search>span{font-size:1.35rem;line-height:1}
+.prospec-store-search input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#fff;font-size:.86rem}
+.prospec-store-search input::placeholder{color:#9aadb1}
+.prospec-store-search button{border:0;background:none;color:#dbe7e9;font-size:1.25rem;cursor:pointer}
+.prospec-store-tools .prospec-division-filters{padding:0 0 3px;gap:6px}
+.prospec-store-tools .prospec-division-filters button{min-height:34px;padding:7px 11px;font-size:.68rem}
+.prospec-store-status{margin:8px 0 12px;padding:10px 12px;border:1px solid #34434a;border-radius:9px;background:#1b2429}
+.prospec-store-status .sd-kicker{font-size:.62rem}
+.prospec-product-grid{gap:12px}
+.prospec-product-card{overflow:hidden;border:1px solid #35444a;border-radius:12px;background:#20292f;box-shadow:0 8px 20px rgba(0,0,0,.12)}
+.prospec-product-card .sd-service-media{position:relative;height:clamp(128px,18vw,190px);min-height:0;overflow:hidden;background:#152126}
+.prospec-product-card .prospec-placeholder-photo{display:block;width:100%;height:100%;object-fit:cover;filter:saturate(.78)}
+.prospec-product-card .prospec-image-note{position:absolute;right:8px;bottom:8px;padding:4px 7px;border:1px solid rgba(255,255,255,.24);border-radius:5px;background:rgba(12,20,23,.78);color:#e8f1f2;font-size:.58rem;font-weight:750}
+.prospec-product-card .sd-service-info{display:flex;flex-direction:column;gap:8px;padding:13px}
+.prospec-product-card .sd-service-meta{margin:0}
+.prospec-product-card .sd-service-meta span{font-size:.62rem;letter-spacing:.03em}
+.prospec-product-card .sd-service-title{display:grid;gap:6px;align-content:start}
+.prospec-product-card .sd-service-title h3{display:-webkit-box;overflow:hidden;margin:0;color:#fff;font-size:.94rem;line-height:1.25;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.prospec-product-card .sd-service-title strong{color:#00d0dc;font-size:.82rem}
+.prospec-product-card .sd-service-info>p{display:-webkit-box;overflow:hidden;min-height:2.6em;margin:0;color:#b3c2c5;font-size:.72rem;line-height:1.4;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.prospec-product-card .sd-order-button{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:40px;margin-top:auto;padding:9px 11px;border-radius:7px;font-size:.7rem}
+.prospec-store-empty{grid-column:1/-1;display:grid;justify-items:center;gap:8px;padding:34px 18px;border:1px dashed #53656b;border-radius:12px;text-align:center}
+.prospec-store-empty>span{color:#00b9c7;font-size:1.8rem}
+.prospec-store-empty strong{color:#fff;font-size:1rem}
+.prospec-store-empty p{max-width:38ch;margin:0;color:#aebfc2;font-size:.78rem}
+.prospec-contact-refined{align-items:stretch;padding-top:28px;padding-bottom:34px}
+.prospec-contact-refined>div:first-child{align-self:center}
+.prospec-contact-refined button{display:inline-flex;align-items:center;gap:10px;min-height:44px;margin-top:13px;padding:10px 15px;border:1px solid #00b9c7;border-radius:8px;background:#00b9c7;color:#10191d;font-weight:900;cursor:pointer}
+.prospec-contact-refined .prospec-contact-details{gap:9px}
+.prospec-contact-refined .prospec-contact-details a{color:#00d0dc;font-size:.78rem}
+.prospec-contact-refined .prospec-contact-details strong{margin-top:2px}
+@media(max-width:820px){.prospec-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.prospec-product-card .sd-service-media{height:145px}}
+@media(max-width:560px){
+ .prospec-hero-refined{padding-top:24px;padding-bottom:24px;gap:12px}
+ .prospec-hero-refined .prospec-hero-stamp{width:112px;aspect-ratio:auto;min-height:78px;border-radius:10px;justify-self:start;padding:12px;transform:none}
+ .prospec-hero-refined .prospec-hero-stamp span,.prospec-hero-refined .prospec-hero-stamp i{font-size:.54rem}
+ .prospec-hero-refined .prospec-hero-stamp strong{font-size:1.2rem}
+ .prospec-department>summary{gap:8px;min-height:62px;padding:9px}
+ .prospec-department-index{display:none}
+ .prospec-department-mark{min-width:38px;height:30px}
+ .prospec-department-copy strong{font-size:.82rem}
+ .prospec-department-copy small{font-size:.65rem}
+ .prospec-department-count{font-size:.62rem}
+ .prospec-department-details{align-items:flex-start;flex-direction:column;gap:8px;padding:0 12px 12px 55px}
+ .prospec-catalogue-heading{gap:8px}
+ .prospec-catalogue-heading p{font-size:.76rem}
+ .prospec-store-tools .prospec-division-filters{overflow-x:auto}
+ .prospec-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .prospec-product-card .sd-service-media{height:112px}
+ .prospec-product-card .sd-service-info{gap:6px;padding:9px}
+ .prospec-product-card .sd-service-title h3{font-size:.79rem}
+ .prospec-product-card .sd-service-title strong{font-size:.72rem}
+ .prospec-product-card .sd-service-info>p{font-size:.66rem}
+ .prospec-product-card .sd-order-button{min-height:36px;padding:8px;font-size:.64rem}
+ .prospec-product-card .sd-service-meta span{font-size:.56rem}
+ .prospec-contact-refined{gap:14px}
+}
+@media(prefers-reduced-motion:reduce){.prospec-department-chevron{transition:none}}
