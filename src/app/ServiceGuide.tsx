@@ -19,7 +19,7 @@ type Props = {
   onTrack: (event: string, details?: { screen?: string; serviceId?: string; serviceName?: string }) => void;
 };
 
-const HISTORY_KEY = "iteration13:guide-history:v1";
+const HISTORY_KEY = "prospec:guide-history:v1";
 
 const screenTips: Record<string, string> = {
   store: "Browsing the Store? I can compare the available offers or take you to a request.",
@@ -29,8 +29,8 @@ const screenTips: Record<string, string> = {
   "briefcase-work": "Here you can review incoming work and move each request to its next status.",
   "briefcase-money": "The Money area separates recorded payments from projected work.",
   "briefcase-store": "Manage the offers and customer notice shown in the Store.",
-  "briefcase-notes": "Keep private working notes here; this demo saves them on this device.",
-  "briefcase-insights": "These demo insights describe activity in this browser only."
+  "briefcase-notes": "Keep private working notes here; this preview saves them on this device.",
+  "briefcase-insights": "These preview insights describe activity in this browser only."
 };
 
 
@@ -68,7 +68,7 @@ export default function ServiceGuide({ view, screen, services, requestCount, onC
     if (!screen || previousScreen.current === screen) return;
     previousScreen.current = screen;
     try {
-      const key = "iteration13:guide-events:v1";
+      const key = "prospec:guide-events:v1";
       const previous = JSON.parse(window.sessionStorage.getItem(key) || "[]") as { event: string; screen: string; at: string; serviceId?: string; serviceName?: string }[];
       window.sessionStorage.setItem(key, JSON.stringify([...previous, { event: "screen-change", screen, at: new Date().toISOString() }].slice(-60)));
     } catch { /* local funnel measurement must never block navigation */ }
@@ -101,7 +101,7 @@ export default function ServiceGuide({ view, screen, services, requestCount, onC
   function track(event: string, details: { serviceId?: string; serviceName?: string } = {}) {
     onTrackRef.current(event, { screen, ...details });
     try {
-      const key = "iteration13:guide-events:v1";
+      const key = "prospec:guide-events:v1";
       const previous = JSON.parse(window.sessionStorage.getItem(key) || "[]") as { event: string; screen: string; at: string; serviceId?: string; serviceName?: string }[];
       window.sessionStorage.setItem(key, JSON.stringify([...previous, { event, screen, at: new Date().toISOString(), ...details }].slice(-60)));
     } catch { /* local funnel measurement must never block navigation */ }
@@ -114,21 +114,21 @@ export default function ServiceGuide({ view, screen, services, requestCount, onC
     setLastChoice(service.id);
     let previousSelections = 0;
     try {
-      const events = JSON.parse(window.sessionStorage.getItem("iteration13:guide-events:v1") || "[]") as { event: string; serviceId?: string }[];
+      const events = JSON.parse(window.sessionStorage.getItem("prospec:guide-events:v1") || "[]") as { event: string; serviceId?: string }[];
       previousSelections = events.filter(item => item.event === "offer-selected" && item.serviceId === service.id).length;
     } catch { /* repeat detection is optional */ }
     track("offer-selected", { serviceId: service.id, serviceName: service.name });
-    say(`${service.name} starts at P${service.price.toLocaleString("en-BW")}. ${service.description} Choose “Request this service” to continue in the existing form; your requested date is a preference, not a confirmed delivery promise.`);
+    say(`${service.name} · ${service.price > 0 ? "P" + service.price.toLocaleString("en-BW") : "quotation on request"}. ${service.description} Choose “Enquire about this item” to send your request to Prospec.`);
     if (previousSelections > 0) say(`You’ve revisited ${service.name}. Want to compare it with another offer before requesting?`);
   }
   function runAction(action: string) {
     track(`action:${action}`);
     switch (action) {
-      case "help": say("I can guide you to a service or a real page in this demo. Choose a service below, view your requests, or browse without chat. I’m a scripted guide, not a live person or AI assistant."); break;
+      case "help": say("I can guide you to a service or a real page in this preview. Choose a service below, view your requests, or browse without chat. I’m a scripted guide, not a live person or AI assistant."); break;
       case "browse": say("No problem. You can keep browsing; the service menu and order form remain available without chat."); setOpen(false); break;
-      case "account": say(`Opening My account. This demo currently has ${requestCount} request(s) in this browser. Use the same browser profile to see local demo records.`); onOpenAccount(); break;
+      case "account": say(`Opening My account. This preview currently has ${requestCount} request(s) in this browser. Use the same browser profile to see local preview records.`); onOpenAccount(); break;
       case "storefront": say("Taking you back to the customer storefront."); onOpenStorefront(); break;
-      case "admin-services": say("Opening the service menu tools. You can add, edit, hide or remove demo services here."); onOpenAdmin("services"); break;
+      case "admin-services": say("Opening the service menu tools. You can add, edit, hide or remove preview services here."); onOpenAdmin("services"); break;
       case "admin-announcement": say("Opening the announcement editor. Publish or clear a storefront note; it stays on this device."); onOpenAdmin("announcement"); break;
       case "admin-requests": say(requestCount ? `Opening ${requestCount} local request(s). Status changes are visible to the customer view on this same device.` : "There are no requests yet. Switch to the storefront and submit a sample request first."); onOpenAdmin("requests"); break;
       default: {
@@ -166,7 +166,7 @@ export default function ServiceGuide({ view, screen, services, requestCount, onC
     if (match) { chooseService(match); return; }
     if (/website|web page|site/.test(normalized)) { const service = activeServices.find(item => /website/i.test(item.name)); if (service) { chooseService(service); return; } }
     if (/app|mobile/.test(normalized)) { const service = activeServices.find(item => /^app$/i.test(item.name)); if (service) { chooseService(service); return; } }
-    say("I can help with the options this demo actually supports. Pick one of the quick actions below, or choose a service from the menu. I won’t pretend to know something this guide hasn’t been configured to answer.");
+    say("I can help with the options this preview actually supports. Pick one of the quick actions below, or choose a service from the menu. I won’t pretend to know something this guide hasn’t been configured to answer.");
   }
 
   const customerActions = [
@@ -184,8 +184,8 @@ export default function ServiceGuide({ view, screen, services, requestCount, onC
   return <div className="sd-guide-root">
     {open && <div className="sd-guide-backdrop" onClick={() => setOpen(false)} aria-hidden="true"/>}
     {open && <section ref={panelRef} className="sd-guide-panel" role="dialog" aria-modal="true" aria-labelledby="sd-guide-title">
-      <header className="sd-guide-head"><div className="sd-guide-avatar"><Sparkles size={18}/></div><div><span className="sd-guide-eyebrow">ITERATION 13 · SERVICE GUIDE</span><h2 id="sd-guide-title">{view === "admin" ? "Studio sidekick" : "Find your next step"}</h2><p><span/> Guided demo · {view === "admin" ? "Admin tools" : "Customer journey"}</p></div><button type="button" aria-label="Close guide" onClick={() => { setOpen(false); launcherRef.current?.focus(); }}><ChevronDown size={19}/></button></header>
-      <div className="sd-guide-intro"><strong>{view === "admin" ? "What are you working on?" : "What would you like to do?"}</strong><p>{screenTips[screen] || (view === "admin" ? "I’ll take you to the right local demo tool." : "Choose a service or jump to your requests. You can always continue without me.")}</p></div>
+      <header className="sd-guide-head"><div className="sd-guide-avatar"><Sparkles size={18}/></div><div><span className="sd-guide-eyebrow">ITERATION 13 · SERVICE GUIDE</span><h2 id="sd-guide-title">{view === "admin" ? "Studio sidekick" : "Find your next step"}</h2><p><span/> Guided preview · {view === "admin" ? "Admin tools" : "Customer journey"}</p></div><button type="button" aria-label="Close guide" onClick={() => { setOpen(false); launcherRef.current?.focus(); }}><ChevronDown size={19}/></button></header>
+      <div className="sd-guide-intro"><strong>{view === "admin" ? "What are you working on?" : "What would you like to do?"}</strong><p>{screenTips[screen] || (view === "admin" ? "I’ll take you to the right local preview tool." : "Choose a service or jump to your requests. You can always continue without me.")}</p></div>
       <div className="sd-guide-actions">{(view === "admin" ? adminActions : customerActions).map(item => <button key={item.key} type="button" onClick={() => item.key === "services" ? say("Choose a service below to see its starting price and fit. I’ll take you to the existing form when you’re ready.") : runAction(item.key)}><span>{item.icon}</span>{item.label}<ArrowRight size={15}/></button>)}</div>
       {view !== "admin" && <div className="sd-guide-services"><span className="sd-guide-section-label">SERVICE SHORTCUTS</span>{activeServices.map(service => <button key={service.id} type="button" onClick={() => chooseService(service)} aria-pressed={lastChoice === service.id}><span className="sd-guide-service-thumb" aria-hidden="true"><img src={service.media} alt="" loading="lazy" onError={event => { event.currentTarget.style.visibility = "hidden"; }}/></span><span className="sd-guide-service-copy"><strong>{service.name}</strong><small>{service.description}</small></span><b>P{service.price.toLocaleString("en-BW")}</b></button>)}</div>}
       {lastChoice && view !== "admin" && <button type="button" className="sd-guide-continue" onClick={continueWithService}>Request this service <ArrowRight size={16}/></button>}
