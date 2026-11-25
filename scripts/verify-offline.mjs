@@ -1,14 +1,14 @@
 import fs from "node:fs";
 
-const read = (path: string) => fs.readFileSync(new URL(path, import.meta.url), "utf8");
+const read = (path) => fs.readFileSync(new URL(path, import.meta.url), "utf8");
 const sw = read("../public/sw.js");
 const page = read("../src/app/page.tsx");
 const account = read("../src/app/AccountWorkspace.tsx");
 const offline = read("../src/app/offline/page.tsx");
 const pwaRegister = read("../src/app/pwa-register.tsx");
 const layout = read("../src/app/layout.tsx");
-const failures: string[] = [];
-const check = (condition: boolean, message: string) => { if (!condition) failures.push(message); };
+const failures = [];
+const check = (condition, message) => { if (!condition) failures.push(message); };
 
 check(sw.includes('const CACHE_VERSION = "prospec-shell-v1"'), "Prospec app-shell cache namespace must be isolated");
 check(sw.includes('event.waitUntil(self.skipWaiting())'), "user-approved worker activation must be awaited by the message event");
