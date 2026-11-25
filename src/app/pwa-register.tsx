@@ -321,7 +321,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
             void install();
             return;
           }
-          if (isIosSafari() || isAndroidChrome()) {
+          if (isIosSafari() || isAndroidChrome() || !environment().embedded) {
             setInstallHelpOpen(true);
             setInstallState("native");
           }
