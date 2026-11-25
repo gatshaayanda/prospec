@@ -1403,19 +1403,6 @@ return <main className="servicePreview" style={{ "--studio-accent": themeColor, 
 
 
     {view === "shop" && <>
-      <section className="prospec-hero prospec-hero-refined sd-wrap" aria-labelledby="prospec-hero-title">
-        <div className="prospec-hero-copy">
-          <span className="prospec-eyebrow">PROSPEC GROUP · BOTSWANA ROOTS · GLOBAL REACH</span>
-          <h1 id="prospec-hero-title">We keep our noses in <em>other people&apos;s business.</em></h1>
-          <p>One sharp team for brands, sourcing, digital identity and print. Tell us what you need; we&apos;ll get the right people on it.</p>
-          <div className="prospec-hero-actions">
-            <button type="button" onClick={() => document.getElementById("prospec-catalogue")?.scrollIntoView({behavior:"smooth"})}>Shop services &amp; products <span aria-hidden="true">↓</span></button>
-            <button type="button" className="is-secondary" onClick={() => { setView("account"); setNotice("Tell Prospec what you need and we’ll route your enquiry to the right division."); }}>Start a request <span aria-hidden="true">↗</span></button>
-          </div>
-          <div className="prospec-hero-signoff"><strong>PITBULLS OF BRANDING</strong><span>QWERTY by nature · strategic by design</span></div>
-        </div>
-        <div className="prospec-hero-stamp" aria-label="Prospec vision: Annihilate"><span>OUR VISION</span><strong>ANNIHILATE.</strong><i>THE ORDINARY</i></div>
-      </section>
       <section className="sd-services sd-wrap sd-digital-store sd-store-collection prospec-storefront" id="services">
         <div className="prospec-catalogue-heading" id="prospec-catalogue">
           <div><span className="prospec-eyebrow">THE PROSPEC STORE</span><h2>Find it. <em>Request it.</em></h2><p>Choose a listed product or service. Fixed prices are shown in BWP; custom work is always welcome.</p></div>
