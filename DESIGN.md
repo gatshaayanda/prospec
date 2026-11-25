@@ -45,3 +45,23 @@ Vision cue: “Annihilate” — a campaign statement, not a claim about custome
 - Preserve the inherited scripted ServiceGuide behavior; change only Prospec identity and task-specific copy/actions.
 - Browser-local preview data is not production persistence. Do not claim shared accounts, live notifications, remote admin inbox or cross-device sync until the Prospec database integration is complete and verified.
 - Do not change Firebase project IDs, secrets, Firestore rules or storage configuration without verified Prospec configuration and authorization.
+
+
+## Owner Briefcase information architecture
+The Briefcase is organised around Prospec's actual operating rhythm, not inherited generic Business OS labels:
+- Overview: shift/session, customer-facing availability, requests needing attention, current pipeline and next actions.
+- Client work: customer directory, incoming enquiries, quote/status/payment actions and customer conversation.
+- Finance: currency, payment records, expenses, receipt/business details and finance insights.
+- Store & offers: business identity, division-facing catalogue, product/service media, storefront preview and customer announcements.
+- Notes: private working notes.
+- Performance: recorded activity, customer journey and directional conversion/operations measures.
+The four divisions remain visible in the workspace: Prospec AG (marketing & advertising), Prospec Supplies (procurement & sourcing), Prospec NFC (digital identity, NFC & QR), and Prospec AG Printing (print & branded production). Do not imply separate division-specific pipelines exist until implemented.
+
+### Usability principles applied
+- Recognition over recall: use explicit task names and keep division context visible. Avoid icon-only navigation for core work.
+- Progressive disclosure: keep the six main work areas visible; retain specialist editors and less-frequent controls inside their relevant area.
+- Match the user's language: prefer enquiries, client work, sourcing, print production, offers, receipts and payments over generic system jargon.
+- Visibility of system status: keep shift state, availability and data-scope labels visible; clearly distinguish local preview records from shared records.
+- Readability is a functional requirement: operational labels and helper copy should not be microtext; form controls must remain comfortably legible on mobile.
+
+Research basis: Nielsen Norman Group, [10 Usability Heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/), [Progressive Disclosure](https://www.nngroup.com/articles/progressive-disclosure/), and [Recognition and Recall](https://www.nngroup.com/articles/recognition-and-recall/).
