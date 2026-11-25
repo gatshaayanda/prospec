@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth, adminDb } from "@/lib/firebase/admin";
+import { getProspecAdminAuth, getProspecAdminDb } from "@/lib/firebase/admin";
 import { FieldValue } from "firebase-admin/firestore";
 
 export const runtime = "nodejs";
@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 async function customerUid(request: NextRequest) {
   const authorization = request.headers.get("authorization") || "";
   if (!authorization.startsWith("Bearer ")) throw new Error("AUTH_REQUIRED");
-  const decoded = await adminAuth.verifyIdToken(authorization.slice(7));
+  const decoded = await getProspecAdminAuth().verifyIdToken(authorization.slice(7));
   if (decoded.prospecAdmin === true) throw new Error("CUSTOMER_SESSION_REQUIRED");
   return decoded.uid;
 }
@@ -15,6 +15,7 @@ async function customerUid(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const uid = await customerUid(request);
+    const adminDb = getProspecAdminDb();
     const [profile, enquiries] = await Promise.all([
       adminDb.collection("prospecCustomers").doc(uid).get(),
       adminDb.collection("prospecEnquiries").where("customerId", "==", uid).orderBy("createdAt", "desc").get(),
@@ -33,6 +34,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const uid = await customerUid(request);
+    const adminDb = getProspecAdminDb();
     const body = await request.json() as Record<string, unknown>;
     const action = body.action;
     if (action === "profile") {
