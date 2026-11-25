@@ -25,7 +25,13 @@ function environment() {
   return { standalone, ios, android, embedded };
 }
 
-function isAndroidChrome() {\n  if (typeof window === "undefined") return false;\n  const ua = window.navigator.userAgent || "";\n  return /Android/i.test(ua) && /Chrome\\//i.test(ua) && !/EdgA|OPR\\//i.test(ua) && !/; wv\\)/i.test(ua);\n}\n\nfunction isIosSafari() {
+function isAndroidChrome() {
+  if (typeof window === "undefined") return false;
+  const ua = window.navigator.userAgent || "";
+  return /Android/i.test(ua) && /Chrome\//i.test(ua) && !/EdgA|OPR\//i.test(ua) && !/; wv\)/i.test(ua);
+}
+
+function isIosSafari() {
   if (typeof window === "undefined") return false;
   const nav = window.navigator;
   const ios = /iPad|iPhone|iPod/i.test(nav.userAgent) ||
