@@ -3,8 +3,8 @@ import path from "node:path";
 
 const root = process.cwd();
 const ignoredDirs = new Set([".git","node_modules",".next","coverage"]);
-const failures: string[] = [];
-const read = (file: string) => fs.readFileSync(path.join(root,file),"utf8");
+const failures = [];
+const read = (file) => fs.readFileSync(path.join(root,file),"utf8");
 const manifest = JSON.parse(read("public/manifest.webmanifest"));
 const appManifest = read("src/app/manifest.ts");
 const layout = read("src/app/layout.tsx");
@@ -16,7 +16,7 @@ const page = read("src/app/page.tsx");
 if (manifest.name !== "Prospec Group | Pitbulls of Branding") failures.push("manifest: wrong Prospec application name");
 if (manifest.short_name !== "Prospec") failures.push("manifest: wrong short name");
 if (manifest.theme_color !== "#00B9C7") failures.push("manifest: wrong theme colour");
-if (!manifest.icons?.some((icon: {src:string}) => icon.src === "/prospec-icon.svg")) failures.push("manifest: Prospec icon missing");
+if (!manifest.icons?.some((icon) => icon.src === "/prospec-icon.svg")) failures.push("manifest: Prospec icon missing");
 if (!appManifest.includes('name: "Prospec Group | Pitbulls of Branding"')) failures.push("app manifest: wrong application name");
 if (!layout.includes('applicationName:"Prospec Group"')) failures.push("layout: wrong application name");
 if (!layout.includes('title:{default:"Prospec Group | Pitbulls of Branding"')) failures.push("layout: wrong default title");
@@ -37,7 +37,7 @@ if (!pwaRegister.includes("PROSPEC GROUP")) failures.push("PWA install: Prospec 
 if (!page.includes('const STORAGE_KEY = "prospec:service-preview:v1"')) failures.push("application storage namespace not isolated for Prospec");
 if (!page.includes("prospecCatalogue") || !page.includes("Quote on request")) failures.push("Prospec catalogue and unpriced enquiry labels missing");
 if (!page.includes('fetch("/api/admin/session"')) failures.push("owner login is not server validated");
-function walk(dir: string) {
+function walk(dir) {
   for (const entry of fs.readdirSync(dir,{withFileTypes:true})) {
     if (ignoredDirs.has(entry.name)) continue;
     const full = path.join(dir,entry.name);
