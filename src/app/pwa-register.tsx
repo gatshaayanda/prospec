@@ -25,7 +25,7 @@ function environment() {
   return { standalone, ios, android, embedded };
 }
 
-function isIosSafari() {
+function isAndroidChrome() {\n  if (typeof window === "undefined") return false;\n  const ua = window.navigator.userAgent || "";\n  return /Android/i.test(ua) && /Chrome\\//i.test(ua) && !/EdgA|OPR\\//i.test(ua) && !/; wv\\)/i.test(ua);\n}\n\nfunction isIosSafari() {
   if (typeof window === "undefined") return false;
   const nav = window.navigator;
   const ios = /iPad|iPhone|iPod/i.test(nav.userAgent) ||
@@ -75,7 +75,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     setInstallCardDismissed(dismissedRecently());
     const embedded = initialEmbedded || env.embedded;
     setEmbeddedAndroid((initialEmbedded && initialAndroid) || (env.embedded && env.android));
-    setCanShowManualInstall(isIosSafari());
+    setCanShowManualInstall(isIosSafari() || isAndroidChrome());
 
     let registration: ServiceWorkerRegistration | null = null;
     const inspect = () => {
@@ -139,7 +139,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
       }
       // Only iOS Safari needs manual guidance. On desktop/Android, do not replace
       // the browser-owned prompt with a custom explainer or fake install flow.
-      if (current.ios && isIosSafari()) {
+      if ((current.ios && isIosSafari()) || isAndroidChrome()) {
         setInstallHelpOpen(true);
         setInstallState("native");
       }
@@ -277,7 +277,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
 
   const installShellStyle: CSSProperties = { position: "fixed", left: 16, right: 16, bottom: 16, zIndex: 1000, maxWidth: 720, margin: "0 auto", padding: 16, borderRadius: 18, background: "#FFFFFF", color: "#111318", boxShadow: "0 12px 40px rgba(0,0,0,.18)", border: "1px solid rgba(17,19,24,.12)" };
   const embeddedInstallStyle: CSSProperties = { position: "fixed", inset: 0, zIndex: 2147483647, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(0,0,0,.82)", backdropFilter: "blur(4px)", overscrollBehavior: "contain" };
-  const installCard = installState === "native" && installHelpOpen && isIosSafari() ? (
+  const installCard = installState === "native" && installHelpOpen && (isIosSafari() || isAndroidChrome()) ? (
     <div style={installShellStyle} role="presentation">
       <section className="plugInstallModal" role="dialog" aria-modal="false" aria-labelledby="plug-install-title" aria-describedby="plug-install-message">
         <div className="plugInstallTop"><span className="plugInstallMark">P</span><span className="plugInstallTag">PROSPEC GROUP · PITBULLS OF BRANDING</span><button type="button" className="plugInstallClose" aria-label="Close install guidance" onClick={dismissInstall}>×</button></div>
