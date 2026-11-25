@@ -6,7 +6,7 @@
 - Brand: teal/cyan, charcoal and white; flowing script Prospec wordmark with clean sans-serif UI; QWERTY voice; “We keep our noses in other people's business”; “Pitbulls of Branding”.
 - Foundation: gatshaayanda/iteration13, source branch main, source commit d94dd55ad92de1ec2d0d98145c6f5e48a263b445.
 - Target: gatshaayanda/prospec, branch main. Clean baseline pushed at d94dd55.
-- JTS and The Plug are visual/interaction references only. Their workflows, Firebase projects, authentication, rules and data must not be transplanted. Iteration 13 remains the Business OS architecture source.
+- Candidate review: John The Stylist Bw is an appointment/deposit-first salon PWA; The Plug is a sneaker/apparel sourcing-request PWA with guest/customer tracking and owner-scoped Firebase workflows. Both are narrower than Prospec's four-division business catalogue and operations needs. Iteration 13 was selected as the general Business OS foundation because its Store → Account → Briefcase, catalogue, quote/status, receipt and owner-workspace patterns fit the full product. No JTS/The Plug code, Firebase project, rules or credentials were transplanted. Their customer-first request patterns remain useful references for the later Prospec persistence pass.
 
 ## Design gate
 Read DESIGN.md before visual work. Dominant genre Character; Loud public campaign moments; Data-led Account/Briefcase. Apply the direction across public Store, customer Account, receipts, owner Briefcase and important states.
