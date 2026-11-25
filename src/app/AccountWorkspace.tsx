@@ -198,6 +198,6 @@ export default function AccountWorkspace({ businessName, currency, orders, disco
     <details className="sd-account-lookup-compact" open={lookupOpen} onToggle={event => setLookupOpen(event.currentTarget.open)}><summary>{normalizedEmail ? "Using " + email : "Find your account"} <b>Change email</b></summary><div><label htmlFor="account-email">Email used on your request</label><input id="account-email" type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="Enter your email address" autoComplete="email" /><p>Your requests are linked to this device’s secure customer session, not just the email address.</p></div></details>
 
     {children && <details className="sd-account-collapsible sd-account-optional-feature"><summary><span>Optional rewards experience</span><b>Explore</b></summary><div>{children}</div></details>}
-    <p className="sd-account-boundary">Your account stays on this device. Request and message changes sync when you are back online; file attachments need an internet connection.</p>
+    <p className="sd-account-boundary">Your Prospec customer session stays linked to this device. Firestore keeps an offline cache and syncs supported request and message changes when you are back online; attachments need internet.</p>
   </section>;
 }
