@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { arrayUnion, doc, updateDoc } from "firebase/firestore";
-import { db, ensureCustomerAuth } from "@/lib/firebase/client";
+import { getProspecDb, ensureCustomerAuth } from "@/lib/firebase/client";
 import ReceiptDocument, { type ReceiptProfile } from "@/app/ReceiptDocument";
 import { generateReactHelpers } from "@uploadthing/react";
 import type { OurFileRouter } from "@/app/api/uploadthing/core";
@@ -76,7 +76,7 @@ export default function AccountWorkspace({ businessName, currency, orders, disco
     const messageText = (drafts[order.id] || "").trim();
     if (!messageText && !attachment) { setUploadNotice("Write a message or attach a file before sending."); return; }
     const message: AccountMessage = { id: "MSG-" + Date.now().toString(36), from: "customer", text: messageText, createdAt: new Date().toISOString(), ...(attachment ? { attachment } : {}) };
-    void ensureCustomerAuth().then(() => updateDoc(doc(db, "prospecEnquiries", order.id), { messages: arrayUnion(message), updatedAt: message.createdAt })).catch(() => setUploadNotice("This message could not sync. Reconnect and try again."));
+    void ensureCustomerAuth().then(() => updateDoc(doc(getProspecDb(), "prospecEnquiries", order.id), { messages: arrayUnion(message), updatedAt: message.createdAt })).catch(() => setUploadNotice("This message could not sync. Reconnect and try again."));
     onUpdateOrder(order.id, current => ({ ...current, messages: [...(current.messages || []), message] }), "Message added to your Prospec request. It will sync when you are online.");
     setDrafts(current => ({ ...current, [order.id]: "" }));
     setUploadNotice("Message added to your Prospec request. It will sync when you are online.");
