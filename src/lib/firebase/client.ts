@@ -1,33 +1,42 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, setPersistence, browserLocalPersistence, signInAnonymously, type User } from "firebase/auth";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 
 const firebaseConfig = {
-  // Public Firebase web config is injected by the deployment environment.
-  // Build/CI must also be able to prerender client routes when those env vars are absent.
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "build-placeholder",
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "build-placeholder.firebaseapp.com",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "build-placeholder",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "build-placeholder.appspot.com",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "build-placeholder",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "build-placeholder",
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  apiKey: "AIzaSyDAr3rsLaFmEikskq1PEezvuPVtd5_S3yw",
+  authDomain: "theworks-f4957.firebaseapp.com",
+  projectId: "theworks-f4957",
+  storageBucket: "theworks-f4957.firebasestorage.app",
+  messagingSenderId: "529404632321",
+  appId: "1:529404632321:web:9c10dedab931e2733e8f00",
+  measurementId: "G-QX3W86BM93",
 };
 
-// Production must supply real web config. Empty Vercel variables are treated as missing too;
-// build fallbacks keep prerender safe while hasFirebaseWebConfig prevents auth actions.
-export const hasFirebaseWebConfig = Boolean(
-  process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
-  process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN &&
-  process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
-  process.env.NEXT_PUBLIC_FIREBASE_APP_ID &&
-  process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-);
-
+export const hasFirebaseWebConfig = true;
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-
 export const auth = getAuth(app);
 export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
 });
 export { app };
+
+/**
+ * Gives each customer a persistent Firebase identity without forcing a password
+ * sign-up. Firebase Auth persists this identity across reloads; Firestore queues
+ * writes made while offline and synchronises them when connectivity returns.
+ */
+let customerAuthPromise: Promise<User> | null = null;
+export function ensureCustomerAuth(): Promise<User> {
+  if (auth.currentUser) return Promise.resolve(auth.currentUser);
+  if (!customerAuthPromise) {
+    customerAuthPromise = (async () => {
+      await setPersistence(auth, browserLocalPersistence);
+      const result = await signInAnonymously(auth);
+      return result.user;
+    })().catch(error => {
+      customerAuthPromise = null;
+      throw error;
+    });
+  }
+  return customerAuthPromise;
+}
