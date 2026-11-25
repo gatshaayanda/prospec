@@ -1415,7 +1415,7 @@ return <main className="servicePreview serviceDemo" style={{ "--studio-accent": 
           </div>
           <aside className="prospec-store-signature" aria-label="Prospec Group divisions">
             <span>PROSPEC GROUP / PITBULLS OF BRANDING</span>
-            <strong>We keep our noses in <em>other people's business.</em></strong>
+            <strong>We keep our noses in <em>other people&apos;s business.</em></strong>
             <div><span>PROSPEC AG</span><span>SUPPLIES</span><span>NFC</span><span>AG PRINTING</span></div>
             <small>MARKETING · SOURCING · DIGITAL IDENTITY · PRINT</small>
           </aside>
