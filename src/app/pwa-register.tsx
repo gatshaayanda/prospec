@@ -25,12 +25,6 @@ function environment() {
   return { standalone, ios, android, embedded };
 }
 
-function isAndroidChrome() {
-  if (typeof window === "undefined") return false;
-  const ua = window.navigator.userAgent || "";
-  return /Android/i.test(ua) && /Chrome\//i.test(ua) && !/EdgA|OPR\//i.test(ua) && !/; wv\)/i.test(ua);
-}
-
 function isIosSafari() {
   if (typeof window === "undefined") return false;
   const nav = window.navigator;
