@@ -6776,3 +6776,17 @@ h1 em,
   background: #00b9c7;
   color: #10252a;
 }
+
+
+/* Owner connection state: make the live-vs-preview boundary impossible to miss. */
+.serviceDemo .sd-workspace-connection-warning {
+  display:grid;gap:7px;margin:14px 0 18px;padding:16px 18px;
+  border:2px solid #a75a19;border-left-width:6px;border-radius:11px;
+  background:#fff7ed;color:#382719;
+}
+.serviceDemo .sd-workspace-connection-warning strong {
+  color:#382719;font-size:1rem;line-height:1.35;font-weight:900;
+}
+.serviceDemo .sd-workspace-connection-warning p {
+  margin:0;color:#503b2a;font-size:15px;line-height:1.6;
+}
