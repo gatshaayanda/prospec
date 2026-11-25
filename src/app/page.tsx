@@ -125,7 +125,7 @@ function findSavedBusinessWorkspaces(): SavedBusinessWorkspace[] {
 const getBusinessCurrency = () => {
   if (typeof window === "undefined") return "BWP";
   try { const value = window.localStorage.getItem(getStorageKey(CURRENCY_KEY)); return supportedCurrencies.includes(value as typeof supportedCurrencies[number]) ? value! : "BWP"; }
-  catch { return "USD"; }
+  catch { return "BWP"; }
 };
 const money = (amount: number) => new Intl.NumberFormat("en", { style: "currency", currency: getBusinessCurrency(), maximumFractionDigits: 2 }).format(amount);
 const formatLocalBytes = (bytes: number | null) => bytes === null ? "Unavailable" : bytes < 1024 ? `${bytes} B` : bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
@@ -567,7 +567,7 @@ export default function Home() {
       if (!("serviceWorker" in navigator) || !("caches" in window)) return;
       try {
         const registration = await navigator.serviceWorker.ready;
-        const shell = await caches.open("iteration13-shell-v32");
+        const shell = await caches.open("prospec-shell-v1");
         const [home, offlinePage] = await Promise.all([shell.match("/"), shell.match("/offline")]);
         if (active) setOfflineShellReady(Boolean(registration.active && home && offlinePage));
       } catch {
@@ -738,10 +738,8 @@ export default function Home() {
         const sharedServices = Array.isArray(sharedExample.data?.services) ? sharedExample.data.services : [];
         // The app's initial hydration can create an empty visitor-local record before the visitor opens the shared example.
         // Treat that untouched empty record as first visit so the catalogue embedded in the link is not shadowed.
-        // The original shared example is the source of truth on first launch. A later
-        // one-service TrailWise sample was accidentally saved into this visitor namespace;
-        // replace that exact injected seed with the complete shared catalogue and media.
-        const isInjectedTrailWiseSeed = savedServices.length === 1 && savedServices[0]?.id === "trailwise-guided-walk";
+        // The original shared example is the source of truth on first launch.
+        const isInjectedTrailWiseSeed = false;
         const hasNoVisitorActivity = !Array.isArray(parsed.orders) || parsed.orders.length === 0;
         const useSharedSnapshot = sharedServices.length > 0 && hasNoVisitorActivity &&
           (savedServices.length === 0 || isInjectedTrailWiseSeed);
@@ -848,9 +846,7 @@ export default function Home() {
     } catch { setNotice("The unfinished setup draft could not be read. Existing saved businesses have not been changed."); return; }
     const discovered = findSavedBusinessWorkspaces();
     setSavedBusinessOptions(discovered);
-    // The TrailWise workspace the owner was actively building is the intended
-    // continuation target. Prefer that exact named business over generic or older
-    // saved workspaces; never silently open "Prospec Group" instead.
+    // Continue the only saved business automatically; ask the owner to choose when several exist.
     if (discovered.length > 1) setShowPreviousBusinessPicker(true);
     else if (discovered.length === 1) openSavedBusinessWorkspace(discovered[0].suffix);
     else setNotice("No previous business was found in this browser. Your saved browser data has not been changed.");
@@ -1339,7 +1335,7 @@ return <main className="servicePreview" style={{ "--studio-accent": themeColor, 
 
     {view === "login" && <section className="sd-admin sd-wrap"><div className="sd-admin-panel sd-admin-login-card" style={{maxWidth:480,margin:"clamp(28px,8vh,84px) auto",padding:24}}><span className="sd-kicker">PROSPEC GROUP / PRIVATE BRIEFCASE</span><h1 style={{fontSize:"clamp(1.8rem,5vw,2.5rem)",margin:"8px 0"}}>Open your <em>Briefcase.</em></h1><p className="sd-admin-help">This is the owner side of your business: customers, jobs, money, Store design and the records that keep everything together.</p><form className="sd-admin-form" onSubmit={submitAdminLogin}><label>Owner access word<input type="password" autoComplete="off" value={adminPassphrase} onChange={event=>setAdminPassphrase(event.target.value)} placeholder="Enter access word" required /></label><button className="sd-button sd-primary" type="submit">{adminLocked ? "Resume my Briefcase →" : "Unlock my Briefcase →"}</button></form><p className="sd-admin-help" style={{marginTop:12}}>Use the owner access word supplied to the Prospec team. Access is checked on the server; customer and enquiry records remain local preview data until the Prospec database connection is configured.</p><button className="sd-button sd-outline" type="button" onClick={() => { setView("shop"); setNotice(""); }}>← Back to Store</button></div></section>}
 
-    {view === "admin" && adminUnlocked && <section className="sd-admin sd-wrap" data-admin-current={adminTab} data-store-section={storeSection}><div className="sd-os-heading"><div><span className="sd-kicker">PRIVATE BRIEFCASE / OWNER WORKSPACE</span><small className="sd-owner-greeting">{ownerGreeting}</small><h1>Your divisions. <em>One briefcase.</em></h1><p><strong>{businessName.trim() || "Prospec Group"}</strong> · Your workspace for customers, jobs, money and records</p></div><span className="sd-os-status" title="This prototype saves its preview records in this browser only">LOCAL PREVIEW · THIS DEVICE</span></div>
+    {view === "admin" && adminUnlocked && <section className="sd-admin sd-wrap" data-admin-current={adminTab} data-store-section={storeSection}><div className="sd-os-heading"><div><span className="sd-kicker">PROSPEC GROUP / OWNER BRIEFCASE</span><small className="sd-owner-greeting">{ownerGreeting}</small><h1>Your divisions. <em>One briefcase.</em></h1><p><strong>{businessName.trim() || "Prospec Group"}</strong> · Your workspace for customers, jobs, money and records</p></div><span className="sd-os-status" title="This prototype saves its preview records in this browser only">LOCAL PREVIEW · THIS DEVICE</span></div>
 <details className="sd-owner-shift-panel sd-owner-shift-details" data-admin-tab="today">
   <summary className="sd-owner-shift-title"><span className="sd-shift-clock" aria-hidden="true">◷</span><div><span className="sd-kicker">OWNER SHIFT</span><strong>Shift active</strong></div><span className="sd-shift-live"><i /> ACTIVE</span><span className="sd-shift-summary-hint">Manage shift</span></summary>
   <div className="sd-owner-shift-metrics"><div><small>Time on shift</small><strong>{shiftStartedAt ? new Date(Math.max(0,sessionNow-shiftStartedAt)).toISOString().slice(11,19) : "00:00:00"}</strong><span>Started {shiftStartedAt ? new Date(shiftStartedAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) : "just now"}</span></div><div><small>Session expires in</small><strong>{sessionExpiresAt ? (()=>{const ms=Math.max(0,sessionExpiresAt-sessionNow);return [Math.floor(ms/3600000),Math.floor(ms%3600000/60000),Math.floor(ms%60000/1000)].map(v=>String(v).padStart(2,"0")).join(":")})() : "12:00:00"}</strong><span>Automatic expiry</span></div></div>
@@ -1499,7 +1495,7 @@ return <main className="servicePreview" style={{ "--studio-accent": themeColor, 
   </div>
   <p className="sd-admin-help sd-local-analytics-boundary">Important boundary: visitors using another phone, browser or device do not appear in this local count. The app does not listen to public traffic across devices in this iteration. There is no shared visitor analytics, Firebase telemetry or cross-device sync yet.</p>
   </details>
-</section><section className="sd-admin-panel sd-owner-notes" id="admin-notes" data-admin-tab="notes"><div className="sd-panel-head"><div><span className="sd-kicker">PRIVATE BRIEFCASE / NOTES</span><h2>My Notes</h2></div><span className="sd-local-pill">THIS DEVICE</span></div><p className="sd-admin-help">Capture priorities, decisions, reminders and ideas for the business. Notes are private to this browser profile in this preview; they are not synced or encrypted as an owner account.</p><label className="sd-admin-label" htmlFor="owner-notes">Working notes</label><textarea id="owner-notes" rows={8} maxLength={12000} value={ownerNotes} onChange={event => setOwnerNotes(event.target.value)} placeholder="Today’s priorities…&#10;Decisions to revisit…&#10;Ideas to develop…" /><div className="sd-notes-meta"><span>{ownerNotes.length.toLocaleString()} / 12,000 characters</span><span>{notesReady ? "Auto-saves on this device" : "Loading notes…"}</span></div></section><div className="sd-admin-footer"><button className="sd-button sd-outline" onClick={() => setPendingConfirm({ kind: "reset-preview" })}>Reset preview data</button><p>Prototype only · no Firebase · no shared admin/customer records</p></div></section>}
+</section><section className="sd-admin-panel sd-owner-notes" id="admin-notes" data-admin-tab="notes"><div className="sd-panel-head"><div><span className="sd-kicker">PRIVATE BRIEFCASE / NOTES</span><h2>My Notes</h2></div><span className="sd-local-pill">THIS DEVICE</span></div><p className="sd-admin-help">Capture priorities, decisions, reminders and ideas for the business. Notes are private to this browser profile in this preview; they are not synced or encrypted as an owner account.</p><label className="sd-admin-label" htmlFor="owner-notes">Working notes</label><textarea id="owner-notes" rows={8} maxLength={12000} value={ownerNotes} onChange={event => setOwnerNotes(event.target.value)} placeholder="Today’s priorities…&#10;Decisions to revisit…&#10;Ideas to develop…" /><div className="sd-notes-meta"><span>{ownerNotes.length.toLocaleString()} / 12,000 characters</span><span>{notesReady ? "Auto-saves on this device" : "Loading notes…"}</span></div></section><div className="sd-admin-footer"><button className="sd-button sd-outline" onClick={() => setPendingConfirm({ kind: "reset-preview" })}>Reset preview data</button><p>Preview data only · no shared customer records or cross-device sync yet</p></div></section>}
 
 
 
