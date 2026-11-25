@@ -6748,3 +6748,31 @@ h1 em,
  .serviceDemo .sd-admin .sd-os-nav button{transition:background-color .16s ease,border-color .16s ease,transform .16s ease}
  .serviceDemo .sd-admin .sd-os-nav button:hover{transform:translateY(-1px)}
 }
+
+/* Prospec customer account: keep the Store action readable inside the light preview surface. */
+.servicePreview .sd-care-empty-action,
+.servicePreview .sd-care-empty-action:hover,
+.servicePreview .sd-care-empty-action:focus-visible {
+  background: #eaf8f7;
+  color: #17343a;
+  border: 2px solid #78bfc1;
+}
+.servicePreview .sd-care-empty-action .sd-care-action-copy strong {
+  color: #17343a;
+  font-size: .92rem;
+  font-weight: 900;
+  line-height: 1.35;
+}
+.servicePreview .sd-care-empty-action .sd-care-action-copy small {
+  color: #405b61;
+  font-size: .78rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.servicePreview .sd-care-empty-action .sd-care-action-arrow {
+  color: #087e87;
+}
+.servicePreview .sd-care-empty-action .sd-care-action-mark {
+  background: #00b9c7;
+  color: #10252a;
+}
