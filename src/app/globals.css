@@ -6655,3 +6655,31 @@ h1 em,
  .prospec-catalogue-heading p{font-size:.88rem!important}
  .prospec-catalogue-count{font-size:.65rem;padding:7px}
 }
+
+
+/* Customer account: make the primary Store route visibly actionable. */
+@keyframes prospec-store-invite-pulse {
+  0%, 100% { box-shadow: 0 5px 0 rgba(23,32,51,.13), 0 0 0 0 rgba(0,185,199,0); }
+  50% { box-shadow: 0 5px 0 rgba(23,32,51,.13), 0 0 0 5px rgba(0,185,199,.16); }
+}
+@keyframes prospec-store-invite-arrow {
+  0%, 75%, 100% { transform: translateX(0); }
+  85% { transform: translateX(4px); }
+  92% { transform: translateX(1px); }
+}
+.sd-care-empty-action {
+  animation: prospec-store-invite-pulse 3.2s ease-in-out infinite;
+}
+.sd-care-action-arrow {
+  animation: prospec-store-invite-arrow 2.8s ease-in-out infinite;
+}
+.sd-care-empty-action:hover,
+.sd-care-empty-action:focus-visible {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sd-care-empty-action,
+  .sd-care-action-arrow {
+    animation: none !important;
+  }
+}
