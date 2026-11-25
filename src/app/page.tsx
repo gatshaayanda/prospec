@@ -1416,18 +1416,6 @@ return <main className="servicePreview" style={{ "--studio-accent": themeColor, 
         </div>
         <div className="prospec-hero-stamp" aria-label="Prospec vision: Annihilate"><span>OUR VISION</span><strong>ANNIHILATE.</strong><i>THE ORDINARY</i></div>
       </section>
-      <section className="prospec-divisions prospec-divisions-compact sd-wrap" id="prospec-divisions" aria-labelledby="prospec-divisions-title">
-        <div className="prospec-section-heading"><div><span className="prospec-eyebrow">FOUR SPECIALIST DEPARTMENTS</span><h2 id="prospec-divisions-title">Find your <em>lane.</em></h2></div><p>Open a department to see what Prospec can do.</p></div>
-        <div className="prospec-department-list">
-          {prospecDivisions.map((division,index)=>{
-            const count=activeServices.filter(service=>service.industry===division.name).length;
-            return <details className="prospec-department" key={division.name}>
-              <summary><span className="prospec-department-index">0{index+1}</span><span className="prospec-department-mark">{division.marker}</span><span className="prospec-department-copy"><strong>{division.name}</strong><small>{division.subtitle}</small></span><span className="prospec-department-count">{count} items</span><span className="prospec-department-chevron" aria-hidden="true">＋</span></summary>
-              <div className="prospec-department-details"><p>{division.detail}</p><button type="button" onClick={()=>{setCatalogueDivision(division.name);setStoreSearch("");document.getElementById("prospec-catalogue")?.scrollIntoView({behavior:"smooth"});}}>View {division.name} offerings <span aria-hidden="true">→</span></button></div>
-            </details>;
-          })}
-        </div>
-      </section>
       <section className="sd-services sd-wrap sd-digital-store sd-store-collection prospec-storefront" id="services">
         <div className="prospec-catalogue-heading" id="prospec-catalogue">
           <div><span className="prospec-eyebrow">THE PROSPEC STORE</span><h2>Find it. <em>Request it.</em></h2><p>Choose a listed product or service. Fixed prices are shown in BWP; custom work is always welcome.</p></div>
@@ -1462,7 +1450,7 @@ return <main className="servicePreview" style={{ "--studio-accent": themeColor, 
       </section>
       <section className="prospec-contact prospec-contact-refined sd-wrap" aria-labelledby="prospec-contact-title">
         <div><span className="prospec-eyebrow">YOUR NEXT MOVE</span><h2 id="prospec-contact-title">Got a brief? <em>Bring it.</em></h2><p>Choose an offering or send a general request. Your Prospec Account keeps the conversation and updates together.</p><button type="button" onClick={()=>{setView("account");setNotice("Tell Prospec what you need and we’ll route your enquiry to the right division.");}}>Start your request <span aria-hidden="true">↗</span></button></div>
-        <div className="prospec-contact-details"><strong>Rooted in Botswana. Ready beyond.</strong><span>Prospec Group serves customers from its Botswana base, with local and international sourcing and services.</span><strong>Home base</strong><span>Gaborone, Botswana · Serving customers locally and internationally</span><a href="mailto:info@prospecagency.com">info@prospecagency.com</a><a href="https://www.facebook.com/468612199989878/" target="_blank" rel="noreferrer">Follow Prospec on Facebook ↗</a></div>
+        <div className="prospec-contact-details"><strong>Rooted in Botswana. Ready beyond.</strong><span>Prospec Group serves customers from its Botswana base, with local and international sourcing and services.</span><strong>Home base</strong><span>Gaborone, Botswana · Serving customers locally and internationally</span></div>
       </section>
 </>}
 
