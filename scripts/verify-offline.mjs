@@ -24,7 +24,7 @@ check(page.includes("prospecCatalogue") && page.includes("prospecDivisions") && 
 check(page.includes("Quote on request") && page.includes("service.custom || service.price <= 0"), "unpriced catalogue items must remain requestable without showing P0");
 check(firebaseClient.includes("persistentLocalCache") && firebaseClient.includes("persistentMultipleTabManager"), "Firestore must retain persistent multi-tab offline cache");
 check(page.includes("ensureCustomerAuth()") && page.includes("onSnapshot(enquiriesQuery"), "customer requests must use persistent Firebase identity and live Firestore updates");
-check(page.includes("setDoc(doc(getProspecDb(), \"prospecEnquiries\"") && account.includes("arrayUnion(message)"), "customer requests and messages must queue through Firestore offline persistence");
+check(page.includes('setDoc(doc(getProspecDb(), "prospecEnquiries"') && account.includes("arrayUnion(message)"), "customer requests and messages must queue through Firestore offline persistence");
 check(firestoreRules.includes("request.auth.uid") && firestoreRules.includes("prospecEnquiries"), "Firestore rules must scope enquiry records to the authenticated customer");
 check(page.includes('fetch("/api/admin/session"') && page.includes("async function submitAdminLogin"), "owner login must use the server session endpoint");
 check(account.includes("Firestore keeps an offline cache") || account.includes("Prospec account"), "customer Account must describe its cloud-backed customer session");
@@ -34,7 +34,7 @@ check(pwaRegister.includes("await prompt.prompt()") && pwaRegister.includes("awa
 check(pwaRegister.includes("i13-install-card") && pwaRegister.includes('className="i13-install-close"') && pwaRegister.includes("setInstallCardDismissed(true)") && pwaRegister.includes("aria-expanded={!installCardCollapsed}"), "compact collapsible and dismissible install card must remain intact");
 check(pwaRegister.includes("function isIosSafari()") && pwaRegister.includes("Share</b>, choose <b>Add to Home Screen</b>"), "iOS Safari installation guidance must remain intact");
 check(pwaRegister.includes("function isAndroidChrome()") && pwaRegister.includes("ANDROID · CHROME") && pwaRegister.includes("Install app"), "Android Chrome install card and browser-owned manual guidance must remain available");
-check(pwaRegister.includes('prospec:install:dismissed-at:v2'), "new install-card release must not inherit stale dismissal from the previous card version");
+check(pwaRegister.includes('prospec:install:dismissed-at:v3'), "new install-card release must not inherit stale dismissal from the previous card version");
 check(page.includes('"Offline ready"') && !page.includes('"App shell saved"'), "customer-facing offline status must avoid technical app-shell wording");
 check(pwaRegister.includes('installState === "embedded"') && pwaRegister.includes("function openBrowser()"), "embedded-browser handoff must remain intact");
 check(pwaRegister.includes('register("/sw.js", { updateViaCache: "none" })') && pwaRegister.includes("SKIP_WAITING") && pwaRegister.includes('className="pwaUpdate"'), "service-worker update lifecycle must remain intact");
