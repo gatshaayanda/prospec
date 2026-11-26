@@ -14,10 +14,17 @@ export function createProspecAdminToken(password: string, now = Date.now()) {
   return { value: expiresAt + "." + signature(expiresAt, password), maxAge: SESSION_SECONDS };
 }
 
-export async function hasProspecAdminSession() {
+export async function hasProspecAdminSession(request?: Request) {
   const password = process.env.ADMIN_PASSWORD;
   if (!password) return false;
-  const cookie = (await cookies()).get(PROSPEC_ADMIN_COOKIE)?.value || "";
+  const requestCookie = request?.headers.get("cookie")
+    ?.split(";")
+    .map(part => part.trim())
+    .find(part => part.startsWith(PROSPEC_ADMIN_COOKIE + "="))
+    ?.slice(PROSPEC_ADMIN_COOKIE.length + 1);
+  const cookie = request
+    ? requestCookie || ""
+    : (await cookies()).get(PROSPEC_ADMIN_COOKIE)?.value || "";
   const [expiresText, supplied] = cookie.split(".");
   const expiresAt = Number(expiresText);
   if (!Number.isInteger(expiresAt) || expiresAt <= Math.floor(Date.now() / 1000) || !supplied) return false;

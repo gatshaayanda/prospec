@@ -7,9 +7,9 @@ import { deleteOfflineMedia, saveOfflineMedia, syncOfflineMedia } from "@/lib/of
 import { useOfflineMediaSource } from "@/app/useOfflineMediaSource";
 
 const { useUploadThing } = generateReactHelpers<OurFileRouter>();
-type Props = { value:string; type:"image"|"video"; online:boolean; onChange:(url:string,type:"image"|"video")=>void; onUploadingChange:(uploading:boolean)=>void; allowVideo?:boolean };
+type Props = { value:string; type:"image"|"video"; online:boolean; onChange:(url:string,type:"image"|"video")=>void; onUploadingChange:(uploading:boolean)=>void; allowVideo?:boolean; adminOnly?:boolean };
 
-export default function ServiceMediaPicker({value,type,online,onChange,onUploadingChange,allowVideo=true}:Props) {
+export default function ServiceMediaPicker({value,type,online,onChange,onUploadingChange,allowVideo=true,adminOnly=false}:Props) {
   const inputRef=useRef<HTMLInputElement>(null);
   const attemptedSync=useRef("");
   const onChangeRef=useRef(onChange);
@@ -17,7 +17,7 @@ export default function ServiceMediaPicker({value,type,online,onChange,onUploadi
   const [uploadProgress,setUploadProgress]=useState(0);
   const [urlDraft,setUrlDraft]=useState(type==="video"&&!value.startsWith("idb-media://")?value:"");
   const previewSource=useOfflineMediaSource(value);
-  const {startUpload,isUploading}=useUploadThing("fileUploader",{
+  const {startUpload,isUploading}=useUploadThing(adminOnly ? "adminMediaUploader" : "fileUploader",{
     onUploadProgress:progress=>setUploadProgress(Math.max(0,Math.min(100,Math.round(progress)))),
     onClientUploadComplete:files=>{
       onUploadingChange(false);

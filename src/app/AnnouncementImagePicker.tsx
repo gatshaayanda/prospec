@@ -7,9 +7,9 @@ import { deleteOfflineMedia,saveOfflineMedia,syncOfflineMedia } from "@/lib/offl
 import { useOfflineMediaSource } from "@/app/useOfflineMediaSource";
 
 const {useUploadThing}=generateReactHelpers<OurFileRouter>();
-type Props={value:string;online:boolean;onChange:(url:string)=>void;onUploadingChange:(uploading:boolean)=>void};
+type Props={value:string;online:boolean;onChange:(url:string)=>void;onUploadingChange:(uploading:boolean)=>void;adminOnly?:boolean};
 
-export default function AnnouncementImagePicker({value,online,onChange,onUploadingChange}:Props){
+export default function AnnouncementImagePicker({value,online,onChange,onUploadingChange,adminOnly=false}:Props){
   const inputRef=useRef<HTMLInputElement>(null);
   const attemptedSync=useRef("");
   const onChangeRef=useRef(onChange);
@@ -19,7 +19,7 @@ export default function AnnouncementImagePicker({value,online,onChange,onUploadi
   const [message,setMessage]=useState("");
   const [progress,setProgress]=useState(0);
   const previewSource=useOfflineMediaSource(value);
-  const {startUpload,isUploading}=useUploadThing("fileUploader",{
+  const {startUpload,isUploading}=useUploadThing(adminOnly ? "adminMediaUploader" : "fileUploader",{
     onUploadProgress:next=>setProgress(Math.max(0,Math.min(100,Math.round(next)))),
     onClientUploadComplete:files=>{
       onUploadingChange(false);const file=files?.[0];const url=file?.ufsUrl||file?.url;
