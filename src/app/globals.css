@@ -7770,3 +7770,61 @@ h1 em,
   .servicePreview .sd-care-empty-action:hover,.servicePreview .sd-account-store-link:hover{transform:none}
   .servicePreview .sd-care-action-arrow{animation:none}
 }
+
+
+/* Prospec navigation is a deliberate two-action control, not inline text links. */
+.servicePreview .sd-header{position:relative!important;top:auto!important;backdrop-filter:none;background:#f6f5f0;border-bottom:1px solid #d9e2e1}
+.servicePreview .sd-nav{min-height:72px;gap:16px}
+.servicePreview .prospec-primary-nav{
+  display:flex;align-items:center;gap:5px;padding:5px;
+  border:1px solid #d5e0df;border-radius:15px;background:#e9efed;
+  box-shadow:inset 0 1px 2px rgba(22,45,47,.05);
+}
+.servicePreview .prospec-primary-nav button{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:44px;padding:0 15px;border:1px solid transparent;border-radius:11px;
+  background:transparent;color:#354347;font-size:14px;font-weight:800;
+  letter-spacing:.005em;line-height:1;text-decoration:none;white-space:nowrap;
+  transition:background .16s ease,color .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.servicePreview .prospec-primary-nav button:hover{background:#fff;color:#102d32}
+.servicePreview .prospec-primary-nav button.is-active{
+  border-color:#087e87;background:#087e87;color:#fff;
+  box-shadow:0 3px 9px rgba(8,126,135,.2);
+}
+.servicePreview .prospec-primary-nav button:focus-visible{outline:3px solid #087e87;outline-offset:3px}
+.servicePreview .prospec-nav-icon{display:inline-grid;place-items:center;width:19px;height:19px;font-size:18px;line-height:1}
+.servicePreview .prospec-primary-nav .sd-count{
+  display:inline-grid;place-items:center;min-width:21px;height:21px;margin:0;padding:0 5px;
+  border:1px solid #b9cdca;border-radius:999px;background:#fff;color:#15565b!important;
+  font-size:11px;font-weight:900;line-height:1;
+}
+.servicePreview .prospec-primary-nav button.is-active .sd-count{
+  border-color:rgba(255,255,255,.48);background:#fff;color:#087e87!important;
+}
+@media(max-width:640px){
+  .servicePreview .sd-nav{min-height:66px;flex-wrap:nowrap;padding:8px 0;gap:8px}
+  .servicePreview .sd-nav nav.prospec-primary-nav{order:initial;width:auto;justify-content:flex-end;gap:3px;flex:0 0 auto}
+  .servicePreview .prospec-primary-nav button{min-height:42px;padding:0 10px;gap:6px;font-size:13px}
+  .servicePreview .prospec-nav-icon{width:16px;height:16px;font-size:16px}
+}
+@media(max-width:380px){
+  .servicePreview .sd-nav{gap:5px}
+  .servicePreview .prospec-header-wordmark{max-width:118px;height:auto}
+  .servicePreview .prospec-primary-nav button{padding-inline:8px}
+}
+/* Keep the owner Briefcase in the actual page footer; it must not float over Store content. */
+.servicePreview .sd-footer{
+  position:relative!important;inset:auto!important;z-index:1!important;
+  margin-top:28px!important;padding:20px 0!important;
+  background:#172329!important;border-top:1px solid #31464a!important;
+  pointer-events:auto!important;
+}
+.servicePreview .sd-footer-inner{padding:0!important}
+.servicePreview{padding-bottom:0!important}
+@media(max-width:640px){
+  .servicePreview .sd-footer{padding:18px 0!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .servicePreview .prospec-primary-nav button{transition:none}
+}
