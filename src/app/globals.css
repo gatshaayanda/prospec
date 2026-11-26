@@ -7461,3 +7461,19 @@ h1 em,
  .prospec-store-tools .prospec-division-filters button,.prospec-owner-entry{transition:none!important}
  .prospec-store-tools .prospec-division-filters button:hover,.prospec-owner-entry:hover{transform:none}
 }
+
+/* Editorial division signature panel: Luvie's warm editorial framing with The Plug's bold utility accents. */
+.prospec-store-signature{position:relative;display:flex;flex-direction:column;justify-content:space-between;min-height:224px;overflow:hidden;padding:clamp(19px,2.4vw,28px);border:1px solid rgba(0,185,199,.38);border-radius:4px 20px 4px 20px;background:radial-gradient(ellipse at 82% 14%,rgba(0,185,199,.25),transparent 40%),linear-gradient(145deg,#293b40 0%,#172328 72%);color:#fff;box-shadow:0 16px 34px rgba(0,0,0,.2)}
+.prospec-store-signature:after{position:absolute;right:-58px;bottom:-108px;width:238px;height:238px;border:1px solid rgba(115,229,231,.34);border-radius:50%;box-shadow:0 0 0 17px rgba(115,229,231,.045),0 0 0 37px rgba(115,229,231,.03);content:"";pointer-events:none}
+.prospec-store-signature>span,.prospec-store-signature>small{position:relative;z-index:1;color:#b9dfe0;font-size:.62rem;font-weight:950;letter-spacing:.14em;line-height:1.5}
+.prospec-store-signature>strong{position:relative;z-index:1;display:block;max-width:430px;margin:19px 0;color:#fff;font-family:Georgia,"Times New Roman",serif;font-size:clamp(1.7rem,3.1vw,2.55rem);font-weight:600;line-height:1.06;letter-spacing:-.045em}
+.prospec-store-signature>strong em{color:#65dce0;font-style:italic}
+.prospec-store-signature>div{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+.prospec-store-signature>div span{display:inline-flex;align-items:center;min-height:27px;padding:5px 9px;border:1px solid rgba(154,226,228,.36);border-radius:5px;background:rgba(8,24,29,.34);color:#efffff;font-size:.62rem;font-weight:900;letter-spacing:.07em}
+.prospec-store-signature>small{font-size:.57rem;letter-spacing:.12em}
+@media(max-width:620px){
+ .prospec-store-signature{min-height:205px;padding:18px}
+ .prospec-store-signature>strong{max-width:340px;margin:16px 0;font-size:clamp(1.65rem,7.2vw,2.05rem)}
+ .prospec-store-signature>div{gap:6px;margin-bottom:10px}
+ .prospec-store-signature>div span{min-height:26px;padding:5px 8px;font-size:.59rem}
+}
