@@ -631,7 +631,7 @@ export default function Home() {
     let stopStorefront: (() => void) | undefined;
     ensureCustomerAuth().then(user => {
       if (!active) return;
-      setCloudSyncStatus(navigator.onLine ? "synced" : "offline");
+      setCloudSyncStatus(navigator.onLine ? "connecting" : "offline");
       const db = getProspecDb();
       const enquiriesQuery = query(collection(db, "prospecEnquiries"), where("customerId", "==", user.uid), orderBy("createdAt", "desc"));
       stopEnquiries = onSnapshot(enquiriesQuery, { includeMetadataChanges: true }, snapshot => {
