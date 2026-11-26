@@ -7895,3 +7895,43 @@ h1 em,
 @media(prefers-reduced-motion:reduce){
   .servicePreview.serviceDemo:has(.prospec-storefront) .sd-nav nav.prospec-primary-nav button{transition:none}
 }
+
+
+/* Header navigation is intentionally account-only; the wordmark returns to Store. */
+.servicePreview.serviceDemo:has(.prospec-storefront) .sd-nav nav.prospec-primary-nav{
+  display:flex!important;align-items:center;justify-content:center;
+  width:auto!important;flex:0 0 auto;padding:4px;
+  border:1px solid #d5e0df;border-radius:14px;background:#e9efed;
+}
+.servicePreview.serviceDemo:has(.prospec-storefront) .sd-nav nav.prospec-primary-nav button{
+  position:relative;display:grid;place-items:center;
+  width:48px;min-width:48px;height:46px;min-height:46px;padding:0;
+  border:1px solid transparent;border-radius:10px;
+  background:transparent;color:#354347;box-shadow:none;
+  transition:background .16s ease,color .16s ease,border-color .16s ease;
+}
+.servicePreview.serviceDemo:has(.prospec-storefront) .sd-nav nav.prospec-primary-nav button:hover{
+  border-color:#c9dcda;background:#fff;color:#102d32;
+}
+.servicePreview.serviceDemo:has(.prospec-storefront) .sd-nav nav.prospec-primary-nav button.is-active{
+  border-color:#087e87;background:#087e87;color:#fff;
+  box-shadow:0 3px 9px rgba(8,126,135,.2);
+}
+.servicePreview.serviceDemo:has(.prospec-storefront) .prospec-account-icon{display:block;width:23px;height:23px}
+.servicePreview.serviceDemo:has(.prospec-storefront) .sd-nav nav.prospec-primary-nav .sd-count{
+  position:absolute;top:-5px;right:-5px;display:grid;place-items:center;
+  min-width:19px;height:19px;margin:0;padding:0 4px;
+  border:2px solid #f6f4ef;border-radius:999px;background:#087e87;color:#fff!important;
+  font-size:10px;font-weight:900;line-height:1;
+}
+.servicePreview.serviceDemo:has(.prospec-storefront) .sd-nav nav.prospec-primary-nav button:focus-visible{
+  outline:3px solid #087e87;outline-offset:3px;
+}
+@media(max-width:640px){
+  .servicePreview.serviceDemo:has(.prospec-storefront) .sd-nav{flex-wrap:nowrap;gap:8px}
+  .servicePreview.serviceDemo:has(.prospec-storefront) .sd-nav nav.prospec-primary-nav{order:initial;width:auto!important;flex:0 0 auto}
+  .servicePreview.serviceDemo:has(.prospec-storefront) .sd-nav nav.prospec-primary-nav button{width:44px;min-width:44px;height:42px;min-height:42px}
+}
+@media(prefers-reduced-motion:reduce){
+  .servicePreview.serviceDemo:has(.prospec-storefront) .sd-nav nav.prospec-primary-nav button{transition:none}
+}
