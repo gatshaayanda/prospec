@@ -273,7 +273,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     }, 1800);
   }
 
-  const installShellStyle: CSSProperties = { position: "fixed", left: 16, right: 16, bottom: 16, zIndex: 1205, maxWidth: 720, margin: "0 auto", padding: 16, borderRadius: 18, background: "#FFFFFF", color: "#111318", boxShadow: "0 12px 40px rgba(0,0,0,.18)", border: "1px solid rgba(17,19,24,.12)" };
+  const installShellStyle: CSSProperties = { position: "fixed", left: "auto", right: 18, bottom: 18, zIndex: 1205, width: "min(440px, calc(100vw - 36px))", maxWidth: 440, margin: 0, padding: 12, borderRadius: 16, background: "#FFFFFF", color: "#111318", boxShadow: "0 12px 40px rgba(0,0,0,.18)", border: "1px solid rgba(17,19,24,.12)" };
   const embeddedInstallStyle: CSSProperties = { position: "fixed", inset: 0, zIndex: 2147483647, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(0,0,0,.82)", backdropFilter: "blur(4px)", overscrollBehavior: "contain" };
   const installCard = installState === "native" && installHelpOpen && !environment().embedded ? (
     <div style={installShellStyle} role="presentation">
