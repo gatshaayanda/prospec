@@ -7317,3 +7317,94 @@ h1 em,
   .servicePreview .sd-footer-systems .prospec-owner-entry {transition:none}
   .servicePreview .sd-footer-systems .prospec-owner-entry:hover {transform:none}
 }
+
+
+/* Focused mobile Store readability correction. Keep the existing catalogue and actions intact. */
+@media(max-width:620px) {
+  .servicePreview .prospec-catalogue-copy h2 {
+    font-size:clamp(2.45rem,11vw,3.35rem);
+    line-height:.98;
+    letter-spacing:-.065em;
+  }
+  .servicePreview .prospec-catalogue-copy p {
+    max-width:42ch;
+    font-size:.96rem;
+    line-height:1.6;
+  }
+  .servicePreview .prospec-catalogue-count {
+    margin-top:13px;
+    font-size:.72rem;
+  }
+  .servicePreview .prospec-store-signature {
+    min-height:190px;
+  }
+  .servicePreview .prospec-store-signature>strong {
+    font-size:clamp(1.65rem,7vw,2rem);
+    line-height:1.12;
+  }
+  .servicePreview .prospec-store-tools {
+    gap:12px;
+  }
+  .servicePreview .prospec-store-search {
+    min-height:48px;
+  }
+  .servicePreview .prospec-store-tools .prospec-division-filters button {
+    min-height:40px;
+    padding:9px 13px;
+    font-size:.76rem;
+  }
+  .servicePreview .prospec-product-grid {
+    grid-template-columns:1fr;
+    gap:14px;
+  }
+  .servicePreview .prospec-product-card {
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+  }
+  .servicePreview .prospec-product-card .sd-service-media {
+    width:100%;
+    height:auto!important;
+    min-height:0;
+    aspect-ratio:16/7;
+  }
+  .servicePreview .prospec-product-card .sd-service-info {
+    min-height:0;
+    padding:14px 15px 15px;
+    gap:9px;
+  }
+  .servicePreview .prospec-product-card .sd-service-meta {
+    min-height:0;
+  }
+  .servicePreview .prospec-product-card .sd-service-meta span {
+    font-size:.68rem;
+  }
+  .servicePreview .prospec-product-card .sd-service-title {
+    min-height:0;
+    gap:6px;
+  }
+  .servicePreview .prospec-product-card .sd-service-title h3 {
+    min-height:0;
+    font-size:1.02rem;
+    line-height:1.3;
+    -webkit-line-clamp:3;
+  }
+  .servicePreview .prospec-product-card .sd-service-title strong {
+    font-size:.9rem;
+  }
+  .servicePreview .prospec-product-card .sd-service-info>p {
+    min-height:0;
+    margin:0 0 2px;
+    font-size:.84rem;
+    line-height:1.5;
+    -webkit-line-clamp:3;
+  }
+  .servicePreview .prospec-product-card .sd-order-button {
+    min-height:44px;
+    padding:10px 13px;
+    font-size:.78rem;
+  }
+  .servicePreview .prospec-contact-refined {
+    padding-top:26px;
+  }
+}
