@@ -7682,3 +7682,30 @@ h1 em,
 }
 .servicePreview .prospec-product-card .sd-order-button{min-height:44px;padding:10px 13px;font-size:14px;line-height:1.35}
 .servicePreview .prospec-product-card .prospec-image-note{font-size:12px}
+
+/* Store toolbar: readable at a glance, with one restrained arrival sheen. */
+.servicePreview .prospec-catalogue-count{
+  position:relative;isolation:isolate;overflow:hidden;
+  min-height:40px;padding:8px 13px;font-size:14px;line-height:1.35;
+}
+.servicePreview .prospec-catalogue-count:after{
+  content:"";position:absolute;z-index:-1;inset:0;
+  background:linear-gradient(110deg,transparent 28%,rgba(255,255,255,.22) 48%,transparent 68%);
+  transform:translateX(-125%);
+  animation:prospec-count-sheen 1.35s .25s ease-out 1 both;
+  pointer-events:none;
+}
+.servicePreview .prospec-store-search input{font-size:16px;font-weight:600}
+.servicePreview .prospec-store-search input::placeholder{font-size:14px}
+.servicePreview .prospec-store-tools .prospec-division-filters button{font-size:14px;min-height:42px}
+@keyframes prospec-count-sheen{
+  from{transform:translateX(-125%)}
+  to{transform:translateX(125%)}
+}
+@media(max-width:620px){
+  .servicePreview .prospec-catalogue-count{min-height:38px;font-size:13px}
+  .servicePreview .prospec-store-tools .prospec-division-filters button{font-size:13px}
+}
+@media(prefers-reduced-motion:reduce){
+  .servicePreview .prospec-catalogue-count:after{animation:none;display:none}
+}
