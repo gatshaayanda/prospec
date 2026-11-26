@@ -44,6 +44,12 @@ export async function PUT(request: NextRequest) {
         rewardDescription: typeof value.rewardDescription === "string" ? value.rewardDescription.slice(0, 500) : "",
         rewardImage: typeof value.rewardImage === "string" && /^https:\/\//i.test(value.rewardImage) ? value.rewardImage.slice(0, 2000) : "",
         discountAmount: typeof value.discountAmount === "number" && Number.isFinite(value.discountAmount) && value.discountAmount >= 0 && value.discountAmount <= 5000 ? value.discountAmount : 0,
+        receiptProfile: value.receiptProfile && typeof value.receiptProfile === "object" ? {
+          legalName: typeof (value.receiptProfile as Record<string, unknown>).legalName === "string" ? String((value.receiptProfile as Record<string, unknown>).legalName).slice(0, 120) : "Prospec Group",
+          registration: typeof (value.receiptProfile as Record<string, unknown>).registration === "string" ? String((value.receiptProfile as Record<string, unknown>).registration).slice(0, 80) : "",
+          address: typeof (value.receiptProfile as Record<string, unknown>).address === "string" ? String((value.receiptProfile as Record<string, unknown>).address).slice(0, 300) : "",
+          footer: typeof (value.receiptProfile as Record<string, unknown>).footer === "string" ? String((value.receiptProfile as Record<string, unknown>).footer).slice(0, 500) : "Thank you for your business.",
+        } : null,
         updatedAt: new Date().toISOString(),
       }, { merge: true });
       return NextResponse.json({ ok: true });
