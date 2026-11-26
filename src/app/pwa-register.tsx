@@ -33,6 +33,12 @@ function isIosSafari() {
   return ios && /Safari/i.test(nav.userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo/i.test(nav.userAgent);
 }
 
+function isChromeBrowser() {
+  if (typeof window === "undefined") return false;
+  const ua = window.navigator.userAgent || "";
+  return /Chrome\\/\\d+/i.test(ua) && !/Edg\\/|OPR\\/|SamsungBrowser|Brave|Vivaldi/i.test(ua);
+}
+
 function dismissedRecently() {
   try {
     const value = window.localStorage.getItem(INSTALL_DISMISSED_KEY);
@@ -75,7 +81,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     setInstallCardDismissed(dismissedRecently());
     const embedded = initialEmbedded || env.embedded;
     setEmbeddedAndroid((initialEmbedded && initialAndroid) || (env.embedded && env.android));
-    setCanShowManualInstall(isIosSafari());
+    setCanShowManualInstall(isIosSafari() || isChromeBrowser());
 
     let registration: ServiceWorkerRegistration | null = null;
     const inspect = () => {
@@ -137,9 +143,9 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
         void install();
         return;
       }
-      // Only iOS Safari needs manual guidance. On desktop/Android, do not replace
-      // the browser-owned prompt with a custom explainer or fake install flow.
-      if (current.ios && isIosSafari()) {
+      // Keep Chrome's native prompt first. If it has not exposed the one-shot event,
+      // offer its documented browser-menu install route rather than a fake prompt.
+      if ((current.ios && isIosSafari()) || isChromeBrowser()) {
         setInstallHelpOpen(true);
         setInstallState("native");
       }
@@ -218,8 +224,9 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
   async function install() {
     const prompt = installPromptRef.current;
     if (!prompt) {
-      // Chromium owns install eligibility. Only iOS Safari needs manual guidance.
-      if (isIosSafari()) {
+      // Chromium owns the native prompt. Its browser menu remains a manual install
+      // route when the site is not currently eligible for the one-shot prompt.
+      if (isIosSafari() || isChromeBrowser()) {
         setInstallHelpOpen(true);
         setInstallState("native");
       }
@@ -276,14 +283,22 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
 
   const installShellStyle: CSSProperties = { position: "fixed", left: 16, right: 16, bottom: 16, zIndex: 1205, maxWidth: 720, margin: "0 auto", padding: 16, borderRadius: 18, background: "#FFFFFF", color: "#111318", boxShadow: "0 12px 40px rgba(0,0,0,.18)", border: "1px solid rgba(17,19,24,.12)" };
   const embeddedInstallStyle: CSSProperties = { position: "fixed", inset: 0, zIndex: 2147483647, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(0,0,0,.82)", backdropFilter: "blur(4px)", overscrollBehavior: "contain" };
+  const installEnvironment = environment();
+  const iosInstallGuide = installEnvironment.ios && isIosSafari();
+  const androidChromeInstallGuide = installEnvironment.android && isChromeBrowser();
+  const installGuide = iosInstallGuide
+    ? { kicker: "IPHONE & IPAD · SAFARI", title: "Add to Home Screen.", message: <>In Safari, tap <b>Share</b>, choose <b>Add to Home Screen</b>, then tap <b>Add</b>. Open the new Home Screen icon to launch the installed app.</>, action: "Continue on the website" }
+    : androidChromeInstallGuide
+      ? { kicker: "ANDROID · CHROME", title: "Install Prospec.", message: <>In Chrome, tap <b>More ⋮</b>, choose <b>Install and create shortcut</b> or <b>Install app</b>, then follow the confirmation steps.</>, action: "Got it" }
+      : { kicker: "DESKTOP · CHROME", title: "Install Prospec.", message: <>In Chrome, open <b>More ⋮ → Cast, save, and share → Install page as app</b>, then confirm the installation.</>, action: "Got it" };
   const installCard = installState === "native" && installHelpOpen && !environment().embedded ? (
     <div style={installShellStyle} role="presentation">
       <section className="plugInstallModal" role="dialog" aria-modal="false" aria-labelledby="plug-install-title" aria-describedby="plug-install-message">
         <div className="plugInstallTop"><span className="plugInstallMark">P</span><span className="plugInstallTag">PROSPEC GROUP · PITBULLS OF BRANDING</span><button type="button" className="plugInstallClose" aria-label="Close install guidance" onClick={dismissInstall}>×</button></div>
-        <div className="plugInstallKicker">IPHONE &amp; IPAD</div>
-        <h2 id="plug-install-title">Add to Home Screen.</h2>
-        <p id="plug-install-message">In Safari, tap <b>Share</b>, choose <b>Add to Home Screen</b>, then tap <b>Add</b>. Open the new Home Screen icon to launch the installed app.</p>
-        <button type="button" className="plugInstallPrimary" onClick={dismissInstall}>Continue on the website</button>
+        <div className="plugInstallKicker">{installGuide.kicker}</div>
+        <h2 id="plug-install-title">{installGuide.title}</h2>
+        <p id="plug-install-message">{installGuide.message}</p>
+        <button type="button" className="plugInstallPrimary" onClick={dismissInstall}>{installGuide.action}</button>
       </section>
     </div>
 ) : installState === "embedded" ? (
@@ -309,7 +324,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
         </div>
         <button className="i13-install-collapse" type="button" aria-label={installCardCollapsed ? "Expand install options" : "Collapse install options"} aria-expanded={!installCardCollapsed} onClick={() => setInstallCardCollapsed(value => !value)}>{installCardCollapsed ? "＋" : "−"}</button>
         <button className="i13-install-close" type="button" aria-label="Dismiss install prompt for seven days" onClick={dismissInstall}>×</button>
-        <button className="i13-install-action" type="button" onClick={() => { void install(); }}>{installCardCollapsed ? "Install" : "Install Prospec Group"} <span aria-hidden="true">↗</span></button>
+        <button className="i13-install-action" type="button" onClick={() => { void install(); }}>{installCardCollapsed ? "Install" : canInstall ? "Install Prospec Group" : "Install options"} <span aria-hidden="true">↗</span></button>
       </aside>
     )}
     {installCard}
