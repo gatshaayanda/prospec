@@ -56,16 +56,16 @@ export default function AccountWorkspace({ businessName, currency, orders, disco
   const money = (amount: number) => new Intl.NumberFormat("en", { style: "currency", currency, maximumFractionDigits: 2 }).format(amount);
   useEffect(() => { const timer = window.setInterval(() => setClockNow(Date.now()), 60000); return () => window.clearInterval(timer); }, []);
   const normalizedEmail = email.trim().toLowerCase();
-  const filteredOrders = useMemo(() => normalizedEmail ? orders.filter(order => order.email.trim().toLowerCase() === normalizedEmail) : [], [orders, normalizedEmail]);
+  const filteredOrders = useMemo(() => orders, [orders]);
   const matchingRewards = useMemo(() => normalizedEmail ? discountClaims.filter(claim => claim.email.trim().toLowerCase() === normalizedEmail) : [], [discountClaims, normalizedEmail]);
   const openOrders = filteredOrders.filter(order => !["Completed", "Declined", "Cancelled"].includes(order.status)).length;
   const currentOrder = filteredOrders.find(order => !["Completed", "Declined", "Cancelled"].includes(order.status)) || filteredOrders[0];
   const newUpdates = filteredOrders.reduce((count, order) => count + (order.messages || []).filter(message => message.from === "studio").length, 0);
   const accountUpdates = useMemo(() => filteredOrders.flatMap(order => [
-    { id: order.id + ":status", title: order.serviceName + " · " + order.status, detail: order.status === "New request" ? "Your request has been received on this device and is awaiting review." : "Current request status", createdAt: order.statusUpdatedAt || order.createdAt, kind: "status" as const },
+    { id: order.id + ":status", title: order.serviceName + " · " + order.status, detail: order.status === "New request" ? "Your request is saved in this account and is awaiting review." : "Current request status", createdAt: order.statusUpdatedAt || order.createdAt, kind: "status" as const },
     ...(order.messages || []).filter(message => message.from === "studio").map(message => ({ id: message.id, title: "Message from " + businessName, detail: message.text || (message.attachment ? "A file was shared with your request." : "A new request message is available."), createdAt: message.createdAt, kind: "message" as const }))
   ]).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()).slice(0, 6), [filteredOrders, businessName]);
-  const monogram = businessName.trim().split(/\\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase() || "B";
+  const monogram = businessName.trim().split(/\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase() || "B";
 
   const { startUpload, isUploading } = useUploadThing("fileUploader", {
     onUploadProgress: progress => setUploadProgress(Math.max(0, Math.min(100, Math.round(progress)))),
@@ -195,7 +195,7 @@ export default function AccountWorkspace({ businessName, currency, orders, disco
     {announcementActive && announcement.trim() && <aside className="sd-account-announcement"><span className="sd-kicker">FROM {businessName.toUpperCase()}</span><h3>Business update</h3><p>{announcement}</p></aside>}
     {uploadNotice && <p className="sd-account-feedback" role="status">{uploadNotice}</p>}
 
-    <details className="sd-account-lookup-compact" open={lookupOpen} onToggle={event => setLookupOpen(event.currentTarget.open)}><summary>{normalizedEmail ? "Using " + email : "Find your account"} <b>Change email</b></summary><div><label htmlFor="account-email">Email used on your request</label><input id="account-email" type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="Enter your email address" autoComplete="email" /><p>Your requests are linked to this device’s secure customer session, not just the email address.</p></div></details>
+    <details className="sd-account-lookup-compact" open={lookupOpen} onToggle={event => setLookupOpen(event.currentTarget.open)}><summary>{normalizedEmail ? "Contact email · " + email : "Add a contact email"} <b>Edit details</b></summary><div><label htmlFor="account-email">Contact email for your requests</label><input id="account-email" type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="Enter your email address" autoComplete="email" /><p>Your requests are linked to this browser’s secure customer session. Changing this contact email does not move requests to another account.</p></div></details>
 
     {children && <details className="sd-account-collapsible sd-account-optional-feature"><summary><span>Optional rewards experience</span><b>Explore</b></summary><div>{children}</div></details>}
     <p className="sd-account-boundary">Your Prospec customer session stays linked to this device. Firestore keeps an offline cache and syncs supported request and message changes when you are back online; attachments need internet.</p>
