@@ -11,7 +11,7 @@ const { useUploadThing } = generateReactHelpers<OurFileRouter>();
 
 export type AccountAttachment = { name: string; url: string; type: string; size: number };
 export type AccountMessage = { id: string; from: "customer" | "studio"; text: string; createdAt: string; attachment?: AccountAttachment };
-export type WorkspaceOrder = { id: string; serviceId: string; serviceName: string; serviceItems?: { id: string; name: string; price: number; custom?: boolean }[]; quoteRequired?: boolean; whatsapp?: string; notificationOptIn?: boolean; price: number; quotedPrice?: number; originalPrice?: number; discountAmount?: number; discountCode?: string; receiptNo?: string; paidAmount?: number; paidAt?: string; paymentStatus?: "Unpaid" | "Partially paid (preview)" | "Paid (preview)"; dueDate: string; customerName: string; email: string; brief: string; status: string; createdAt: string; statusUpdatedAt?: string; messages?: AccountMessage[] };
+export type WorkspaceOrder = { id: string; customerId?: string; serviceId: string; serviceName: string; serviceItems?: { id: string; name: string; price: number; custom?: boolean }[]; quoteRequired?: boolean; whatsapp?: string; notificationOptIn?: boolean; price: number; quotedPrice?: number; originalPrice?: number; discountAmount?: number; discountCode?: string; receiptNo?: string; paidAmount?: number; paidAt?: string; paymentStatus?: "Unpaid" | "Partially paid (preview)" | "Paid (preview)"; dueDate: string; customerName: string; email: string; brief: string; status: string; createdAt: string; statusUpdatedAt?: string; messages?: AccountMessage[] };
 
 type DiscountClaim = { id: string; email: string; code: string; amount: number; lapTime: number; createdAt: string; status: "Available" | "Redeemed" };
 type Props = {
@@ -26,6 +26,7 @@ type Props = {
   availability: "available" | "limited" | "unavailable";
   customerName?: string;
   email: string;
+  customerUid: string;
   setEmail: (email: string) => void;
   online: boolean;
   syncStatus: "connecting" | "synced" | "offline" | "error";
@@ -43,7 +44,7 @@ type Props = {
 
 const prettyDate = (value: string) => { try { return new Date(value).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }); } catch { return value; } };
 
-export default function AccountWorkspace({ businessName, currency, orders, discountClaims, receiptProfile, accentColor, secondaryColor, highlightColor, availability, customerName, email, setEmail, online, syncStatus, announcement, announcementActive, onBrowse, onUpdateOrder, children, requestForm, onNewRequest, selectedServices, onRemoveSelected, onContinueRequest }: Props) {
+export default function AccountWorkspace({ businessName, currency, customerUid, orders, discountClaims, receiptProfile, accentColor, secondaryColor, highlightColor, availability, customerName, email, setEmail, online, syncStatus, announcement, announcementActive, onBrowse, onUpdateOrder, children, requestForm, onNewRequest, selectedServices, onRemoveSelected, onContinueRequest }: Props) {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [uploadingOrder, setUploadingOrder] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -56,7 +57,7 @@ export default function AccountWorkspace({ businessName, currency, orders, disco
   const money = (amount: number) => new Intl.NumberFormat("en", { style: "currency", currency, maximumFractionDigits: 2 }).format(amount);
   useEffect(() => { const timer = window.setInterval(() => setClockNow(Date.now()), 60000); return () => window.clearInterval(timer); }, []);
   const normalizedEmail = email.trim().toLowerCase();
-  const filteredOrders = useMemo(() => orders, [orders]);
+  const filteredOrders = useMemo(() => orders.filter(order => order.customerId ? order.customerId === customerUid : Boolean(normalizedEmail) && order.email.trim().toLowerCase() === normalizedEmail), [orders, customerUid, normalizedEmail]);
   const matchingRewards = useMemo(() => normalizedEmail ? discountClaims.filter(claim => claim.email.trim().toLowerCase() === normalizedEmail) : [], [discountClaims, normalizedEmail]);
   const openOrders = filteredOrders.filter(order => !["Completed", "Declined", "Cancelled"].includes(order.status)).length;
   const currentOrder = filteredOrders.find(order => !["Completed", "Declined", "Cancelled"].includes(order.status)) || filteredOrders[0];
