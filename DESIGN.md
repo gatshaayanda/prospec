@@ -43,7 +43,7 @@ Vision cue: “Annihilate” — a campaign statement, not a claim about custome
 ## Protected behavior and boundaries
 - Preserve the inherited PWA install event lifecycle, inline install-card placement, iOS guidance, embedded-browser handoff, offline shell, cache update and refresh behavior.
 - Preserve the inherited scripted ServiceGuide behavior; change only Prospec identity and task-specific copy/actions.
-- Browser-local preview data is not production persistence. Do not claim shared accounts, live notifications, remote admin inbox or cross-device sync until the Prospec database integration is complete and verified.
+- The live Prospec Store uses the supplied `theworks-f4957` Firestore project for the public catalogue, customer-owned enquiries and request messages; the owner Briefcase reads and updates shared records through its server-authenticated API. Customer identity is persistent Anonymous Auth on the same browser/device, not a recoverable cross-device account. Owner notes and local activity counters remain browser-local. Do not claim email/push delivery, payment-gateway capture or cross-device account recovery.
 - Do not change Firebase project IDs, secrets, Firestore rules or storage configuration without verified Prospec configuration and authorization.
 
 
