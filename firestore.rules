@@ -35,6 +35,8 @@ service cloud.firestore {
           "paidAt", "receiptNo", "completedAt"
         ])
         && request.resource.data.status == "New request"
+        && request.resource.data.messages is list
+        && request.resource.data.messages.size() == 0
         && request.resource.data.price is number
         && request.resource.data.price >= 0;
       allow read: if isOwner() || (signedIn() && resource.data.customerId == request.auth.uid);
@@ -45,8 +47,8 @@ service cloud.firestore {
         && request.resource.data.updatedAt is string
         && request.resource.data.messages is list
         && request.resource.data.messages.size() <= 100
-        && request.resource.data.messages.hasAll(resource.data.messages)
-        && request.resource.data.messages.size() == resource.data.messages.size() + 1
+        && request.resource.data.messages.hasAll(resource.data.get("messages", []))
+        && request.resource.data.messages.size() == resource.data.get("messages", []).size() + 1
         && request.resource.data.messages[request.resource.data.messages.size() - 1].from == "customer"
         && request.resource.data.messages[request.resource.data.messages.size() - 1].text is string
         && request.resource.data.messages[request.resource.data.messages.size() - 1].text.size() <= 2000
