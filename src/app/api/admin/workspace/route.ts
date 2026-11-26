@@ -42,6 +42,8 @@ export async function PUT(request: NextRequest) {
         rewardActive: value.rewardActive === true,
         rewardTitle: typeof value.rewardTitle === "string" ? value.rewardTitle.slice(0, 120) : "",
         rewardDescription: typeof value.rewardDescription === "string" ? value.rewardDescription.slice(0, 500) : "",
+        rewardImage: typeof value.rewardImage === "string" && /^https:\/\//i.test(value.rewardImage) ? value.rewardImage.slice(0, 2000) : "",
+        discountAmount: typeof value.discountAmount === "number" && Number.isFinite(value.discountAmount) && value.discountAmount >= 0 && value.discountAmount <= 5000 ? value.discountAmount : 0,
         updatedAt: new Date().toISOString(),
       }, { merge: true });
       return NextResponse.json({ ok: true });
