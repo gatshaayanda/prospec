@@ -360,7 +360,14 @@ export default function Home() {
           rewardTitle: typeof storefront.rewardTitle === "string" ? storefront.rewardTitle : "",
           rewardDescription: typeof storefront.rewardDescription === "string" ? storefront.rewardDescription : "",
           rewardImage: typeof storefront.rewardImage === "string" ? storefront.rewardImage : "",
-          discountAmount: typeof storefront.discountAmount === "number" && Number.isFinite(storefront.discountAmount) ? storefront.discountAmount : 0,
+          discountAmount: typeof storefront.discountAmount === "number" && Number.isFinite(storefront.discountAmount) ? storefront.discountAmount : storefront.rewardActive === true ? 5 : 0,
+          receiptProfile: storefront.receiptProfile && typeof storefront.receiptProfile === "object" ? {
+            legalName: typeof storefront.receiptProfile.legalName === "string" ? storefront.receiptProfile.legalName : "Prospec Group",
+            registration: typeof storefront.receiptProfile.registration === "string" ? storefront.receiptProfile.registration : "",
+            address: typeof storefront.receiptProfile.address === "string" ? storefront.receiptProfile.address : "",
+            phone: current.receiptProfile?.phone || "",
+            footer: typeof storefront.receiptProfile.footer === "string" ? storefront.receiptProfile.footer : "Thank you for your business.",
+          } : current.receiptProfile,
           orders,
         }));
         setOwnerCloudReady(true);
@@ -383,12 +390,18 @@ export default function Home() {
       rewardDescription: data.rewardDescription || "",
       rewardImage: data.rewardImage || "",
       discountAmount: Number.isFinite(data.discountAmount) ? data.discountAmount : 0,
+      receiptProfile: {
+        legalName: data.receiptProfile?.legalName || "Prospec Group",
+        registration: data.receiptProfile?.registration || "",
+        address: data.receiptProfile?.address || "",
+        footer: data.receiptProfile?.footer || "Thank you for your business.",
+      },
     };
     void fetch("/api/admin/workspace", {
       method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "storefront", storefront }),
     }).then(response => { if (!response.ok) setNotice("Store changes could not sync to the Prospec database."); });
-  }, [ownerCloudReady, adminUnlocked, view, data.services, data.availability, data.announcement, data.announcementActive, data.announcementImage, data.rewardActive, data.rewardTitle, data.rewardDescription, data.rewardImage, data.discountAmount]);
+  }, [ownerCloudReady, adminUnlocked, view, data.services, data.availability, data.announcement, data.announcementActive, data.announcementImage, data.rewardActive, data.rewardTitle, data.rewardDescription, data.rewardImage, data.discountAmount, data.receiptProfile]);
 
   useEffect(() => {
     if (!ownerCloudReady || !adminUnlocked || view !== "admin") return;
@@ -670,7 +683,14 @@ export default function Home() {
           rewardTitle: typeof remote.rewardTitle === "string" ? remote.rewardTitle : "",
           rewardDescription: typeof remote.rewardDescription === "string" ? remote.rewardDescription : "",
           rewardImage: typeof remote.rewardImage === "string" ? remote.rewardImage : "",
-          discountAmount: typeof remote.discountAmount === "number" && Number.isFinite(remote.discountAmount) ? remote.discountAmount : current.discountAmount,
+          discountAmount: typeof remote.discountAmount === "number" && Number.isFinite(remote.discountAmount) ? remote.discountAmount : remote.rewardActive === true ? 5 : current.discountAmount,
+          receiptProfile: remote.receiptProfile && typeof remote.receiptProfile === "object" ? {
+            legalName: typeof remote.receiptProfile.legalName === "string" ? remote.receiptProfile.legalName : "Prospec Group",
+            registration: typeof remote.receiptProfile.registration === "string" ? remote.receiptProfile.registration : "",
+            address: typeof remote.receiptProfile.address === "string" ? remote.receiptProfile.address : "",
+            phone: current.receiptProfile?.phone || "",
+            footer: typeof remote.receiptProfile.footer === "string" ? remote.receiptProfile.footer : "Thank you for your business.",
+          } : current.receiptProfile,
         }));
       }, () => { if (active) setCloudSyncStatus("error"); });
     }).catch(() => { if (active) setCloudSyncStatus(navigator.onLine ? "error" : "offline"); });
@@ -1530,7 +1550,7 @@ return <main className="servicePreview serviceDemo" style={{ "--studio-accent": 
 <div className="sd-finance-metrics"><article><small>Payments received</small><strong>{money(paidTotal)}</strong></article><article><small>Completed value</small><strong>{money(completedValue)}</strong></article><article><small>Projected · accepted / active</small><strong>{money(projectedValue)}</strong></article><article><small>Requested value · excluding declined</small><strong>{money(requestedValue)}</strong></article><article><small>Completed · unpaid</small><strong>{money(completedUnpaid)}</strong></article></div>
 <p className="sd-admin-help">Paid totals include only amounts manually recorded by an owner; no payment gateway is connected. Completed-unpaid and active pipeline are estimates, not cash received.</p>
 <AdminMoneyInsights mode="money" businessName={businessName} currency={businessCurrency} brandColor={themeColor} />
-<div className="sd-receipt-profile"><h3>Business details on receipts</h3><p className="sd-admin-help">Use the business&apos;s own details and tax references in this prototype document.</p>
+<div className="sd-receipt-profile"><h3>Business details on receipts</h3><p className="sd-admin-help">Legal name, registration, address and footer are shared on customer receipts. The contact number remains on this device and is not published to the Store or customer receipts.</p>
 <div className="sd-form-two">
 <label>Registered / legal name (if different)<input value={data.receiptProfile?.legalName || ""} onChange={event=>commitData(current=>({...current,receiptProfile:{...emptyData.receiptProfile!,...(current.receiptProfile||{}),legalName:event.target.value}}),"Receipt business name saved on this device.")}/></label>
 <label>Tax / BURS reference<input value={data.receiptProfile?.registration || ""} onChange={event=>commitData(current=>({...current,receiptProfile:{...emptyData.receiptProfile!,...(current.receiptProfile||{}),registration:event.target.value}}),"Tax reference saved on this device.")}/></label>
