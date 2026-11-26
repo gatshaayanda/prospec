@@ -439,6 +439,7 @@ export default function Home() {
   const [customerName, setCustomerName] = useState("");
   const [email, setEmail] = useState("");
   const [customerProfileReady, setCustomerProfileReady] = useState(false);
+  const [whatsapp, setWhatsapp] = useState("");
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(getStorageKey("prospec:customer-profile:v1"));
@@ -458,7 +459,6 @@ export default function Home() {
       else window.localStorage.removeItem(getStorageKey("prospec:customer-profile:v1"));
     } catch { setNotice("Your customer details could not be remembered on this device."); }
   }, [customerName, email, whatsapp, customerProfileReady]);
-  const [whatsapp, setWhatsapp] = useState("");
   const [notificationOptIn, setNotificationOptIn] = useState(false);
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [selectionReady, setSelectionReady] = useState(false);
