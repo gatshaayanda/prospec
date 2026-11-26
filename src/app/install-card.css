@@ -37,3 +37,12 @@
 .i13-install-action:focus-visible,.i13-install-close:focus-visible,.i13-install-collapse:focus-visible{outline:3px solid #00aeba;outline-offset:3px}
 @keyframes prospec-install-sheen{0%,62%{transform:translateX(-120%)}82%,100%{transform:translateX(120%)}}
 @media(prefers-reduced-motion:reduce){.i13-install-action{transition:none}.i13-install-action:before{animation:none;display:none}.i13-install-action:hover{transform:none}}
+
+/* Prospec installation guidance keeps the same charcoal/teal identity as the
+   branded invitation card while leaving browser-owned install confirmation intact. */
+.plugInstallModal:before{background:linear-gradient(90deg,#20272d 0 28%,#00b9c7 28% 100%)}
+.plugInstallMark{background:#20272d;border-color:#00b9c7}
+.plugInstallKicker,.plugInstallModal h2 em{color:#087e87}
+.plugInstallPrimary{background:#00b9c7;color:#10272a;box-shadow:0 8px 20px rgba(0,145,155,.2)}
+.plugInstallPrimary:hover{background:#009aa5}
+.plugInstallClose:focus-visible{outline:3px solid #00b9c7;outline-offset:3px}
