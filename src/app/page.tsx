@@ -223,6 +223,7 @@ export default function Home() {
   const [ready, setReady] = useState(false);
   const [cloudSyncStatus, setCloudSyncStatus] = useState<"connecting" | "synced" | "offline" | "error">("connecting");
   const [ownerCloudReady, setOwnerCloudReady] = useState(false);
+  const syncedOwnerOrdersRef = useRef<Record<string, string>>({});
   const [ownerCloudError, setOwnerCloudError] = useState(false);
   const [online, setOnline] = useState(true);
   const [offlineShellReady, setOfflineShellReady] = useState(false);
@@ -347,6 +348,7 @@ export default function Home() {
         if (!active) return;
         const storefront = payload.storefront || {};
         const orders = Array.isArray(payload.enquiries) ? payload.enquiries as PreviewOrder[] : [];
+        syncedOwnerOrdersRef.current = Object.fromEntries(orders.map(order => [order.id, JSON.stringify(order)]));
         setData(current => ({
           ...current,
           services: Array.isArray(storefront.services) ? storefront.services as Service[] : current.services,
@@ -386,13 +388,19 @@ export default function Home() {
 
   useEffect(() => {
     if (!ownerCloudReady || !adminUnlocked || view !== "admin") return;
-    for (const order of data.orders) {
+    const changedOrders = data.orders.filter(order => syncedOwnerOrdersRef.current[order.id] !== JSON.stringify(order));
+    if (!changedOrders.length) return;
+    void Promise.all(changedOrders.map(async order => {
       const { id, ...patch } = order;
-      void fetch("/api/admin/workspace", {
+      const response = await fetch("/api/admin/workspace", {
         method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "enquiry", id, patch }),
-      }).then(response => { if (!response.ok) setNotice("A request update could not sync to the Prospec database."); });
-    }
+      });
+      if (!response.ok) throw new Error("A request update could not sync to the Prospec database.");
+      return [id, JSON.stringify(order)] as const;
+    })).then(saved => {
+      saved.forEach(([id, signature]) => { syncedOwnerOrdersRef.current[id] = signature; });
+    }).catch(() => setNotice("A request update could not sync to the Prospec database. Keep the Briefcase open and retry the change when connected."));
   }, [ownerCloudReady, adminUnlocked, view, data.orders]);
 
   const [selected, setSelected] = useState<string | null>(null);
