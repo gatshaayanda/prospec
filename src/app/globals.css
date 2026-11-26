@@ -7935,3 +7935,19 @@ h1 em,
 @media(prefers-reduced-motion:reduce){
   .servicePreview.serviceDemo:has(.prospec-storefront) .sd-nav nav.prospec-primary-nav button{transition:none}
 }
+
+
+/* Compact, progressive customer request flow */
+.sd-request-progress{display:flex;align-items:center;gap:8px;margin:0 0 16px;color:var(--sd-muted,#64748b);font-size:12px}
+.sd-request-progress>span{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.sd-request-progress>span:first-letter{font-weight:800}
+.sd-request-progress>span.is-current,.sd-request-progress>span.is-complete{color:var(--sd-ink,#20272d);font-weight:750}
+.sd-request-progress>span.is-current{color:var(--sd-accent,#008f9b)}
+.sd-request-progress>i{height:1px;flex:1;background:currentColor;opacity:.25}
+.sd-request-step[hidden]{display:none!important}
+.sd-request-step{display:grid;gap:14px}
+.sd-request-step-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px}
+.sd-request-review{padding:12px;border:1px solid var(--sd-border,#d8e0e3);border-radius:12px;background:var(--sd-soft,#f5f8f8);display:grid;gap:5px}
+.sd-request-review p,.sd-request-review small{margin:0}
+.sd-request-review small{line-height:1.45}
+@media(max-width:480px){.sd-request-progress{gap:5px;font-size:11px}.sd-request-progress>span{gap:4px}.sd-request-step-actions>*{flex:1;min-width:0}.sd-request-step-actions button{padding-inline:10px}}
