@@ -634,13 +634,13 @@ export default function Home() {
       setCloudSyncStatus(navigator.onLine ? "synced" : "offline");
       const db = getProspecDb();
       const enquiriesQuery = query(collection(db, "prospecEnquiries"), where("customerId", "==", user.uid), orderBy("createdAt", "desc"));
-      stopEnquiries = onSnapshot(enquiriesQuery, snapshot => {
+      stopEnquiries = onSnapshot(enquiriesQuery, { includeMetadataChanges: true }, snapshot => {
         if (!active) return;
         if (viewRef.current !== "admin") {
           const orders = snapshot.docs.map(item => ({ id: item.id, ...item.data() })) as PreviewOrder[];
           setData(current => ({ ...current, orders }));
         }
-        setCloudSyncStatus("synced");
+        setCloudSyncStatus(!navigator.onLine ? "offline" : snapshot.metadata.hasPendingWrites || snapshot.metadata.fromCache ? "connecting" : "synced");
       }, () => { if (active) setCloudSyncStatus("error"); });
       stopStorefront = onSnapshot(doc(db, "prospecPublic", "storefront"), snapshot => {
         if (!active || !snapshot.exists()) return;
@@ -1215,13 +1215,16 @@ export default function Home() {
     try {
       const customer = await ensureCustomerAuth();
       const { id: _localId, ...enquiryRecord } = order;
-      void setDoc(doc(getProspecDb(), "prospecEnquiries", id), { ...enquiryRecord, customerId: customer.uid }, { merge: false }).catch(() => setCloudSyncStatus("error"));
-      setCloudSyncStatus(navigator.onLine ? "synced" : "offline");
+      void setDoc(doc(getProspecDb(), "prospecEnquiries", id), { ...enquiryRecord, customerId: customer.uid, messages: [] }, { merge: false }).catch(() => {
+        setCloudSyncStatus("error");
+        setNotice("Your request is saved on this device, but Prospec could not confirm it with the shared database. Reconnect and try again.");
+      });
+      setCloudSyncStatus(navigator.onLine ? "connecting" : "offline");
     } catch {
       setNotice("Your customer session could not be established. Please reconnect and try again; your request has not been submitted.");
       return;
     }
-    if (!commitData(current => ({ ...current, orders: [order, ...current.orders], discountClaims: claim ? (current.discountClaims || []).map(item => item.id === claim.id ? { ...item, status: "Redeemed" as const } : item) : current.discountClaims, events: [{ id: "EV-"+Date.now().toString(36), kind: "request", label: "Customer request received · "+order.serviceName, at: new Date().toISOString() }, ...(current.events || [])] }), "Your request has been saved to your Prospec account. No payment was taken.")) return;
+    if (!commitData(current => ({ ...current, orders: [order, ...current.orders], discountClaims: claim ? (current.discountClaims || []).map(item => item.id === claim.id ? { ...item, status: "Redeemed" as const } : item) : current.discountClaims, events: [{ id: "EV-"+Date.now().toString(36), kind: "request", label: "Customer request received · "+order.serviceName, at: new Date().toISOString() }, ...(current.events || [])] }), navigator.onLine ? "Request saved. Waiting for Prospec's shared database to confirm it. No payment was taken." : "Request saved on this device and queued to sync when you reconnect. No payment was taken.")) return;
     recordJourneyEvent("request_submitted", { screen: "customer-account", serviceId: order.serviceId, serviceName: order.serviceName, orderId: order.id });
     setView("account"); setOrderFormOpen(false); setSelected(null); setSelectedServiceIds([]); setCustomSelections([]); setCatalogueQuery(""); setPromoCode("");
     try { window.localStorage.removeItem(getStorageKey(CUSTOMER_SELECTION_KEY)); } catch { /* selection state is already cleared in memory */ }
