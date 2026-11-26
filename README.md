@@ -19,10 +19,32 @@ Brand voice: QWERTY — Quirky, Witty, Enthusiastic, Transcendent and Youthful. 
 ## Owner Briefcase
 The single 💼 icon in the footer opens the owner access screen. The server validates the one-word access secret using the server-only ADMIN_PASSWORD variable. The owner workspace retains the foundation's catalogue editing, announcements, enquiry queue, status management, money records, receipts, notes and insights.
 
-## Current implementation boundary
-The public storefront and all four division catalogues are configured for Prospec. The inherited prototype's data layer is still browser-local: enquiries, account messages, status changes, notes and owner edits do not yet sync across devices or create a shared remote inbox. The owner login is server-validated, but local preview data is not a production customer database. Do not use this release for live customer records until the supplied Prospec Firebase project is connected and its customer/staff authorization rules and server data paths have been implemented and tested.
+## Persistence, security and production readiness
 
-The repository includes Firebase client configuration scaffolding and UploadThing upload routes. No Firebase project ID, credentials, customer authentication flow or Firestore rules have been changed as part of this visual/catalogue adaptation. Uploads require valid UploadThing configuration and internet access.
+Prospec is connected in code to the supplied Firebase project `theworks-f4957`.
+
+- The public catalogue and announcement are read from `prospecPublic/storefront`. Owner changes are saved through the authenticated server-side Briefcase API.
+- Customers use persistent Firebase Anonymous Auth identities. Enquiries are stored in `prospecEnquiries`, scoped to the creating customer UID, and streamed into that customer's Account. The Account uses the authenticated session as its record boundary; the contact email is not an account-recovery credential.
+- Firestore uses persistent IndexedDB cache with multi-tab support. Supported customer enquiry and message writes queue locally while offline and synchronise after reconnection. The Account reports cached, pending and server-confirmed states separately.
+- Owner enquiry status, quote and manual payment-record updates are saved through the server-side workspace API. Owner catalogue, availability and announcement changes are shared through the same API.
+- The owner access word is validated server-side against `ADMIN_PASSWORD`. The HttpOnly owner session expires after 12 hours; the Briefcase locks after 30 minutes of inactivity.
+- UploadThing handles approved catalogue and enquiry attachments. Uploads require an internet connection.
+- Owner working notes and the current activity/performance counters are still browser-local. They are not shared across devices.
+- Customer in-app updates and conversations are available. Email delivery, push notifications and payment-gateway capture are not implemented. A recorded payment is an owner-entered record, not proof of a gateway transaction. Receipts are operational records, not a claim of tax-invoice compliance.
+- Anonymous customer identities persist on the same browser/device. Cross-device account recovery or email/password sign-in is not implemented.
+
+### Required deployment configuration
+
+Before production customer use:
+
+1. Enable **Authentication → Sign-in method → Anonymous** in Firebase Authentication.
+2. Publish `firestore.rules` and `firestore.indexes.json` to `theworks-f4957`.
+3. Set server-only `ADMIN_PASSWORD`.
+4. Set server-only `FIREBASE_ADMIN_KEY` using a service-account JSON key from the same Firebase project. Never prefix it with `NEXT_PUBLIC_` or commit the JSON.
+5. Set `UPLOADTHING_TOKEN` for media uploads and `NEXT_PUBLIC_BASE_URL` for canonical metadata.
+6. Verify customer ownership, owner authorization, offline queue/reconnect, first customer message, attachment upload and owner status/quote/payment-record flows on the deployed build.
+
+The Firebase web configuration in `src/lib/firebase/client.ts` is public application configuration, not a private credential. Do not create a new Firebase project or add Firebase Storage rules.
 
 ## Business contacts
 - Head office: Plot 20643 Unit 1, Block 3 Industrial, Gaborone, Botswana
