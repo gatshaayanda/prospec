@@ -630,11 +630,12 @@ export default function Home() {
         try {
           const savedProfile = window.localStorage.getItem(getStorageKey("prospec:customer-profile:v1"));
           const latestOrder = Array.isArray(parsed.orders) ? parsed.orders[0] : undefined;
+          const profileHasWhatsapp = savedProfile ? typeof (JSON.parse(savedProfile) as { whatsapp?: unknown }).whatsapp === "string" : false;
           if (!savedProfile && latestOrder) {
             if (typeof latestOrder.customerName === "string") setCustomerName(latestOrder.customerName);
             if (typeof latestOrder.email === "string") setEmail(latestOrder.email);
-            if (typeof latestOrder.whatsapp === "string") setWhatsapp(latestOrder.whatsapp);
           }
+          if ((!savedProfile || !profileHasWhatsapp) && typeof latestOrder?.whatsapp === "string") setWhatsapp(latestOrder.whatsapp);
         } catch { /* the customer can enter their email in Account */ }
         setData({ ...emptyData, ...parsed, services: Array.isArray(parsed.services) ? parsed.services : [], orders: Array.isArray(parsed.orders) ? parsed.orders : [], announcement: typeof parsed.announcement === "string" ? parsed.announcement : "", announcementActive: typeof parsed.announcementActive === "boolean" ? parsed.announcementActive : Boolean((typeof parsed.announcement === "string" && parsed.announcement.trim()) || (typeof parsed.announcementImage === "string" && parsed.announcementImage.trim())), views: (Number(parsed.views) || 0) + 1, events: [...(Array.isArray(parsed.events) ? parsed.events : []), { id: "EV-"+Date.now().toString(36), kind: "visit", label: "Store visited", at: new Date().toISOString() }], receiptProfile: { ...emptyData.receiptProfile!, ...(parsed.receiptProfile || {}) } });
         setAnnouncementDraft(typeof parsed.announcement === "string" ? parsed.announcement : "");
@@ -1260,6 +1261,7 @@ export default function Home() {
     if (!selectedServices.length) { setNotice("Choose at least one product or service for this request."); return; }
     if (!dueDate || !brief.trim()) { setRequestStep(2); setNotice("Add your requested date and project brief before sending."); return; }
     if (!customerName.trim() || !email.trim() || !whatsapp.trim()) { setRequestStep(3); setNotice("Complete your contact details before sending."); return; }
+    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email.trim())) { setRequestStep(3); setNotice("Enter a valid email address so you can receive updates in your Account."); return; }
     const claim = (data.discountClaims || []).find(item => item.code.toLowerCase() === promoCode.trim().toLowerCase() && item.email.toLowerCase() === email.trim().toLowerCase() && item.status === "Available");
     if (promoCode.trim() && !claim) { setNotice("That discount code is not available for this customer account."); return; }
     const servicesTotal = selectedServices.reduce((sum, service) => sum + service.price, 0);
@@ -1522,13 +1524,13 @@ return <main className="servicePreview serviceDemo" style={{ "--studio-accent": 
 <div className="sd-request-step-actions"><button type="button" className="sd-button sd-outline" onClick={() => setOrderFormOpen(false)}>Cancel</button><button type="button" className="sd-button sd-primary" onClick={advanceRequestStep}>Continue to project details →</button></div>
 </div>
 <div hidden={requestStep!==2} className="sd-request-step" aria-label="Project details">
-<label>Target date<input type="date" value={dueDate} min={localDate()} onChange={event=>setDueDate(event.target.value)} required/><small>Your requested date is reviewed before confirmation.</small></label>
-<label className="sd-request-brief">Project brief<textarea value={brief} onChange={event=>setBrief(event.target.value)} rows={3} placeholder="What would you like to achieve? Include sizes, quantities, destination, deadlines or anything we should know." required/></label>
+<label>Target date<input type="date" value={dueDate} min={localDate()} onChange={event=>setDueDate(event.target.value)}/><small>Your requested date is reviewed before confirmation.</small></label>
+<label className="sd-request-brief">Project brief<textarea value={brief} onChange={event=>setBrief(event.target.value)} rows={3} placeholder="What would you like to achieve? Include sizes, quantities, destination, deadlines or anything we should know."/></label>
 <div className="sd-request-step-actions"><button type="button" className="sd-button sd-outline" onClick={()=>setRequestStep(1)}>← Back to items</button><button type="button" className="sd-button sd-primary" onClick={advanceRequestStep}>Continue to contact →</button></div>
 </div>
 <div hidden={requestStep!==3} className="sd-request-step" aria-label="Contact details and review">
-<div className="sd-form-two"><label>Your name<input value={customerName} onChange={event=>setCustomerName(event.target.value)} autoComplete="name" required placeholder="Name or business"/></label><label>Email<input value={email} onChange={event=>setEmail(event.target.value)} type="email" autoComplete="email" required placeholder="you@example.com"/></label></div>
-<label>WhatsApp number<input type="tel" value={whatsapp} onChange={event=>setWhatsapp(event.target.value)} autoComplete="tel" required placeholder="+267 …"/></label>
+<div className="sd-form-two"><label>Your name<input value={customerName} onChange={event=>setCustomerName(event.target.value)} autoComplete="name" placeholder="Name or business"/></label><label>Email<input value={email} onChange={event=>setEmail(event.target.value)} type="email" autoComplete="email" placeholder="you@example.com"/></label></div>
+<label>WhatsApp number<input type="tel" value={whatsapp} onChange={event=>setWhatsapp(event.target.value)} autoComplete="tel" placeholder="+267 …"/></label>
 {data.rewardActive && <label>Discount code <span className="sd-optional">OPTIONAL</span><input value={promoCode} onChange={event=>setPromoCode(event.target.value.toUpperCase())} placeholder="Enter a reward code" /></label>}
 <label className="sd-enquiry-notifications"><input type="checkbox" checked={notificationOptIn} onChange={event=>setNotificationOptIn(event.target.checked)}/> Keep me informed about updates to this enquiry <span>In-app updates appear in your Account. Push and email notifications are not enabled yet.</span></label>
 <div className="sd-request-review"><strong>Review your request</strong><p>{selectedServices.map(service=>service.name).join(" + ")}</p><p>Requested date: {dueDate || "Not selected"}</p><p>{customerName || "Your name"} · {email || "Your email"} · {whatsapp || "Your WhatsApp"}</p><small>Fixed catalogue prices are estimates until Prospec reviews your request. Custom items require a quote. No payment is taken here.</small></div>
