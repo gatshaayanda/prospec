@@ -22,3 +22,18 @@
 .i13-install-card.is-collapsed .i13-install-collapse{right:40px;top:50%;transform:translateY(-50%)}
 .i13-install-card.is-collapsed .i13-install-close{right:7px;top:50%;transform:translateY(-50%)}
 @media(max-width:420px){.i13-install-card{left:10px;right:10px;bottom:16px;width:auto}.i13-install-card.is-collapsed{left:8px;right:8px;width:auto;padding-left:8px}.i13-install-card.is-collapsed .i13-install-action{min-width:72px;font-size:.68rem}}
+
+/* Prospec branded install prompt; native prompt lifecycle and protected placement remain unchanged. */
+.i13-install-card{border:1px solid rgba(0,185,199,.42);background:linear-gradient(145deg,#ffffff 0%,#f2fbfb 100%);box-shadow:0 16px 42px rgba(0,0,0,.24),0 0 0 1px rgba(0,185,199,.08)}
+.i13-install-mark{background:linear-gradient(145deg,#00b9c7,#087c86);color:#082329;box-shadow:0 5px 14px rgba(0,185,199,.22)}
+.i13-install-brand strong{color:#17252a;font-size:.8rem;letter-spacing:.075em}
+.i13-install-brand small{color:#4d666c;font-size:.68rem;letter-spacing:.09em}
+.i13-install-action{position:relative;overflow:hidden;background:linear-gradient(100deg,#087f88 0%,#00b9c7 48%,#087f88 100%);background-size:200% 100%;color:#071f23;box-shadow:0 5px 14px rgba(0,145,155,.2);transition:background-position .45s ease,transform .2s ease}
+.i13-install-action:before{position:absolute;inset:0;transform:translateX(-120%);background:linear-gradient(105deg,transparent 28%,rgba(255,255,255,.48) 48%,transparent 68%);content:"";animation:prospec-install-sheen 4.8s ease-in-out infinite;pointer-events:none}
+.i13-install-action:hover{background-position:100% 0;transform:translateY(-1px)}
+.i13-install-action span{position:relative;z-index:1}
+.i13-install-collapse{background:#e3f7f7;color:#075b63}
+.i13-install-close{background:#edf1f2;color:#26383d}
+.i13-install-action:focus-visible,.i13-install-close:focus-visible,.i13-install-collapse:focus-visible{outline:3px solid #00aeba;outline-offset:3px}
+@keyframes prospec-install-sheen{0%,62%{transform:translateX(-120%)}82%,100%{transform:translateX(120%)}}
+@media(prefers-reduced-motion:reduce){.i13-install-action{transition:none}.i13-install-action:before{animation:none;display:none}.i13-install-action:hover{transform:none}}
