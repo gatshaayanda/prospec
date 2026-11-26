@@ -359,6 +359,8 @@ export default function Home() {
           rewardActive: storefront.rewardActive === true,
           rewardTitle: typeof storefront.rewardTitle === "string" ? storefront.rewardTitle : "",
           rewardDescription: typeof storefront.rewardDescription === "string" ? storefront.rewardDescription : "",
+          rewardImage: typeof storefront.rewardImage === "string" ? storefront.rewardImage : "",
+          discountAmount: typeof storefront.discountAmount === "number" && Number.isFinite(storefront.discountAmount) ? storefront.discountAmount : 0,
           orders,
         }));
         setOwnerCloudReady(true);
@@ -379,12 +381,14 @@ export default function Home() {
       rewardActive: data.rewardActive === true,
       rewardTitle: data.rewardTitle || "",
       rewardDescription: data.rewardDescription || "",
+      rewardImage: data.rewardImage || "",
+      discountAmount: Number.isFinite(data.discountAmount) ? data.discountAmount : 0,
     };
     void fetch("/api/admin/workspace", {
       method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "storefront", storefront }),
     }).then(response => { if (!response.ok) setNotice("Store changes could not sync to the Prospec database."); });
-  }, [ownerCloudReady, adminUnlocked, view, data.services, data.availability, data.announcement, data.announcementActive, data.announcementImage, data.rewardActive, data.rewardTitle, data.rewardDescription]);
+  }, [ownerCloudReady, adminUnlocked, view, data.services, data.availability, data.announcement, data.announcementActive, data.announcementImage, data.rewardActive, data.rewardTitle, data.rewardDescription, data.rewardImage, data.discountAmount]);
 
   useEffect(() => {
     if (!ownerCloudReady || !adminUnlocked || view !== "admin") return;
@@ -665,6 +669,8 @@ export default function Home() {
           rewardActive: remote.rewardActive === true,
           rewardTitle: typeof remote.rewardTitle === "string" ? remote.rewardTitle : "",
           rewardDescription: typeof remote.rewardDescription === "string" ? remote.rewardDescription : "",
+          rewardImage: typeof remote.rewardImage === "string" ? remote.rewardImage : "",
+          discountAmount: typeof remote.discountAmount === "number" && Number.isFinite(remote.discountAmount) ? remote.discountAmount : current.discountAmount,
         }));
       }, () => { if (active) setCloudSyncStatus("error"); });
     }).catch(() => { if (active) setCloudSyncStatus(navigator.onLine ? "error" : "offline"); });
