@@ -7709,3 +7709,64 @@ h1 em,
 @media(prefers-reduced-motion:reduce){
   .servicePreview .prospec-catalogue-count:after{animation:none;display:none}
 }
+
+/* Visual finish: compact, anchored install guidance and unmistakable Store actions. */
+@media(max-width:560px){
+  .plugInstallModal{padding:20px 18px 18px;border-radius:17px}
+  .plugInstallTop{margin-bottom:16px}
+  .plugInstallModal h2{font-size:clamp(2rem,10vw,2.8rem);line-height:.98;letter-spacing:-.055em}
+  .plugInstallModal>p:not(.plugInstallFootnote){font-size:14px;line-height:1.55}
+  .plugInstallPrimary,.plugInstallSecondary{min-height:46px}
+}
+@media(max-width:560px){
+  .plugInstallModal:where(section){max-height:calc(100dvh - 56px)}
+}
+.servicePreview .sd-care-empty-action{
+  position:relative;isolation:isolate;min-height:68px;
+  border:1px solid #69bfc2;
+  box-shadow:0 3px 0 rgba(0,125,132,.08),0 7px 18px rgba(0,110,118,.08);
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,background .18s ease;
+}
+.servicePreview .sd-care-empty-action:hover{
+  transform:translateY(-2px);border-color:#087e87;
+  background:#def4f2;box-shadow:0 5px 0 rgba(0,125,132,.08),0 12px 22px rgba(0,110,118,.14);
+}
+.servicePreview .sd-care-empty-action:focus-visible{
+  outline:3px solid #087e87;outline-offset:3px;
+}
+.servicePreview .sd-care-action-arrow{
+  display:grid;place-items:center;width:28px;height:28px;border-radius:50%;
+  background:#087e87;color:#fff;font-size:19px;font-weight:800;
+  animation:prospec-browse-arrow 2.2s ease-in-out infinite;
+}
+@keyframes prospec-browse-arrow{
+  0%,65%,100%{transform:translateX(0)}
+  78%{transform:translateX(4px)}
+  88%{transform:translateX(1px)}
+}
+.servicePreview .sd-account-store-link{
+  min-height:44px;padding-inline:15px;border-color:#00aeba;
+  box-shadow:0 2px 0 rgba(0,125,132,.08);
+  transition:background .18s ease,border-color .18s ease,transform .18s ease;
+}
+.servicePreview .sd-account-store-link:hover{
+  transform:translateY(-1px);background:#eaf8f7;border-color:#087e87;
+}
+.servicePreview .sd-account-store-link:focus-visible{outline:3px solid #087e87;outline-offset:3px}
+.servicePreview .prospec-store-signature>strong{max-width:19ch;text-wrap:balance}
+.servicePreview .prospec-store-signature>div span{min-height:32px;display:inline-flex;align-items:center}
+.servicePreview .prospec-product-card .sd-service-title h3{overflow-wrap:anywhere}
+@media(max-width:620px){
+  .servicePreview .prospec-store-signature{gap:9px;padding:15px}
+  .servicePreview .prospec-store-signature>strong{font-size:clamp(1.7rem,7.2vw,2.15rem);line-height:1.06}
+  .servicePreview .prospec-product-card .sd-service-media{aspect-ratio:16/6}
+  .servicePreview .prospec-product-card .sd-service-info{padding:13px 14px 14px;gap:8px}
+  .servicePreview .prospec-product-card .sd-service-title h3{font-size:16px;line-height:1.35}
+  .servicePreview .prospec-product-card .sd-service-title strong{font-size:14px}
+  .servicePreview .prospec-product-card .sd-service-info>p{font-size:14px;line-height:1.5}
+}
+@media(prefers-reduced-motion:reduce){
+  .servicePreview .sd-care-empty-action,.servicePreview .sd-account-store-link{transition:none}
+  .servicePreview .sd-care-empty-action:hover,.servicePreview .sd-account-store-link:hover{transform:none}
+  .servicePreview .sd-care-action-arrow{animation:none}
+}
