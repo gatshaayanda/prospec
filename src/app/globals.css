@@ -7586,3 +7586,82 @@ h1 em,
  .servicePreview .prospec-store-tools .prospec-division-filters button:hover,
  .servicePreview .sd-footer-systems .prospec-owner-entry:hover{transform:none}
 }
+
+/* Prospec Account legibility pass — preserve the compact composition while
+   bringing operational copy and controls up to the portfolio readability floor. */
+.servicePreview .sd-account-compact{font-size:14px;line-height:1.5}
+.servicePreview .sd-account-compact .sd-account-overline,
+.servicePreview .sd-account-compact .sd-account-ready,
+.servicePreview .sd-account-compact .sd-kicker,
+.servicePreview .sd-account-compact .sd-care-label,
+.servicePreview .sd-account-compact .sd-care-request p,
+.servicePreview .sd-account-compact .sd-availability,
+.servicePreview .sd-account-compact .sd-care-status,
+.servicePreview .sd-account-compact .sd-care-next small,
+.servicePreview .sd-account-compact .sd-care-action-copy small,
+.servicePreview .sd-account-compact .sd-account-quick-links>div .sd-kicker,
+.servicePreview .sd-account-compact .sd-account-quick-links>div strong,
+.servicePreview .sd-account-compact .sd-account-quick-links>a,
+.servicePreview .sd-account-compact .sd-account-quick-links>button,
+.servicePreview .sd-account-compact .sd-account-detail-heading>span,
+.servicePreview .sd-account-compact .sd-account-notification-empty,
+.servicePreview .sd-account-compact .sd-care-feed li time,
+.servicePreview .sd-account-compact .sd-care-request-detail>summary small,
+.servicePreview .sd-account-compact .sd-care-request-body>p,
+.servicePreview .sd-account-compact .sd-account-order-actions>span,
+.servicePreview .sd-account-compact .sd-account-demo-explainer,
+.servicePreview .sd-account-compact .sd-account-message>div,
+.servicePreview .sd-account-compact .sd-account-message time,
+.servicePreview .sd-account-compact .sd-account-message-empty,
+.servicePreview .sd-account-compact .sd-account-composer>label,
+.servicePreview .sd-account-compact .sd-account-attach,
+.servicePreview .sd-account-compact .sd-account-lookup-compact label,
+.servicePreview .sd-account-compact .sd-account-lookup-compact p,
+.servicePreview .sd-account-compact .sd-account-boundary,
+.servicePreview .sd-account-compact .sd-account-basket-body li small,
+.servicePreview .sd-account-compact .sd-account-basket-body li button,
+.servicePreview .sd-account-compact .sd-account-collapsible>div,
+.servicePreview .sd-account-compact .sd-account-feedback{font-size:12px;line-height:1.5}
+.servicePreview .sd-account-compact .sd-account-brand-lockup strong,
+.servicePreview .sd-account-compact .sd-care-next>strong,
+.servicePreview .sd-account-compact .sd-care-action-copy strong,
+.servicePreview .sd-account-compact .sd-account-quick-stats>div span,
+.servicePreview .sd-account-compact .sd-account-basket>summary,
+.servicePreview .sd-account-compact .sd-account-lookup-compact>summary,
+.servicePreview .sd-account-compact .sd-account-collapsible>summary,
+.servicePreview .sd-account-compact .sd-account-detail-heading h2,
+.servicePreview .sd-account-compact .sd-care-feed li strong,
+.servicePreview .sd-account-compact .sd-care-request-detail>summary strong,
+.servicePreview .sd-account-compact .sd-account-message p,
+.servicePreview .sd-account-compact .sd-account-composer textarea,
+.servicePreview .sd-account-compact .sd-account-lookup-compact input,
+.servicePreview .sd-account-compact .sd-account-basket-body li strong{font-size:14px;line-height:1.5}
+.servicePreview .sd-account-compact .sd-account-compact-intro p,
+.servicePreview .sd-account-compact .sd-care-next p,
+.servicePreview .sd-account-compact .sd-care-feed li p,
+.servicePreview .sd-account-compact .sd-account-announcement p{font-size:14px;line-height:1.55}
+.servicePreview .sd-account-compact .sd-account-quick-stats>div strong{font-size:22px;line-height:1.15}
+.servicePreview .sd-account-compact .sd-account-store-link,
+.servicePreview .sd-account-compact .sd-care-conversation,
+.servicePreview .sd-account-compact .sd-account-quick-stats>button,
+.servicePreview .sd-account-compact .sd-account-secondary-action,
+.servicePreview .sd-account-compact .sd-account-basket-actions .sd-button,
+.servicePreview .sd-account-compact .sd-account-composer-actions .sd-button{font-size:14px;min-height:42px}
+.servicePreview .sd-account-compact .sd-account-request-form .sd-order-form>label,
+.servicePreview .sd-account-compact .sd-account-request-form .sd-catalogue-add>label{font-size:14px}
+.servicePreview .sd-account-compact .sd-account-request-form input:not([type=checkbox]),
+.servicePreview .sd-account-compact .sd-account-request-form textarea,
+.servicePreview .sd-account-compact .sd-account-composer textarea,
+.servicePreview .sd-account-compact .sd-account-lookup-compact input{font-size:16px;line-height:1.5}
+.servicePreview .sd-account-compact .sd-account-request-form .sd-enquiry-category>summary,
+.servicePreview .sd-account-compact .sd-account-request-form .sd-enquiry-category-items label span{font-size:14px;line-height:1.45}
+.servicePreview .sd-account-compact .sd-account-request-form .sd-enquiry-category-items label strong,
+.servicePreview .sd-account-compact .sd-account-request-form .sd-order-form>label small,
+.servicePreview .sd-account-compact .sd-account-request-form .sd-enquiry-notifications span,
+.servicePreview .sd-account-compact .sd-account-request-form .sd-privacy-note{font-size:12px;line-height:1.5}
+@media(max-width:380px){
+  .servicePreview .sd-account-compact .sd-account-overline,
+  .servicePreview .sd-account-compact .sd-account-ready{font-size:12px}
+  .servicePreview .sd-account-compact .sd-account-quick-links>a,
+  .servicePreview .sd-account-compact .sd-account-quick-links>button{font-size:13px}
+}
