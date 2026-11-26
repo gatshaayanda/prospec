@@ -7665,3 +7665,20 @@ h1 em,
   .servicePreview .sd-account-compact .sd-account-quick-links>a,
   .servicePreview .sd-account-compact .sd-account-quick-links>button{font-size:13px}
 }
+
+/* Prospec catalogue legibility: keep every full product name, description and
+   price visible; card consistency comes from shared structure, not clipped copy. */
+.servicePreview .prospec-product-card .sd-service-meta span{font-size:12px;line-height:1.4}
+.servicePreview .prospec-product-card .sd-service-title{min-height:0;gap:7px}
+.servicePreview .prospec-product-card .sd-service-title h3{
+  display:block;min-height:0;overflow:visible;font-size:16px;line-height:1.35;
+  -webkit-box-orient:initial;-webkit-line-clamp:unset;overflow-wrap:anywhere;
+}
+.servicePreview .prospec-product-card .sd-service-title strong{font-size:14px;line-height:1.4}
+.servicePreview .prospec-product-card .sd-service-info>p{
+  display:block;min-height:0;overflow:visible;margin:0 0 8px;
+  font-size:14px;line-height:1.55;white-space:normal;overflow-wrap:anywhere;
+  -webkit-box-orient:initial;-webkit-line-clamp:unset;
+}
+.servicePreview .prospec-product-card .sd-order-button{min-height:44px;padding:10px 13px;font-size:14px;line-height:1.35}
+.servicePreview .prospec-product-card .prospec-image-note{font-size:12px}
