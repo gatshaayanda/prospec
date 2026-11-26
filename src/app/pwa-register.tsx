@@ -36,7 +36,7 @@ function isIosSafari() {
 function isChromeBrowser() {
   if (typeof window === "undefined") return false;
   const ua = window.navigator.userAgent || "";
-  return /Chrome\\/\\d+/i.test(ua) && !/Edg\\/|OPR\\/|SamsungBrowser|Brave|Vivaldi/i.test(ua);
+  return /Chrome\/\d+/i.test(ua) && !/Edg\/|OPR\/|SamsungBrowser|Brave|Vivaldi/i.test(ua);
 }
 
 function dismissedRecently() {
