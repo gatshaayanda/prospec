@@ -39,6 +39,7 @@ if (!pwaRegister.includes("PROSPEC GROUP")) failures.push("PWA install: Prospec 
 if (!pwaRegister.includes("installCardCollapsed") || !pwaRegister.includes("aria-expanded={!installCardCollapsed}")) failures.push("PWA install: accessible collapsible card state missing");
 if (!pwaRegister.includes("onClick={dismissInstall}") || !pwaRegister.includes("setInstallCardDismissed(true)")) failures.push("PWA install: cancellable user dismissal missing");
 if (!pwaRegister.includes("const installInvitationEligible = true;")) failures.push("PWA install: invitation must not require repeat visits");
+if (!pwaRegister.includes("function isChromeBrowser()") || !pwaRegister.includes("(isIosSafari() || isChromeBrowser())") || !pwaRegister.includes("Chrome’s <b>⋮ menu</b>")) failures.push("PWA install: Chrome invitation and honest no-prompt fallback missing");
 if (/INSTALL_VISIT|INSTALL_RELEASE|INSTALL_DISMISS_MS|dismissedRecently|rememberDismissal/.test(pwaRegister)) failures.push("PWA install: obsolete visit or persistent dismissal cooldown remains");
 if (!installCss.includes(".i13-install-card.is-collapsed")) failures.push("PWA install: collapsed compact presentation styles missing");
 if (!page.includes('const STORAGE_KEY = "prospec:service-preview:v1"')) failures.push("application storage namespace not isolated for Prospec");
