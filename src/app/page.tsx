@@ -1431,7 +1431,7 @@ export default function Home() {
   ];
   const setupCompletedCount = setupChecklist.filter(item => item.complete).length;
   const setupReady = setupCompletedCount === setupChecklist.length;
-  const noticeIsError = /could not|failed|denied|invalid|cannot|not confirmed|not available|wait for|enter a valid|choose at least|choose today|choose a future|add your|complete your|unsupported|not accepted|not connected|not be confirmed/i.test(notice);
+  const noticeIsError = /^(choose|add |enter |the browser|local preview storage|could not save)|could not|failed|denied|invalid|cannot|not confirmed|not available|wait for|enter a valid|choose at least|choose today|choose a future|add your|complete your|unsupported|not accepted|not connected|not be confirmed/i.test(notice);
 return <main className="servicePreview serviceDemo" style={{ "--studio-accent": themeColor, "--studio-accent-secondary": secondaryColor, "--studio-accent-highlight": highlightColor, "--studio-accent-ink": accentInk(themeColor), "--studio-accent-text": accentText(themeColor) } as React.CSSProperties}>
     {!identityReady || !ready || !businessNameReady ? <section className="sd-identity-loading" aria-live="polite">Preparing your business identity…</section> : !identityComplete ? <section className="sd-identity-onboarding">
       <div className="sd-identity-onboarding-top"><span>PROSPEC / BUSINESS OS</span><span>{identityEditing ? "BUSINESS IDENTITY" : "SETUP · STORE · ACCOUNT · BRIEFCASE"}</span></div>
