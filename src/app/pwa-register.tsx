@@ -196,29 +196,29 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     };
   }, [installState, installHelpOpen]);
 
-  async function install() {
+  function install() {
     const prompt = installPromptRef.current;
+    // Chromium only permits the native install UI from a real, retained
+    // beforeinstallprompt event. Never substitute a menu explainer for it.
     if (!prompt) {
-      // Never manufacture a replacement prompt. Manual steps are only valid for
-      // iOS Safari, where beforeinstallprompt is not available.
-      if (isIosSafari() || isChromeBrowser()) {
+      if (isIosSafari()) {
         setInstallHelpOpen(true);
         setInstallState("native");
       }
       return;
     }
-    try {
-      await prompt.prompt();
-      await prompt.userChoice;
-    } catch {
-      // The event is one-shot and browser-controlled. Do not replace it with
-      // generic Chrome-menu instructions when the native prompt fails.
-    } finally {
-      installPromptRef.current = null;
-      setCanInstall(false);
-      setInstallHelpOpen(false);
-      setInstallState("hidden");
-    }
+
+    // Keep prompt() in the synchronous click call stack; do not defer it behind
+    // a timer, effect, event relay, or awaited operation.
+    installPromptRef.current = null;
+    void prompt.prompt()
+      .then(() => prompt.userChoice)
+      .catch(() => {
+        // Chromium owns eligibility and may reject a consumed/expired event.
+      })
+      .finally(() => {
+        setCanInstall(false);
+      });
   }
 
   function dismissInstall() {
@@ -255,13 +255,13 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
 
   const installShellStyle: CSSProperties = { position: "fixed", left: 16, right: 16, bottom: 16, zIndex: 1000, maxWidth: 720, margin: "0 auto", padding: 16, borderRadius: 18, background: "#FFFFFF", color: "#111318", boxShadow: "0 12px 40px rgba(0,0,0,.18)", border: "1px solid rgba(17,19,24,.12)" };
   const embeddedInstallStyle: CSSProperties = { position: "fixed", inset: 0, zIndex: 2147483647, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(0,0,0,.82)", backdropFilter: "blur(4px)", overscrollBehavior: "contain" };
-  const installCard = installState === "native" && installHelpOpen && (isIosSafari() || isChromeBrowser()) ? (
+  const installCard = installState === "native" && installHelpOpen && isIosSafari() ? (
     <div style={installShellStyle} role="presentation">
       <section className="plugInstallModal" role="dialog" aria-modal="false" aria-labelledby="plug-install-title" aria-describedby="plug-install-message">
         <div className="plugInstallTop"><span className="plugInstallMark">P</span><span className="plugInstallTag">PROSPEC GROUP · PITBULLS OF BRANDING</span><button type="button" className="plugInstallClose" aria-label="Close install guidance" onClick={dismissInstall}>×</button></div>
         <div className="plugInstallKicker">{isIosSafari() ? "IPHONE & IPAD" : "CHROME INSTALL"}</div>
         <h2 id="plug-install-title">{isIosSafari() ? "Add to Home Screen." : "Install Prospec Group."}</h2>
-        <p id="plug-install-message">{isIosSafari() ? <>In Safari, tap <b>Share</b>, choose <b>Add to Home Screen</b>, then tap <b>Add</b>. Open the new Home Screen icon to launch the installed app.</> : <>Chrome has not supplied its one-tap install prompt for this visit. Open Chrome’s <b>⋮ menu</b> and choose <b>Install app</b> or <b>Add to Home screen</b> if offered. The browser controls install eligibility.</>}</p>
+        <p id="plug-install-message">{isIosSafari() ? <>In Safari, tap <b>Share</b>, choose <b>Add to Home Screen</b>, then tap <b>Add</b>. Open the new Home Screen icon to launch the installed app.</> }</p>
         <button type="button" className="plugInstallPrimary" onClick={dismissInstall}>Continue on the website</button>
       </section>
     </div>
