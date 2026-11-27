@@ -289,7 +289,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
         </div>
         <button className="i13-install-close" type="button" aria-label="Dismiss install prompt" onClick={dismissInstall}>×</button>
         <button className="i13-install-collapse" type="button" aria-label={installCardCollapsed ? "Expand install invitation" : "Collapse install invitation"} aria-expanded={!installCardCollapsed} onClick={() => setInstallCardCollapsed((value) => !value)}>{installCardCollapsed ? "＋" : "−"}</button>
-        {!installCardCollapsed && <button className="i13-install-action" type="button" onClick={install}>"Install Prospec Group" <span aria-hidden="true">↗</span></button>}
+        {!installCardCollapsed && <button className="i13-install-action" type="button" onClick={install}>Install Prospec Group <span aria-hidden="true">↗</span></button>}
       </aside>
     )}
     {installCard}
