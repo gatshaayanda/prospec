@@ -11,12 +11,6 @@ type InstallPromptEvent = Event & {
 };
 type InstallState = "hidden" | "native" | "embedded";
 
-const INSTALL_DISMISSED_KEY = "prospec:install:dismissed-at:v6";
-const INSTALL_RELEASE_KEY = "prospec:install:invitation-release:v5";
-const INSTALL_VISIT_COUNT_KEY = "prospec:install:visits:v1";
-const INSTALL_VISIT_SESSION_KEY = "prospec:install:visit-session:v1";
-const INSTALL_VISIT_THRESHOLD = 3;
-const INSTALL_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
 
 function environment() {
   if (typeof window === "undefined") return { standalone: true, ios: false, android: false, embedded: false };
@@ -37,30 +31,6 @@ function isIosSafari() {
   return ios && /Safari/i.test(nav.userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo/i.test(nav.userAgent);
 }
 
-function dismissedRecently() {
-  try {
-    const value = window.localStorage.getItem(INSTALL_DISMISSED_KEY);
-    if (!value) return false;
-    const at = Date.parse(value);
-    if (!Number.isFinite(at)) return false;
-    return Date.now() - at < INSTALL_DISMISS_MS;
-  } catch {
-    return false;
-  }
-}
-
-function rememberDismissal() {
-  try {
-    window.localStorage.setItem(INSTALL_DISMISSED_KEY, new Date().toISOString());
-  } catch {
-    // Installation remains optional when storage is unavailable.
-  }
-}
-
-function clearDismissal() {
-  try { window.localStorage.removeItem(INSTALL_DISMISSED_KEY); } catch {}
-}
-
 export default function PwaRegister({ initialEmbedded = false, initialAndroid = false }: { initialEmbedded?: boolean; initialAndroid?: boolean }) {
   const installPromptRef = useRef<InstallPromptEvent | null>(null);
   const [installState, setInstallState] = useState<InstallState>(initialEmbedded ? "embedded" : "hidden");
@@ -78,32 +48,8 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     const env = environment();
     const embedded = initialEmbedded || env.embedded;
     setEmbeddedAndroid((initialEmbedded && initialAndroid) || (env.embedded && env.android));
-    let visitCount = 0;
-    try {
-      if (window.sessionStorage.getItem(INSTALL_VISIT_SESSION_KEY) !== "1") {
-        visitCount = Number(window.localStorage.getItem(INSTALL_VISIT_COUNT_KEY) || "0") + 1;
-        window.localStorage.setItem(INSTALL_VISIT_COUNT_KEY, String(visitCount));
-        window.sessionStorage.setItem(INSTALL_VISIT_SESSION_KEY, "1");
-      } else {
-        visitCount = Number(window.localStorage.getItem(INSTALL_VISIT_COUNT_KEY) || "0");
-      }
-    } catch {
-      visitCount = INSTALL_VISIT_THRESHOLD;
-    }
-    try {
-      if (window.localStorage.getItem(INSTALL_RELEASE_KEY) !== "1") {
-        window.localStorage.removeItem(INSTALL_DISMISSED_KEY);
-        window.localStorage.setItem(INSTALL_VISIT_COUNT_KEY, String(INSTALL_VISIT_THRESHOLD));
-        visitCount = INSTALL_VISIT_THRESHOLD;
-        window.localStorage.setItem(INSTALL_RELEASE_KEY, "1");
-        setInstallCardDismissed(false);
-      } else {
-        setInstallCardDismissed(dismissedRecently());
-      }
-    } catch {
-      setInstallCardDismissed(false);
-    }
-    const installInvitationEligible = visitCount >= INSTALL_VISIT_THRESHOLD;
+    setInstallCardDismissed(false);
+    const installInvitationEligible = true;
     setCanShowManualInstall(!env.standalone && !embedded && isIosSafari());
 
     let registration: ServiceWorkerRegistration | null = null;
@@ -127,7 +73,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
       event.preventDefault();
       const prompt = event as InstallPromptEvent;
       installPromptRef.current = prompt;
-      setInstallCardDismissed(dismissedRecently());
+      setInstallCardDismissed(false);
       setInstallCardCollapsed(false);
       setCanInstall(installInvitationEligible);
       // Retain the one-shot native event for the user's explicit Install click.
@@ -270,7 +216,6 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
   }
 
   function dismissInstall() {
-    rememberDismissal();
     setInstallCardDismissed(true);
     setInstallHelpOpen(false);
     setInstallState("hidden");
