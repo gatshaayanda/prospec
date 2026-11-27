@@ -137,7 +137,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
         void install();
         return;
       }
-      // Only iOS Safari needs manual guidance; Chromium owns install eligibility.
+      // Android and iOS show manual guidance when no native install event is available.
       if ((current.ios && isIosSafari()) || current.android) {
         setInstallHelpOpen(true);
         setInstallState("native");
