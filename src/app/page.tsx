@@ -1223,7 +1223,9 @@ export default function Home() {
   }
   function openRequestForm() {
     recordJourneyEvent("request_started", { screen: "request-form", serviceId: selectedServices[0]?.id, serviceName: selectedServices.map(item => item.name).join(" + ") });
-    setRequestStep(1); setOrderFormOpen(true); setView("account");
+    // Existing selections are already the completed Items step. Move directly
+    // to project details; customers can still go back if they want to edit them.
+    setRequestStep(selectedServices.length ? 2 : 1); setOrderFormOpen(true); setView("account");
     window.setTimeout(() => document.getElementById("service-order")?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
   }
 
@@ -1371,9 +1373,19 @@ export default function Home() {
     event.preventDefault();
     if (!selectedServices.length) { setNotice("Choose at least one product or service for this request."); return; }
     if (!dueDate || !brief.trim()) { setRequestStep(2); setNotice("Add your requested date and project brief before sending."); return; }
-    if (!customerName.trim() || !email.trim() || !whatsapp.trim()) { setRequestStep(3); setNotice("Complete your contact details before sending."); return; }
-    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email.trim())) { setRequestStep(3); setNotice("Enter a valid email address so you can receive updates in your Account."); return; }
-    const claim = (data.discountClaims || []).find(item => item.code.toLowerCase() === promoCode.trim().toLowerCase() && item.email.toLowerCase() === email.trim().toLowerCase() && item.status === "Available");
+    if (!customerName.trim() || !whatsapp.trim()) { setRequestStep(3); setNotice("Complete your name and WhatsApp contact before sending."); return; }
+    let customer: Awaited<ReturnType<typeof ensureCustomerAuth>>;
+    try {
+      customer = await ensureCustomerAuth();
+    } catch {
+      setNotice("Your customer sign-in could not be checked. Reconnect and try again; your request has not been submitted.");
+      return;
+    }
+    const googleLinked = customer.providerData.some(provider => provider.providerId === "google.com");
+    const customerEmail = googleLinked && customer.email ? customer.email.trim().toLowerCase() : "";
+    if (!customerEmail) { setRequestStep(3); setNotice("Continue with Google at the top of your Account to use your verified email and submit this request."); return; }
+    setEmail(customerEmail);
+    const claim = (data.discountClaims || []).find(item => item.code.toLowerCase() === promoCode.trim().toLowerCase() && item.email.toLowerCase() === customerEmail && item.status === "Available");
     if (promoCode.trim() && !claim) { setNotice("That discount code is not available for this customer account."); return; }
     const servicesTotal = selectedServices.reduce((sum, service) => sum + service.price, 0);
     const discountAmount = claim ? Math.min(claim.amount, servicesTotal) : 0;
@@ -1382,9 +1394,9 @@ export default function Home() {
     const id = "PR-" + Date.now().toString(36).toUpperCase();
     const order: PreviewOrder = { id, receiptNo: "REQ-" + createdAt.slice(0, 10).replaceAll("-", "") + "-" + id.slice(-5), serviceId: selectedServices[0].id, serviceName: selectedServices.map(service => service.name).join(" + "), serviceItems: selectedServices.map(({id,name,price,custom}) => ({id,name,price,custom:Boolean(custom || price <= 0)})), quoteRequired: selectedServices.some(service => Boolean(service.custom || service.price <= 0)), price: Math.max(0, servicesTotal - discountAmount), ...(discountAmount ? { originalPrice: servicesTotal, discountAmount, discountCode: claim!.code } : {}), dueDate, customerName: customerName.trim(), email: email.trim(), whatsapp: whatsapp.trim(), notificationOptIn, brief: brief.trim(), status: "New request", createdAt, paymentStatus: "Unpaid", paidAmount: 0 };
     try {
-      const customer = await ensureCustomerAuth();
       order.customerId = customer.uid;
-      void setDoc(doc(getProspecDb(), "prospecCustomers", customer.uid), { uid: customer.uid, name: customerName.trim(), email: email.trim(), phone: whatsapp.trim(), updatedAt: createdAt }, { merge: true }).catch(() => { /* the enquiry remains the primary customer record */ });
+      order.email = customerEmail;
+      void setDoc(doc(getProspecDb(), "prospecCustomers", customer.uid), { uid: customer.uid, name: customerName.trim(), email: customerEmail, phone: whatsapp.trim(), updatedAt: createdAt }, { merge: true }).catch(() => { /* the enquiry remains the primary customer record */ });
       const { id: _localId, ...enquiryRecord } = order;
       void setDoc(doc(getProspecDb(), "prospecEnquiries", id), { ...enquiryRecord, customerId: customer.uid, messages: [] }, { merge: false }).catch(() => {
         setCloudSyncStatus("error");
@@ -1659,11 +1671,11 @@ return <main className="servicePreview serviceDemo" style={{ "--studio-accent": 
 <div className="sd-request-step-actions"><button type="button" className="sd-button sd-outline" onClick={()=>setRequestStep(1)}>← Back to items</button><button type="button" className="sd-button sd-primary" onClick={advanceRequestStep}>Continue to contact →</button></div>
 </div>
 <div hidden={requestStep!==3} className="sd-request-step" aria-label="Contact details and review">
-<div className="sd-form-two"><label>Your name<input value={customerName} onChange={event=>setCustomerName(event.target.value)} autoComplete="name" placeholder="Name or business"/></label><label>Email<input value={email} onChange={event=>setEmail(event.target.value)} type="email" autoComplete="email" placeholder="you@example.com"/></label></div>
+<div className="sd-form-two"><label>Your name<input value={customerName} onChange={event=>setCustomerName(event.target.value)} autoComplete="name" placeholder="Name or business"/></label><div className="sd-google-email-confirmation"><strong>Verified email</strong><span>{email || "Connect your Google account above to use its verified email."}</span><small>Your Google email is saved with this request and lets you recover your account on another device.</small></div></div>
 <label>WhatsApp number<input type="tel" value={whatsapp} onChange={event=>setWhatsapp(event.target.value)} autoComplete="tel" placeholder="+267 …"/></label>
 {data.rewardActive && <label>Discount code <span className="sd-optional">OPTIONAL</span><input value={promoCode} onChange={event=>setPromoCode(event.target.value.toUpperCase())} placeholder="Enter a reward code" /></label>}
 <label className="sd-enquiry-notifications"><input type="checkbox" checked={notificationOptIn} onChange={event=>setNotificationOptIn(event.target.checked)}/> Keep me informed about updates to this enquiry <span>In-app updates appear in your Account. Push and email notifications are not enabled yet.</span></label>
-<div className="sd-request-review"><strong>Review your request</strong><p>{selectedServices.map(service=>service.name).join(" + ")}</p><p>Requested date: {dueDate || "Not selected"}</p><p>{customerName || "Your name"} · {email || "Your email"} · {whatsapp || "Your WhatsApp"}</p><small>Fixed catalogue prices are estimates until Prospec reviews your request. Custom items require a quote. No payment is taken here.</small></div>
+<div className="sd-request-review"><strong>Review your request</strong><p>{selectedServices.map(service=>service.name).join(" + ")}</p><p>Requested date: {dueDate || "Not selected"}</p><p>{customerName || "Your name"} · {email || "Connect Google for verified email"} · {whatsapp || "Your WhatsApp"}</p><small>Fixed catalogue prices are estimates until Prospec reviews your request. Custom items require a quote. No payment is taken here.</small></div>
 <div className="sd-request-step-actions"><button type="button" className="sd-button sd-outline" onClick={()=>setRequestStep(2)}>← Back to project</button><button className="sd-button sd-primary sd-submit" type="submit">Send request <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="20" height="20" style={{ display: "block", flex: "0 0 20px", overflow: "visible" }} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h15"/><path d="m13 5 7 7-7 7"/></svg></button></div>
 <p className="sd-privacy-note">Saved to your Prospec account · no payment taken</p>
 </div>
