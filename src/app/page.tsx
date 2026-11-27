@@ -418,7 +418,7 @@ export default function Home() {
           method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "storefront", storefront }),
         });
-        const result = await response.json().catch(() => ({})) as { error?: string; storefront?: { services?: Service[] } };
+        const result = await response.json().catch(() => ({})) as { error?: string; storefront?: Partial<PreviewData> };
         if (!response.ok) throw new Error(result.error || "The shared Store rejected this update.");
         const savedStorefront = result.storefront;
         const persistedStorefront = savedStorefront ? {
