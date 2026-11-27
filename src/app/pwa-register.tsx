@@ -31,11 +31,6 @@ function isIosSafari() {
   return ios && /Safari/i.test(nav.userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo/i.test(nav.userAgent);
 }
 
-function isChromeBrowser() {
-  if (typeof navigator === "undefined") return false;
-  const ua = navigator.userAgent || "";
-  return /Chrome|Chromium/i.test(ua) && !/Edg|OPR|SamsungBrowser/i.test(ua);
-}
 
 export default function PwaRegister({ initialEmbedded = false, initialAndroid = false }: { initialEmbedded?: boolean; initialAndroid?: boolean }) {
   const installPromptRef = useRef<InstallPromptEvent | null>(null);
@@ -55,8 +50,8 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     const embedded = initialEmbedded || env.embedded;
     setEmbeddedAndroid((initialEmbedded && initialAndroid) || (env.embedded && env.android));
     setInstallCardDismissed(false);
-    const installInvitationEligible = true;
-    setCanShowManualInstall(!env.standalone && !embedded && (isIosSafari() || isChromeBrowser()));
+    // iOS Safari needs manual guidance; Chromium must wait for its native event.
+    setCanShowManualInstall(!env.standalone && !embedded && isIosSafari());
 
     let registration: ServiceWorkerRegistration | null = null;
     const inspect = () => {
@@ -81,7 +76,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
       installPromptRef.current = prompt;
       setInstallCardDismissed(false);
       setInstallCardCollapsed(false);
-      setCanInstall(installInvitationEligible);
+      setCanInstall(true);
       // Retain the one-shot native event for the user's explicit Install click.
       // Do not interrupt page load with a second, custom install screen.
     };
