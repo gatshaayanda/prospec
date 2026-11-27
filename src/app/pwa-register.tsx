@@ -12,11 +12,11 @@ type InstallPromptEvent = Event & {
 type InstallState = "hidden" | "native" | "embedded";
 
 const INSTALL_DISMISSED_KEY = "prospec:install:dismissed-at:v6";
-const INSTALL_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
-const INSTALL_RELEASE_KEY = "prospec:install:invitation-release:v4";
+const INSTALL_RELEASE_KEY = "prospec:install:invitation-release:v5";
 const INSTALL_VISIT_COUNT_KEY = "prospec:install:visits:v1";
 const INSTALL_VISIT_SESSION_KEY = "prospec:install:visit-session:v1";
 const INSTALL_VISIT_THRESHOLD = 3;
+const INSTALL_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
 
 function environment() {
   if (typeof window === "undefined") return { standalone: true, ios: false, android: false, embedded: false };
@@ -68,17 +68,15 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
   const [embeddedAndroid, setEmbeddedAndroid] = useState(initialEmbedded && initialAndroid);
   const [installHelpOpen, setInstallHelpOpen] = useState(false);
   const [canInstall, setCanInstall] = useState(false);
-  const [canShowManualInstall, setCanShowManualInstall] = useState(initialAndroid);
+  const [canShowManualInstall, setCanShowManualInstall] = useState(false);
   const [installCardDismissed, setInstallCardDismissed] = useState(false);
-  const [installCardCollapsed, setInstallCardCollapsed] = useState(false);
   const embeddedActionRef = useRef<HTMLButtonElement | null>(null);
   const reloadForUpdate = useRef(false);
 
   useEffect(() => {
     const env = environment();
     const embedded = initialEmbedded || env.embedded;
-    // Invite visitors after three separate visits, not on their first landing.
-    // sessionStorage prevents route changes/reloads in the same visit from inflating the count.
+    setEmbeddedAndroid((initialEmbedded && initialAndroid) || (env.embedded && env.android));
     let visitCount = 0;
     try {
       if (window.sessionStorage.getItem(INSTALL_VISIT_SESSION_KEY) !== "1") {
@@ -89,17 +87,12 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
         visitCount = Number(window.localStorage.getItem(INSTALL_VISIT_COUNT_KEY) || "0");
       }
     } catch {
-      // If browser storage is unavailable, do not block the install invitation.
       visitCount = INSTALL_VISIT_THRESHOLD;
     }
     const installInvitationEligible = visitCount >= INSTALL_VISIT_THRESHOLD;
-    // One-time release migration: clear stale dismissals created when dismissing
-    // Chrome's native prompt also hid the branded invitation.
     try {
       if (window.localStorage.getItem(INSTALL_RELEASE_KEY) !== "1") {
-        // Release recovery: make the invitation visible once for existing
-        // visitors whose prior visit/dismissal state left the card missing.
-        clearDismissal();
+        window.localStorage.removeItem(INSTALL_DISMISSED_KEY);
         window.localStorage.setItem(INSTALL_VISIT_COUNT_KEY, String(INSTALL_VISIT_THRESHOLD));
         window.localStorage.setItem(INSTALL_RELEASE_KEY, "1");
         setInstallCardDismissed(false);
@@ -109,9 +102,6 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     } catch {
       setInstallCardDismissed(false);
     }
-    setEmbeddedAndroid((initialEmbedded && initialAndroid) || (env.embedded && env.android));
-    // Keep the branded invitation visible after three separate visits on all
-    // supported browsers. Chromium uses its retained native prompt when available.
     setCanShowManualInstall(!env.standalone && !embedded && installInvitationEligible);
 
     let registration: ServiceWorkerRegistration | null = null;
@@ -136,7 +126,6 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
       const prompt = event as InstallPromptEvent;
       installPromptRef.current = prompt;
       setInstallCardDismissed(dismissedRecently());
-      setInstallCardCollapsed(false);
       setCanInstall(installInvitationEligible);
       // Retain the one-shot native event for the user's explicit Install click.
       // Do not interrupt page load with a second, custom install screen.
@@ -169,10 +158,14 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
         setInstallState("embedded");
         return;
       }
-      // This event can be dispatched programmatically and therefore is not a
-      // trusted user activation. Never consume Chromium's one-shot prompt here.
-      // The native prompt is invoked only by the actual Install button click.
-      if (!current.standalone) {
+      if (installPromptRef.current) {
+        // Invoke the browser's native prompt directly from the customer's click.
+        void install();
+        return;
+      }
+      // Only iOS Safari needs manual guidance. On desktop/Android, do not replace
+      // the browser-owned prompt with a custom explainer or fake install flow.
+      if (current.ios && isIosSafari()) {
         setInstallHelpOpen(true);
         setInstallState("native");
       }
@@ -251,18 +244,21 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
   async function install() {
     const prompt = installPromptRef.current;
     if (!prompt) {
-      // Chromium has not supplied its one-shot native install event.
-      // Do not replace the native action with an instructional message or
-      // a browser handoff; wait until the browser makes prompt() available.
+      // Never manufacture a replacement prompt. Manual steps are only valid for
+      // iOS Safari, where beforeinstallprompt is not available.
+      if (isIosSafari()) {
+        setInstallHelpOpen(true);
+        setInstallState("native");
+      }
       return;
     }
     try {
-      // Keep prompt() as the first operation in the trusted click call stack,
-      // exactly as in the Iteration 13 installation flow.
       await prompt.prompt();
-      await prompt.userChoice;
+      const choice = await prompt.userChoice;
+      if (choice.outcome === "dismissed") rememberDismissal();
     } catch {
-      // The browser owns this one-shot prompt; do not fake a successful install.
+      // The event is one-shot and browser-controlled. Do not replace it with
+      // generic Chrome-menu instructions when the native prompt fails.
     } finally {
       installPromptRef.current = null;
       setCanInstall(false);
@@ -271,16 +267,9 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     }
   }
 
-  function closeInstallHelp() {
-    // Closing browser guidance must not dismiss the persistent install invitation.
-    setInstallHelpOpen(false);
-    setInstallState("hidden");
-  }
-
   function dismissInstall() {
     rememberDismissal();
     setInstallCardDismissed(true);
-    setInstallCardCollapsed(false);
     setInstallHelpOpen(false);
     setInstallState("hidden");
   }
@@ -311,17 +300,16 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     }, 1800);
   }
 
-  const installShellStyle: CSSProperties = { position: "fixed", left: "auto", right: 18, bottom: 18, zIndex: 1205, width: "min(440px, calc(100vw - 36px))", maxWidth: 440, margin: 0, padding: 12, borderRadius: 16, background: "#FFFFFF", color: "#111318", boxShadow: "0 12px 40px rgba(0,0,0,.18)", border: "1px solid rgba(17,19,24,.12)" };
+  const installShellStyle: CSSProperties = { position: "fixed", left: 16, right: 16, bottom: 16, zIndex: 1000, maxWidth: 720, margin: "0 auto", padding: 16, borderRadius: 18, background: "#FFFFFF", color: "#111318", boxShadow: "0 12px 40px rgba(0,0,0,.18)", border: "1px solid rgba(17,19,24,.12)" };
   const embeddedInstallStyle: CSSProperties = { position: "fixed", inset: 0, zIndex: 2147483647, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(0,0,0,.82)", backdropFilter: "blur(4px)", overscrollBehavior: "contain" };
-  const installCard = installState === "native" && installHelpOpen && !environment().embedded ? (
+  const installCard = installState === "native" && installHelpOpen && isIosSafari() ? (
     <div style={installShellStyle} role="presentation">
       <section className="plugInstallModal" role="dialog" aria-modal="false" aria-labelledby="plug-install-title" aria-describedby="plug-install-message">
-        <div className="plugInstallTop"><span className="plugInstallMark">P</span><span className="plugInstallTag">PROSPEC GROUP · PITBULLS OF BRANDING</span><button type="button" className="plugInstallClose" aria-label="Close install guidance" onClick={closeInstallHelp}>×</button></div>
-        {environment().android ? <><div className="plugInstallKicker">ANDROID INSTALL</div><h2 id="plug-install-title">Install Prospec.</h2><p id="plug-install-message">If Chrome offers its native install prompt, this button opens it. Otherwise open Chrome’s <b>⋮ menu</b> and choose <b>Install app</b> or <b>Add to Home screen</b>, then confirm.</p></> : isIosSafari() ? <><div className="plugInstallKicker">IPHONE &amp; IPAD · SAFARI</div><h2 id="plug-install-title">Add to Home Screen.</h2><p id="plug-install-message">In Safari, tap <b>Share</b>, choose <b>Add to Home Screen</b>, then tap <b>Add</b>. Open the new Home Screen icon to launch the installed app.</p></> : <><div className="plugInstallKicker">BROWSER INSTALL</div><h2 id="plug-install-title">Install Prospec.</h2><p id="plug-install-message">Use your browser’s <b>Install</b> option in the address bar, or open the browser menu and choose <b>Install Prospec</b> / <b>Install app</b> if available. Confirm to add Prospec to your device.</p></>}
-        {environment().android ? <div className="plugInstallActions">
-          <button type="button" className="plugInstallPrimary" onClick={() => { if (installPromptRef.current) install(); else openBrowser(); }}>Install with Chrome</button>
-          <button type="button" className="plugInstallSecondary" onClick={dismissInstall}>Continue on the website</button>
-        </div> : <button type="button" className="plugInstallPrimary" onClick={closeInstallHelp}>Continue on the website</button>}
+        <div className="plugInstallTop"><span className="plugInstallMark">P</span><span className="plugInstallTag">PROSPEC GROUP · PITBULLS OF BRANDING</span><button type="button" className="plugInstallClose" aria-label="Close install guidance" onClick={dismissInstall}>×</button></div>
+        <div className="plugInstallKicker">IPHONE & IPAD</div>
+        <h2 id="plug-install-title">Add to Home Screen.</h2>
+        <p id="plug-install-message">In Safari, tap <b>Share</b>, choose <b>Add to Home Screen</b>, then tap <b>Add</b>. Open the new Home Screen icon to launch the installed app.</p>
+        <button type="button" className="plugInstallPrimary" onClick={dismissInstall}>Continue on the website</button>
       </section>
     </div>
 ) : installState === "embedded" ? (
@@ -340,14 +328,22 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
 
   return <>
     {!environment().standalone && installState !== "embedded" && (canInstall || canShowManualInstall) && !installCardDismissed && !(installState === "native" && installHelpOpen) && (
-      <aside className={`i13-install-card${installCardCollapsed ? " is-collapsed" : ""}`} aria-label="Install Prospec Group">
+      <aside className="i13-install-card" aria-label="Install Prospec Group">
         <div className="i13-install-brand">
           <span className="i13-install-mark" aria-hidden="true">P</span>
           <span><strong>PROSPEC GROUP</strong><small>PITBULLS OF BRANDING</small></span>
         </div>
-        <button className="i13-install-collapse" type="button" aria-label={installCardCollapsed ? "Expand install options" : "Collapse install options"} aria-expanded={!installCardCollapsed} onClick={() => setInstallCardCollapsed(value => !value)}>{installCardCollapsed ? "＋" : "−"}</button>
-        <button className="i13-install-close" type="button" aria-label="Dismiss install prompt for seven days" onClick={dismissInstall}>×</button>
-        <button className="i13-install-action" type="button" onClick={install}>{installCardCollapsed ? "Install" : "Install Prospec Group"} <span aria-hidden="true">↗</span></button>
+        <button className="i13-install-close" type="button" aria-label="Dismiss install prompt" onClick={() => setInstallCardDismissed(true)}>×</button>
+        <button className="i13-install-action" type="button" onClick={() => {
+          if (installPromptRef.current) {
+            void install();
+            return;
+          }
+          if (isIosSafari()) {
+            setInstallHelpOpen(true);
+            setInstallState("native");
+          }
+        }}>{canInstall ? "Install Prospec Group" : "Add to Home Screen"} <span aria-hidden="true">↗</span></button>
       </aside>
     )}
     {installCard}
