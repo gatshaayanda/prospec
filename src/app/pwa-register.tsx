@@ -248,12 +248,13 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
   async function install() {
     const prompt = installPromptRef.current;
     if (!prompt) {
-      // Chromium owns the install sheet. If it has not supplied an event,
-      // do not substitute a help modal for the native action.
-      if (isIosSafari()) {
-        setInstallHelpOpen(true);
-        setInstallState("native");
-      }
+      // The browser has not made its native install prompt available yet.
+      // Keep the Install action useful without pretending a native prompt ran:
+      // Android guidance offers a Chrome handoff; other browsers show their
+      // own install instructions. If Chromium later supplies the event, the
+      // next explicit click invokes prompt() directly below.
+      setInstallHelpOpen(true);
+      setInstallState("native");
       return;
     }
     try {
