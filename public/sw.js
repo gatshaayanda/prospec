@@ -6,7 +6,7 @@ const PUBLIC_PAGE_LIMIT = 12;
 const MEDIA_LIMIT = 24;
 const MEDIA_MAX_BYTES = 4 * 1024 * 1024;
 const MEDIA_HOSTS = ["images.unsplash.com", "utfs.io", "ufs.sh"];
-const APP_SHELL = ["/", "/offline", "/patterns", "/iphone-install", "/iphone-install.svg", "/prospec-icon.svg", "/prospec-icon.svg", "/prospec-icon.svg", "/prospec-icon.svg", "/prospec-icon.svg", "/prospec-icon.svg", "/manifest.webmanifest"];
+const APP_SHELL = ["/", "/offline", "/patterns", "/iphone-install", "/iphone-install.svg", "/prospec-icon.svg", "/prospec-icon-192.png", "/prospec-icon-512.png", "/manifest.webmanifest"];
 
 self.addEventListener("install", event => {
   event.waitUntil((async () => {
