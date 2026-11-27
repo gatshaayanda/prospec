@@ -63,3 +63,11 @@ The sole public owner entry is the icon-only 💼 footer control. One access-wor
 - Preserve all existing owner controls and records: shift/session, availability, customers, enquiries, quotes, status, payment recording, expenses, receipts, Store identity/palette/catalogue/media/preview, announcements, sprint rewards, notes and insights.
 - Use progressive disclosure for specialist forms while keeping primary work areas visible. Prefer recognition over recall and Prospec operational language.
 - Owner text and form controls must be comfortably readable on desktop and mobile. Avoid micro-sized helper text and tiny navigation controls. Do not treat colour/contrast tweaks as a substitute for readable type, spacing and clear labels.
+
+## Store media publishing and owner activity
+- Owner media uploads use UploadThing's `adminMediaUploader`; do not route owner uploads through the public/customer uploader. The picker returns the confirmed UploadThing URL to the editor; the owner must save the product/service or announcement before it is published.
+- Storefront writes are debounced and serialized to prevent older overlapping saves from overwriting newer catalogue/media edits. `/api/admin/workspace` reads the Firestore storefront document back after writing; the UI confirms a save only when the returned service/media payload matches.
+- The public Store listens to `prospecPublic/storefront` with Firestore `onSnapshot`. This readback plus listener is the intended publish path; still perform browser QA for actual image delivery/rendering.
+- Successful owner actions are recorded in the Briefcase Performance activity trail instead of producing a toast for every edit. Attribute image replacement/removal explicitly. Keep validation and genuine persistence failures visible.
+- The owner Store/Account header is hidden while the owner Briefcase is open. The footer Briefcase is right-aligned on mobile, opposite the left-side guide launcher.
+- Android install CTA first invokes the retained `beforeinstallprompt` event when Chrome has supplied it; otherwise it hands the URL to Chrome. Chrome controls native prompt eligibility. Never fabricate a browser prompt; retain the manual Chrome menu fallback.
