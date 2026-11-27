@@ -1590,9 +1590,18 @@ return <main className="servicePreview serviceDemo" style={{ "--studio-accent": 
             
           </div>
           <label className="prospec-store-search"><span aria-hidden="true">⌕</span><input type="search" value={storeSearch} onChange={event=>setStoreSearch(event.target.value)} placeholder="Search products and services" aria-label="Search products and services"/>{storeSearch&&<button type="button" onClick={()=>setStoreSearch("")} aria-label="Clear search">×</button>}</label>
-          <div className="prospec-division-filters" role="group" aria-label="Filter catalogue by department">
-            <button type="button" aria-pressed={catalogueDivision==="All"} onClick={()=>setCatalogueDivision("All")}>Everything</button>
-            {prospecDivisions.map(item=><button key={item.name} type="button" aria-pressed={catalogueDivision===item.name} onClick={()=>setCatalogueDivision(item.name)}>{item.marker}</button>)}
+          <div className="prospec-division-tabs" role="tablist" aria-label="Explore Prospec divisions">
+            <button type="button" role="tab" aria-selected={catalogueDivision==="All"} aria-controls="prospec-division-panel" className={catalogueDivision==="All"?"active":""} onClick={()=>setCatalogueDivision("All")}>All divisions</button>
+            {prospecDivisions.map(item=><button key={item.name} type="button" role="tab" aria-selected={catalogueDivision===item.name} aria-controls="prospec-division-panel" className={catalogueDivision===item.name?"active":""} onClick={()=>setCatalogueDivision(item.name)}>
+              <strong>{item.name==="Prospec AG Printing"?"PROSPEC AG PRINTING":item.name.toUpperCase()}</strong><small>{item.subtitle}</small>
+            </button>)}
+          </div>
+          <div className="prospec-active-division" id="prospec-division-panel" role="tabpanel" aria-live="polite">
+            <div><span className="prospec-eyebrow">{catalogueDivision==="All"?"THE PROSPEC GROUP":prospecDivisions.find(item=>item.name===catalogueDivision)?.name.toUpperCase()}</span>
+              <h3>{catalogueDivision==="All"?"Four divisions. One point of contact.":prospecDivisions.find(item=>item.name===catalogueDivision)?.subtitle}</h3>
+              <p>{catalogueDivision==="All"?"Explore marketing, procurement, digital identity and branded production.":prospecDivisions.find(item=>item.name===catalogueDivision)?.detail}</p>
+            </div>
+            <span className="prospec-catalogue-count" aria-live="polite">{visibleServices.length} offerings</span>
           </div>
         </div>
         <div className="sd-storefront-bar prospec-store-status">
