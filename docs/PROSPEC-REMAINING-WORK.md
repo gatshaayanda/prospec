@@ -46,6 +46,28 @@ The code correction is pushed, but these browser/device and live UploadThing che
 - Corrected the Briefcase editor to `step="0.01"` so cents are valid and native form validation no longer blocks those prices.
 - This directly addresses the observed Price-field validation symptom. It does not yet prove the live browser save or Firestore sync path; test both after the updated build is deployed.
 
+
+## Store / Briefcase audit — 27 November 2026
+
+### Code paths reviewed
+- Product/service create and edit use the same validated editor and local commit path; Hide/Show and confirmed Delete update the service list. While the owner session is connected, the storefront autosave writes the catalogue to `prospecPublic/storefront` and reads it back.
+- Announcement text, visibility and thumbnail are committed through the same Store state and autosave path. Announcement thumbnail upload uses the owner-only UploadThing endpoint.
+- Sprint discount promotion has Save & Publish, Hide and Remove controls. Reward headline, copy, amount and image are included in the shared storefront payload.
+- Customer request status, quote and conversation updates are sent through the owner enquiry API. A manually recorded payment is a record of an offline/manual payment entry; it does not move money or integrate with a payment processor.
+- Product images are limited to 4 MB and videos to 16 MB by the owner UploadThing endpoint. Announcement/reward thumbnails are image-only, max 4 MB.
+
+### Additional correction in this audit
+- The client previously checked Firestore readback only for the service array. A server-side normalization could therefore drop or alter announcement/reward fields without the client detecting the mismatch.
+- Updated the client to compare the complete published Store payload (catalogue, availability, announcement, sprint reward, discount amount and receipt profile) against the Firestore readback.
+- Sprint reward publishing now explicitly rejects a local `idb-media://` pending-sync thumbnail and non-HTTPS image URLs instead of allowing the API to silently store an empty reward image.
+
+### Remaining boundaries / QA
+- Directly assigned promotional discount claims are currently stored in this browser's local workspace data; the owner enquiry/storefront API does not persist or distribute those claims across devices. Do not treat direct promotion assignment as a cross-device customer feature yet.
+- Offline-selected service and announcement media remain marked Pending Sync until UploadThing returns a hosted URL. Publish only after that sync completes; the service/announcement save validation rejects local-only media references.
+- Static code review and GitHub CI do not prove actual UploadThing credentials, browser file picker behaviour, Firebase production writes, public image delivery, or cross-device customer visibility. Those require live browser QA with an authenticated owner session.
+- Four division tiles are still static labels, not workspace selectors; they do not filter the Briefcase sections. This remains unimplemented and must not be described as working.
+- The CI workflow runs ESLint and a production build, including the identity, offline and typography verification scripts. It does not run browser end-to-end tests.
+
 ## 2. Currency consistency
 
 ### Observed mismatch
