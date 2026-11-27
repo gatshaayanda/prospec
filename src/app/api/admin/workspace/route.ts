@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasProspecAdminSession } from "@/lib/admin-session";
+import { hasProspecGrowthSession } from "@/lib/growth-session";
 import { getProspecAdminDb } from "@/lib/firebase/admin";
 
 export const runtime = "nodejs";
 
-async function authorised() {
-  return hasProspecAdminSession();
+async function authorised(request?: Request) {
+  return (await hasProspecAdminSession(request)) || (await hasProspecGrowthSession(request));
 }
 
-export async function GET() {
-  if (!(await authorised())) return NextResponse.json({ error: "Owner session required." }, { status: 401 });
+export async function GET(request: NextRequest) {
+  if (!(await authorised(request))) return NextResponse.json({ error: "Owner session required." }, { status: 401 });
   try {
     const adminDb = getProspecAdminDb();
     const [storefront, enquiries] = await Promise.all([
@@ -26,13 +27,29 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
-  if (!(await authorised())) return NextResponse.json({ error: "Owner session required." }, { status: 401 });
+  const owner = await hasProspecAdminSession(request);
+  const growth = !owner && await hasProspecGrowthSession(request);
+  if (!owner && !growth) return NextResponse.json({ error: "Authorised workspace session required." }, { status: 401 });
   try {
     const adminDb = getProspecAdminDb();
     const body = await request.json() as Record<string, unknown>;
     if (body.action === "storefront" && body.storefront && typeof body.storefront === "object") {
+      if (growth && typeof body.division !== "string") return NextResponse.json({ error: "Select a working division before publishing." }, { status: 400 });
       const value = body.storefront as Record<string, unknown>;
       const services = Array.isArray(value.services) ? value.services.slice(0, 200) : [];
+      const existingSnapshot = growth ? await adminDb.collection("prospecPublic").doc("storefront").get() : null;
+      const existingServices = Array.isArray(existingSnapshot?.data()?.services) ? existingSnapshot!.data()!.services as Record<string, unknown>[] : [];
+      const division = typeof body.division === "string" ? body.division : "";
+      const allowedDivisions = ["Prospec AG", "Prospec Supplies", "Prospec NFC", "Prospec AG Printing"];
+      if (growth && !allowedDivisions.includes(division)) return NextResponse.json({ error: "That division is not available to Growth Desk." }, { status: 403 });
+      if (growth) {
+        const submittedById = new Map(services.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object" && typeof (item as Record<string, unknown>).id === "string")).map(item => [String(item.id), item]));
+        const existingOutsideDivision = existingServices.filter(item => item.industry !== division);
+        const submittedOutsideDivision = services.filter(item => item.industry !== division);
+        if (JSON.stringify(existingOutsideDivision) !== JSON.stringify(submittedOutsideDivision)) return NextResponse.json({ error: "Growth Desk can only change catalogue items in the selected division." }, { status: 403 });
+        if (services.some(item => item.industry === division && (!item || typeof item !== "object"))) return NextResponse.json({ error: "Invalid catalogue item." }, { status: 400 });
+        void submittedById;
+      }
       const savedStorefront = {
         services,
         availability: ["available", "limited", "unavailable"].includes(String(value.availability)) ? value.availability : "available",
@@ -63,6 +80,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ ok: true, storefront: persistedSnapshot.data() });
     }
     if (body.action === "enquiry" && typeof body.id === "string" && body.patch && typeof body.patch === "object") {
+      if (growth) return NextResponse.json({ error: "Growth Desk does not have permission to edit customer jobs or finance records." }, { status: 403 });
       const patch = body.patch as Record<string, unknown>;
       const allowed = ["status", "statusUpdatedAt", "completedAt", "price", "quotedPrice", "quoteRequired", "messages", "paymentStatus", "paidAmount", "paidAt", "receiptNo"];
       const safe = Object.fromEntries(Object.entries(patch).filter(([key]) => allowed.includes(key)));
