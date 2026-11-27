@@ -13,7 +13,7 @@ type InstallState = "hidden" | "native" | "embedded";
 
 const INSTALL_DISMISSED_KEY = "prospec:install:dismissed-at:v6";
 const INSTALL_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
-const INSTALL_RELEASE_KEY = "prospec:install:invitation-release:v2";
+const INSTALL_RELEASE_KEY = "prospec:install:invitation-release:v3";
 
 function environment() {
   if (typeof window === "undefined") return { standalone: true, ios: false, android: false, embedded: false };
@@ -74,8 +74,8 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
   useEffect(() => {
     const env = environment();
     const embedded = initialEmbedded || env.embedded;
-    // One-time release migration: clear stale dismissals from the broken invitation,
-    // then honour the customer's seven-day dismissal choice on subsequent visits.
+    // One-time release migration: clear stale dismissals created when dismissing
+    // Chrome's native prompt also hid the branded invitation.
     try {
       if (window.localStorage.getItem(INSTALL_RELEASE_KEY) !== "1") {
         clearDismissal();
@@ -255,7 +255,8 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     void promptResult
       .then(() => prompt.userChoice)
       .then(choice => {
-        if (choice.outcome === "dismissed") rememberDismissal();
+        // A native prompt dismissal is not a request to hide the branded invitation.
+        // Only the card's explicit close action records a seven-day dismissal.
       })
       .catch(() => {
         // The browser owns this one-shot prompt; never simulate its confirmation UI.
