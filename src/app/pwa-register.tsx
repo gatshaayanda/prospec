@@ -13,7 +13,7 @@ type InstallState = "hidden" | "native" | "embedded";
 
 const INSTALL_DISMISSED_KEY = "prospec:install:dismissed-at:v6";
 const INSTALL_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
-const INSTALL_RELEASE_KEY = "prospec:install:invitation-release:v3";
+const INSTALL_RELEASE_KEY = "prospec:install:invitation-release:v4";
 const INSTALL_VISIT_COUNT_KEY = "prospec:install:visits:v1";
 const INSTALL_VISIT_SESSION_KEY = "prospec:install:visit-session:v1";
 const INSTALL_VISIT_THRESHOLD = 3;
@@ -97,7 +97,10 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     // Chrome's native prompt also hid the branded invitation.
     try {
       if (window.localStorage.getItem(INSTALL_RELEASE_KEY) !== "1") {
+        // Release recovery: make the invitation visible once for existing
+        // visitors whose prior visit/dismissal state left the card missing.
         clearDismissal();
+        window.localStorage.setItem(INSTALL_VISIT_COUNT_KEY, String(INSTALL_VISIT_THRESHOLD));
         window.localStorage.setItem(INSTALL_RELEASE_KEY, "1");
         setInstallCardDismissed(false);
       } else {
