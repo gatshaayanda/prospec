@@ -107,9 +107,9 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
       setInstallCardDismissed(false);
     }
     setEmbeddedAndroid((initialEmbedded && initialAndroid) || (env.embedded && env.android));
-    // The branded invitation is available in every supported browser, even when
-    // Chromium has not yet emitted beforeinstallprompt.
-    setCanShowManualInstall(!env.standalone && !embedded && installInvitationEligible);
+    // Match Iteration 13: Chromium/desktop invitations appear only when the
+    // browser supplies its retained native prompt. Only iOS Safari uses guidance.
+    setCanShowManualInstall(!env.standalone && !embedded && installInvitationEligible && isIosSafari());
 
     let registration: ServiceWorkerRegistration | null = null;
     const inspect = () => {
@@ -245,45 +245,30 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     };
   }, [installState, installHelpOpen]);
 
-  function install() {
+  async function install() {
     const prompt = installPromptRef.current;
     if (!prompt) {
-      // Chrome only exposes its native install sheet after beforeinstallprompt.
-      // Without that browser-owned event, show the supported browser instructions.
-      if (!environment().standalone) {
+      // Chromium owns the install sheet. If it has not supplied an event,
+      // do not substitute a help modal for the native action.
+      if (isIosSafari()) {
         setInstallHelpOpen(true);
         setInstallState("native");
       }
       return;
     }
-
-    // Invoke prompt() synchronously in the actual button click handler. Do not put
-    // an await, timer, state transition, or other asynchronous boundary before it:
-    // Chromium requires the retained event to be used during this user activation.
-    installPromptRef.current = null;
-    setCanInstall(false);
-    let promptResult: Promise<void>;
     try {
-      promptResult = prompt.prompt();
+      // Keep prompt() as the first operation in the trusted click call stack,
+      // exactly as in the Iteration 13 installation flow.
+      await prompt.prompt();
+      await prompt.userChoice;
     } catch {
-      setInstallHelpOpen(true);
-      setInstallState("native");
-      return;
+      // The browser owns this one-shot prompt; do not fake a successful install.
+    } finally {
+      installPromptRef.current = null;
+      setCanInstall(false);
+      setInstallHelpOpen(false);
+      setInstallState("hidden");
     }
-
-    void promptResult
-      .then(() => prompt.userChoice)
-      .then(choice => {
-        // A native prompt dismissal is not a request to hide the branded invitation.
-        // Only the card's explicit close action records a seven-day dismissal.
-      })
-      .catch(() => {
-        // The browser owns this one-shot prompt; never simulate its confirmation UI.
-      })
-      .finally(() => {
-        setInstallHelpOpen(false);
-        setInstallState("hidden");
-      });
   }
 
   function closeInstallHelp() {
