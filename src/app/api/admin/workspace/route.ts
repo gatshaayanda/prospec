@@ -33,7 +33,7 @@ export async function PUT(request: NextRequest) {
     if (body.action === "storefront" && body.storefront && typeof body.storefront === "object") {
       const value = body.storefront as Record<string, unknown>;
       const services = Array.isArray(value.services) ? value.services.slice(0, 200) : [];
-      await adminDb.collection("prospecPublic").doc("storefront").set({
+      const savedStorefront = {
         services,
         availability: ["available", "limited", "unavailable"].includes(String(value.availability)) ? value.availability : "available",
         announcement: typeof value.announcement === "string" ? value.announcement.slice(0, 2000) : "",
@@ -51,8 +51,11 @@ export async function PUT(request: NextRequest) {
           footer: typeof (value.receiptProfile as Record<string, unknown>).footer === "string" ? String((value.receiptProfile as Record<string, unknown>).footer).slice(0, 500) : "Thank you for your business.",
         } : null,
         updatedAt: new Date().toISOString(),
-      }, { merge: true });
-      return NextResponse.json({ ok: true });
+      };
+      await adminDb.collection("prospecPublic").doc("storefront").set(savedStorefront, { merge: true });
+      // Echo the exact saved catalogue back to the owner so the UI can confirm
+      // that media URLs survived the shared Firestore write.
+      return NextResponse.json({ ok: true, storefront: savedStorefront });
     }
     if (body.action === "enquiry" && typeof body.id === "string" && body.patch && typeof body.patch === "object") {
       const patch = body.patch as Record<string, unknown>;
