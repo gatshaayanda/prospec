@@ -8039,3 +8039,7 @@ h1 em,
  .sd-growth-workspace .sd-store-design-nav{top:118px;overflow-x:auto}
  .sd-growth-workspace .sd-growth-heading .sd-button{min-height:40px}
 }
+
+
+.sd-growth-workspace .sd-store-design-nav{top:148px}
+@media(max-width:760px){.sd-growth-workspace .sd-store-design-nav{top:190px}}
