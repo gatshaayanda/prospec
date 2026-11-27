@@ -11,7 +11,7 @@ import RacingWarmup from "@/app/games/racing-warmup";
 import ReceiptDocument from "@/app/ReceiptDocument";
 import AdminMoneyInsights from "@/app/AdminMoneyInsights";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { collection, doc, onSnapshot, orderBy, query, setDoc, where } from "firebase/firestore";
+import { collection, doc, getDoc, onSnapshot, orderBy, query, setDoc, where } from "firebase/firestore";
 import { getProspecDb, ensureCustomerAuth } from "@/lib/firebase/client";
 
 type Service = { id: string; name: string; industry?: string; price: number; description: string; media: string; mediaType: "image" | "video"; active: boolean; custom?: boolean };
@@ -672,6 +672,13 @@ export default function Home() {
       setCustomerUid(user.uid);
       setCloudSyncStatus(navigator.onLine ? "connecting" : "offline");
       const db = getProspecDb();
+      void getDoc(doc(db, "prospecCustomers", user.uid)).then(profileSnapshot => {
+        if (!active || !profileSnapshot.exists()) return;
+        const profile = profileSnapshot.data();
+        if (typeof profile.name === "string" && profile.name) setCustomerName(profile.name);
+        if (typeof profile.email === "string" && profile.email) setEmail(profile.email);
+        if (typeof profile.phone === "string" && profile.phone) setWhatsapp(profile.phone);
+      }).catch(() => { /* contact details can still be entered manually */ });
       const enquiriesQuery = query(collection(db, "prospecEnquiries"), where("customerId", "==", user.uid), orderBy("createdAt", "desc"));
       stopEnquiries = onSnapshot(enquiriesQuery, { includeMetadataChanges: true }, snapshot => {
         if (!active) return;
