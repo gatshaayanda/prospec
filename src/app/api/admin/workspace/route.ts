@@ -50,7 +50,7 @@ export async function PUT(request: NextRequest) {
         const existingOutsideDivision = existingServices.filter(item => item.industry !== division);
         const submittedOutsideDivision = services.filter(item => item.industry !== division);
         if (JSON.stringify(existingOutsideDivision) !== JSON.stringify(submittedOutsideDivision)) return NextResponse.json({ error: "Growth Desk can only change catalogue items in the selected division." }, { status: 403 });
-        if (services.some(item => item.industry === division && (!item || typeof item !== "object"))) return NextResponse.json({ error: "Invalid catalogue item." }, { status: 400 });
+        if (services.some(item => !item || typeof item !== "object" || typeof item.id !== "string" || typeof item.industry !== "string")) return NextResponse.json({ error: "Invalid catalogue item." }, { status: 400 });
       }
       const savedStorefront = {
         services,
