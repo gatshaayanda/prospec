@@ -37,8 +37,9 @@ if (!pwaRegister.includes("(canInstall || canShowManualInstall)") || !pwaRegiste
 if (!pwaRegister.includes('className={`i13-install-card') || !pwaRegister.includes('className="i13-install-close"') || !pwaRegister.includes("setInstallCardDismissed(true)")) failures.push("PWA install: dismissible branded card missing");
 if (!pwaRegister.includes("PROSPEC GROUP")) failures.push("PWA install: Prospec branding missing");
 if (!pwaRegister.includes("installCardCollapsed") || !pwaRegister.includes("aria-expanded={!installCardCollapsed}")) failures.push("PWA install: accessible collapsible card state missing");
-if (!pwaRegister.includes("onClick={dismissInstall}") || !pwaRegister.includes("rememberDismissal();")) failures.push("PWA install: persistent user dismissal missing");
-if (!pwaRegister.includes("setInstallCardDismissed(dismissedRecently())")) failures.push("PWA install: recent dismissal preference is not restored");
+if (!pwaRegister.includes("onClick={dismissInstall}") || !pwaRegister.includes("setInstallCardDismissed(true)")) failures.push("PWA install: cancellable user dismissal missing");
+if (!pwaRegister.includes("const installInvitationEligible = true;")) failures.push("PWA install: invitation must not require repeat visits");
+if (/INSTALL_VISIT|INSTALL_RELEASE|INSTALL_DISMISS_MS|dismissedRecently|rememberDismissal/.test(pwaRegister)) failures.push("PWA install: obsolete visit or persistent dismissal cooldown remains");
 if (!installCss.includes(".i13-install-card.is-collapsed")) failures.push("PWA install: collapsed compact presentation styles missing");
 if (!page.includes('const STORAGE_KEY = "prospec:service-preview:v1"')) failures.push("application storage namespace not isolated for Prospec");
 if (!page.includes("prospecCatalogue") || !page.includes("Quote on request")) failures.push("Prospec catalogue and unpriced enquiry labels missing");
