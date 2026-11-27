@@ -7,7 +7,9 @@ const SESSION_SECONDS = 12 * 60 * 60;
 const ACCESS_CODE = process.env.GROWTH_ACCESS_CODE || "75363056";
 
 function signingSecret() {
-  return process.env.ADMIN_PASSWORD || process.env.NEXTAUTH_SECRET || "prospec-growth-qa-session-signing-key";
+  const secret = process.env.GROWTH_SESSION_SECRET || process.env.ADMIN_PASSWORD || process.env.NEXTAUTH_SECRET;
+  if (!secret) throw new Error("Set GROWTH_SESSION_SECRET or use the existing server-side owner session secret.");
+  return secret;
 }
 function signature(expiresAt: number) {
   return createHmac("sha256", signingSecret()).update("prospec-growth:" + expiresAt).digest("base64url");
