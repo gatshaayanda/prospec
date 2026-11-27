@@ -40,7 +40,7 @@ The sole public owner entry is the icon-only 💼 footer control. One access-wor
 - Do not claim payment gateway, payment capture, email delivery or push notifications unless implemented and tested.
 
 ## PWA / offline lock
-- Preserve beforeinstallprompt early capture, retained native event, click-triggered browser prompt, dismissible bottom-fixed install-card placement (bottom edge; right-aligned on desktop), iOS Safari Share → Add to Home Screen guidance, Android manual-install fallback when the browser does not emit beforeinstallprompt, embedded-browser handoff, service-worker registration/update lifecycle and offline shell. The customer may collapse the branded install card without dismissing it; explicit dismissal is remembered for seven days.
+- Preserve beforeinstallprompt early capture, retained native event, click-triggered browser prompt, dismissible bottom-fixed install-card placement (bottom edge; right-aligned on desktop), iOS Safari Share → Add to Home Screen guidance, Chrome fallback guidance when Chrome has not emitted beforeinstallprompt, embedded-browser handoff, service-worker registration/update lifecycle and offline shell. The customer may collapse the branded install card without dismissing it; explicit dismissal is in-memory for the current page only.
 - The bottom-fixed placement is the approved Iteration 13/Africhiko pattern. Do not convert it to an inline/top-of-page element. Keep placement stable; change only branding/assets and isolated cache namespace. Do not fake a prompt, duplicate listeners or change native prompt lifecycle mechanics.
 - Offline copy must explain that Firestore retains a persistent local cache and queues supported customer writes until connectivity returns. Uploads still require internet.
 
