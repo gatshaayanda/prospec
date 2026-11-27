@@ -8043,3 +8043,95 @@ h1 em,
 
 .sd-growth-workspace .sd-store-design-nav{top:148px}
 @media(max-width:760px){.sd-growth-workspace .sd-store-design-nav{top:190px}}
+
+
+/* Prospec division switcher refresh: neutral surfaces, clear text contrast, calm active state. */
+.serviceDemo .sd-admin .sd-division-switcher{
+  background:#f1f5f4;
+  border:1px solid #d5dfdc;
+  border-radius:14px;
+  padding:12px;
+  box-shadow:0 5px 16px rgba(24,48,48,.07);
+}
+.serviceDemo .sd-admin .sd-division-switcher-heading{
+  margin:0 0 9px;
+  padding:0 2px;
+}
+.serviceDemo .sd-admin .sd-division-switcher-heading .sd-kicker{
+  color:#405b5b;
+  font-size:12px;
+  font-weight:850;
+  letter-spacing:.09em;
+}
+.serviceDemo .sd-admin .sd-division-switcher-heading>button{
+  min-height:40px;
+  padding:7px 12px;
+  border:1px solid #b9cbc7;
+  border-radius:9px;
+  background:#fff;
+  color:#244347;
+  font-size:13px;
+  font-weight:750;
+}
+.serviceDemo .sd-admin .sd-division-switcher-heading>button:hover{
+  background:#f5faf9;
+  border-color:#729b95;
+}
+.serviceDemo .sd-admin .sd-division-switcher-heading>button.is-selected{
+  background:#dcefeb;
+  border-color:#168078;
+  color:#123f3d;
+}
+.serviceDemo .sd-admin .sd-division-rail>button{
+  min-height:64px;
+  padding:10px 12px;
+  border:1px solid #c5d2cf;
+  border-radius:10px;
+  background:#fff;
+  color:#173b3d;
+  box-shadow:0 1px 2px rgba(20,50,48,.04);
+}
+.serviceDemo .sd-admin .sd-division-rail>button strong{
+  color:#173b3d;
+  font-weight:850;
+}
+.serviceDemo .sd-admin .sd-division-rail>button span{
+  color:#506568;
+}
+.serviceDemo .sd-admin .sd-division-rail>button:hover{
+  background:#f6faf9;
+  border-color:#7da9a2;
+  box-shadow:0 2px 7px rgba(20,70,64,.08);
+}
+.serviceDemo .sd-admin .sd-division-rail>button.is-selected{
+  background:#dff2ee;
+  border:2px solid #087f78;
+  padding:9px 11px;
+  color:#123f3d;
+  box-shadow:inset 0 0 0 1px rgba(8,127,120,.08),0 2px 7px rgba(8,90,82,.08);
+}
+.serviceDemo .sd-admin .sd-division-rail>button.is-selected strong{
+  color:#123f3d;
+}
+.serviceDemo .sd-admin .sd-division-rail>button.is-selected span{
+  color:#345a58;
+}
+.serviceDemo .sd-admin .sd-division-rail>button:focus-visible,
+.serviceDemo .sd-admin .sd-division-switcher-heading>button:focus-visible{
+  outline:3px solid #075e68;
+  outline-offset:3px;
+}
+.serviceDemo .sd-admin .sd-division-scope{
+  margin:9px 2px 0;
+  color:#40565a;
+  font-size:13px;
+  font-weight:650;
+  line-height:1.45;
+}
+@media(max-width:760px){
+  .serviceDemo .sd-admin .sd-division-switcher{padding:10px}
+  .serviceDemo .sd-admin .sd-division-rail{gap:7px}
+  .serviceDemo .sd-admin .sd-division-rail>button{min-height:62px;padding:9px 10px}
+  .serviceDemo .sd-admin .sd-division-rail>button.is-selected{padding:8px 9px}
+  .serviceDemo .sd-admin .sd-division-scope{font-size:12px}
+}
