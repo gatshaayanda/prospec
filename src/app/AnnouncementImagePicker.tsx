@@ -51,6 +51,8 @@ export default function AnnouncementImagePicker({value,online,onChange,onUploadi
     try {
       const uploaded = await startUpload([file]);
       if (!uploaded?.[0]?.ufsUrl && !uploaded?.[0]?.url) {
+        onUploadingChange(false);
+        setProgress(0);
         const saved = await saveOfflineMedia(file);
         attemptedSync.current = saved.id;
         onChange("idb-media://" + saved.id);
