@@ -1,6 +1,7 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
 import { hasProspecAdminSession } from "@/lib/admin-session";
+import { hasProspecGrowthSession } from "@/lib/growth-session";
 
 const f = createUploadthing();
 
@@ -27,10 +28,12 @@ export const ourFileRouter = {
     video: { maxFileSize: "16MB", maxFileCount: 1 },
   })
     .middleware(async ({ req }) => {
-      if (!(await hasProspecAdminSession(req))) {
-        throw new UploadThingError("Open the owner Briefcase and sign in before uploading business media.");
+      const owner = await hasProspecAdminSession(req);
+      const growth = !owner && await hasProspecGrowthSession(req);
+      if (!owner && !growth) {
+        throw new UploadThingError("Open the Owner Briefcase or Growth Desk before uploading business media.");
       }
-      return { workspace: "prospec-owner" as const };
+      return { workspace: growth ? "prospec-growth" as const : "prospec-owner" as const };
     })
     .onUploadComplete(async ({ file, metadata }) => {
       console.info("[Prospec] owner media uploaded", {
