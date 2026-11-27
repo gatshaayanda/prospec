@@ -31,6 +31,12 @@ function isIosSafari() {
   return ios && /Safari/i.test(nav.userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo/i.test(nav.userAgent);
 }
 
+function isChromeBrowser() {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  return /Chrome|Chromium/i.test(ua) && !/Edg|OPR|SamsungBrowser/i.test(ua);
+}
+
 export default function PwaRegister({ initialEmbedded = false, initialAndroid = false }: { initialEmbedded?: boolean; initialAndroid?: boolean }) {
   const installPromptRef = useRef<InstallPromptEvent | null>(null);
   const [installState, setInstallState] = useState<InstallState>(initialEmbedded ? "embedded" : "hidden");
@@ -50,7 +56,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     setEmbeddedAndroid((initialEmbedded && initialAndroid) || (env.embedded && env.android));
     setInstallCardDismissed(false);
     const installInvitationEligible = true;
-    setCanShowManualInstall(!env.standalone && !embedded && isIosSafari());
+    setCanShowManualInstall(!env.standalone && !embedded && (isIosSafari() || isChromeBrowser()));
 
     let registration: ServiceWorkerRegistration | null = null;
     const inspect = () => {
@@ -85,13 +91,15 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     const promptWindow = window as Window & { __iteration13InstallPrompt?: Event; __iteration13PwaListenerReady?: boolean };
     // The browser can emit beforeinstallprompt before React hydrates. Adopt the
     // event captured by the tiny beforeInteractive script before listening normally.
-    promptWindow.__iteration13PwaListenerReady = true;
     const earlyPrompt = promptWindow.__iteration13InstallPrompt;
     if (earlyPrompt) {
       delete promptWindow.__iteration13InstallPrompt;
       onBeforeInstallPrompt(earlyPrompt);
     }
+    // Register first, then mark the React listener ready. Reversing this order
+    // creates a small race in which the early script drops the event.
     window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+    promptWindow.__iteration13PwaListenerReady = true;
 
     if (env.standalone && !embedded) {
       setInstallState("hidden");
@@ -194,7 +202,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     if (!prompt) {
       // Never manufacture a replacement prompt. Manual steps are only valid for
       // iOS Safari, where beforeinstallprompt is not available.
-      if (isIosSafari()) {
+      if (isIosSafari() || isChromeBrowser()) {
         setInstallHelpOpen(true);
         setInstallState("native");
       }
@@ -248,13 +256,13 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
 
   const installShellStyle: CSSProperties = { position: "fixed", left: 16, right: 16, bottom: 16, zIndex: 1000, maxWidth: 720, margin: "0 auto", padding: 16, borderRadius: 18, background: "#FFFFFF", color: "#111318", boxShadow: "0 12px 40px rgba(0,0,0,.18)", border: "1px solid rgba(17,19,24,.12)" };
   const embeddedInstallStyle: CSSProperties = { position: "fixed", inset: 0, zIndex: 2147483647, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, background: "rgba(0,0,0,.82)", backdropFilter: "blur(4px)", overscrollBehavior: "contain" };
-  const installCard = installState === "native" && installHelpOpen && isIosSafari() ? (
+  const installCard = installState === "native" && installHelpOpen && (isIosSafari() || isChromeBrowser()) ? (
     <div style={installShellStyle} role="presentation">
       <section className="plugInstallModal" role="dialog" aria-modal="false" aria-labelledby="plug-install-title" aria-describedby="plug-install-message">
         <div className="plugInstallTop"><span className="plugInstallMark">P</span><span className="plugInstallTag">PROSPEC GROUP · PITBULLS OF BRANDING</span><button type="button" className="plugInstallClose" aria-label="Close install guidance" onClick={dismissInstall}>×</button></div>
-        <div className="plugInstallKicker">IPHONE & IPAD</div>
-        <h2 id="plug-install-title">Add to Home Screen.</h2>
-        <p id="plug-install-message">In Safari, tap <b>Share</b>, choose <b>Add to Home Screen</b>, then tap <b>Add</b>. Open the new Home Screen icon to launch the installed app.</p>
+        <div className="plugInstallKicker">{isIosSafari() ? "IPHONE & IPAD" : "CHROME INSTALL"}</div>
+        <h2 id="plug-install-title">{isIosSafari() ? "Add to Home Screen." : "Install Prospec Group."}</h2>
+        <p id="plug-install-message">{isIosSafari() ? <>In Safari, tap <b>Share</b>, choose <b>Add to Home Screen</b>, then tap <b>Add</b>. Open the new Home Screen icon to launch the installed app.</> : <>Chrome has not supplied its one-tap install prompt for this visit. Open Chrome’s <b>⋮ menu</b> and choose <b>Install app</b> or <b>Add to Home screen</b> if offered. The browser controls install eligibility.</>}</p>
         <button type="button" className="plugInstallPrimary" onClick={dismissInstall}>Continue on the website</button>
       </section>
     </div>
@@ -281,7 +289,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
         </div>
         <button className="i13-install-close" type="button" aria-label="Dismiss install prompt" onClick={dismissInstall}>×</button>
         <button className="i13-install-collapse" type="button" aria-label={installCardCollapsed ? "Expand install invitation" : "Collapse install invitation"} aria-expanded={!installCardCollapsed} onClick={() => setInstallCardCollapsed((value) => !value)}>{installCardCollapsed ? "＋" : "−"}</button>
-        {!installCardCollapsed && <button className="i13-install-action" type="button" onClick={install}>{canInstall ? "Install Prospec Group" : "Add to Home Screen"} <span aria-hidden="true">↗</span></button>}
+        {!installCardCollapsed && <button className="i13-install-action" type="button" onClick={install}>"Install Prospec Group" <span aria-hidden="true">↗</span></button>}
       </aside>
     )}
     {installCard}
