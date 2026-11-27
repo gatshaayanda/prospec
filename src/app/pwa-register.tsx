@@ -11,7 +11,7 @@ type InstallPromptEvent = Event & {
 };
 type InstallState = "hidden" | "native" | "embedded";
 
-const INSTALL_DISMISSED_KEY = "prospec:install:dismissed-at:v6";
+const INSTALL_DISMISSED_KEY = "prospec:install:dismissed-at:v7";
 const INSTALL_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
 
 function environment() {
@@ -64,7 +64,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
   const [embeddedAndroid, setEmbeddedAndroid] = useState(initialEmbedded && initialAndroid);
   const [installHelpOpen, setInstallHelpOpen] = useState(false);
   const [canInstall, setCanInstall] = useState(false);
-  const [canShowManualInstall, setCanShowManualInstall] = useState(false);
+  const [canShowManualInstall, setCanShowManualInstall] = useState(initialAndroid);
   const [installCardDismissed, setInstallCardDismissed] = useState(false);
   const [installCardCollapsed, setInstallCardCollapsed] = useState(false);
   const embeddedActionRef = useRef<HTMLButtonElement | null>(null);
@@ -75,7 +75,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     setInstallCardDismissed(dismissedRecently());
     const embedded = initialEmbedded || env.embedded;
     setEmbeddedAndroid((initialEmbedded && initialAndroid) || (env.embedded && env.android));
-    setCanShowManualInstall(isIosSafari() || env.android);
+    setCanShowManualInstall(isIosSafari() || env.android || initialAndroid);
 
     let registration: ServiceWorkerRegistration | null = null;
     const inspect = () => {
