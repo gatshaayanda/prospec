@@ -251,13 +251,9 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
   async function install() {
     const prompt = installPromptRef.current;
     if (!prompt) {
-      // The browser has not made its native install prompt available yet.
-      // Keep the Install action useful without pretending a native prompt ran:
-      // Android guidance offers a Chrome handoff; other browsers show their
-      // own install instructions. If Chromium later supplies the event, the
-      // next explicit click invokes prompt() directly below.
-      setInstallHelpOpen(true);
-      setInstallState("native");
+      // Chromium has not supplied its one-shot native install event.
+      // Do not replace the native action with an instructional message or
+      // a browser handoff; wait until the browser makes prompt() available.
       return;
     }
     try {
