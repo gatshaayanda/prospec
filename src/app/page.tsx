@@ -400,10 +400,15 @@ export default function Home() {
     void fetch("/api/admin/workspace", {
       method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "storefront", storefront }),
-    }).then(response => {
-      if (!response.ok) setNotice("Store changes could not sync to the Prospec database.");
-      else setNotice("Changes saved to the shared Prospec Store.");
-    }).catch(() => setNotice("Store changes could not reach the Prospec database. Keep the Briefcase open and retry when connected."));
+    }).then(async response => {
+      const result = await response.json().catch(() => ({})) as { error?: string; storefront?: { services?: Service[] } };
+      if (!response.ok) throw new Error(result.error || "The shared Store rejected this update.");
+      const savedServices = Array.isArray(result.storefront?.services) ? result.storefront.services : null;
+      if (!savedServices || JSON.stringify(savedServices) !== JSON.stringify(storefront.services)) {
+        throw new Error("The shared Store did not confirm the exact product images and catalogue details. Your local preview is unchanged; retry the save.");
+      }
+      setNotice("Changes confirmed in the shared Prospec Store.");
+    }).catch(error => setNotice(error instanceof Error ? error.message : "Store changes could not reach the Prospec database. Keep the Briefcase open and retry when connected."));
   }, [ownerCloudReady, adminUnlocked, view, data.services, data.availability, data.announcement, data.announcementActive, data.announcementImage, data.rewardActive, data.rewardTitle, data.rewardDescription, data.rewardImage, data.discountAmount, data.receiptProfile]);
 
   useEffect(() => {
