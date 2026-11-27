@@ -103,7 +103,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     } catch {
       setInstallCardDismissed(false);
     }
-    setCanShowManualInstall(!env.standalone && !embedded && installInvitationEligible);
+    setCanShowManualInstall(!env.standalone && !embedded && isIosSafari());
 
     let registration: ServiceWorkerRegistration | null = null;
     const inspect = () => {
