@@ -1170,13 +1170,13 @@ export default function Home() {
     if (!alreadyVisited) loadSharedBusinessExample();
   }, [sharedExample, isSharedExampleWorkspace, identityComplete]);
 
-  const divisionServices = selectedDivision === "All" ? data.services : data.services.filter(service => service.industry === selectedDivision);
-  const divisionOrders = selectedDivision === "All" ? data.orders : data.orders.filter(order => {
+  const divisionServices = useMemo(() => selectedDivision === "All" ? data.services : data.services.filter(service => service.industry === selectedDivision), [data.services, selectedDivision]);
+  const divisionOrders = useMemo(() => selectedDivision === "All" ? data.orders : data.orders.filter(order => {
     const serviceIds = [order.serviceId, ...(order.serviceItems || []).map(item => item.id)].filter(Boolean);
     const serviceNames = [order.serviceName, ...(order.serviceItems || []).map(item => item.name)].map(name => name.trim().toLowerCase());
     return data.services.some(service => service.industry === selectedDivision && (serviceIds.includes(service.id) || serviceNames.includes(service.name.trim().toLowerCase())));
-  });
-  const adminActiveServices = divisionServices.filter(service => service.active);
+  }), [data.orders, data.services, selectedDivision]);
+  const adminActiveServices = useMemo(() => divisionServices.filter(service => service.active), [divisionServices]);
   const paidTotal = divisionOrders.reduce((sum, order) => sum + (order.paidAmount || 0), 0);
   const completedUnpaid = divisionOrders.filter(order => order.status === "Completed").reduce((sum, order) => sum + Math.max(0, order.price - (order.paidAmount || 0)), 0);
   
@@ -1186,7 +1186,7 @@ export default function Home() {
   const customerRecords = Array.from(new Map(divisionOrders.map(order => [order.email.toLowerCase(), { name: order.customerName, email: order.email, jobs: divisionOrders.filter(item => item.email.toLowerCase() === order.email.toLowerCase()) }] as const)).values());
   const selectedServices = [...selectedServiceIds.map(id => data.services.find(service => service.id === id && service.active) || customSelections.find(service => service.id === id)).filter((service): service is Service => Boolean(service)), ...(selected && !selectedServiceIds.includes(selected) ? [data.services.find(service => service.id === selected && service.active)].filter((service): service is Service => Boolean(service)) : [])];
   const selectedService = selectedServices[0] || data.services.find(service => service.id === selected && service.active);
-  const statusCounts = useMemo(() => divisionOrders.reduce<Record<string, number>>((acc, order) => { acc[order.status] = (acc[order.status] || 0) + 1; return acc; }, {}), [data.orders]);
+  const statusCounts = useMemo(() => divisionOrders.reduce<Record<string, number>>((acc, order) => { acc[order.status] = (acc[order.status] || 0) + 1; return acc; }, {}), [divisionOrders]);
   const localStorageBytes = useMemo<number | null>(() => {
     if (typeof window === "undefined") return null;
     try {
