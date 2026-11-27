@@ -13,6 +13,7 @@ type InstallState = "hidden" | "native" | "embedded";
 
 const INSTALL_DISMISSED_KEY = "prospec:install:dismissed-at:v6";
 const INSTALL_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
+const INSTALL_RELEASE_KEY = "prospec:install:invitation-release:v1";
 
 function environment() {
   if (typeof window === "undefined") return { standalone: true, ios: false, android: false, embedded: false };
@@ -72,17 +73,24 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
 
   useEffect(() => {
     const env = environment();
-    // Android release: clear a prior card dismissal so this corrected install invitation
-    // is visible immediately after upgrade. Keep the canonical v6 key required by QA.
-    if (env.android || initialAndroid) {
-      clearDismissal();
-      setInstallCardDismissed(false);
-    } else {
-      setInstallCardDismissed(dismissedRecently());
-    }
     const embedded = initialEmbedded || env.embedded;
+    // One-time release migration: clear stale dismissals from the broken invitation,
+    // then honour the customer's seven-day dismissal choice on subsequent visits.
+    try {
+      if (window.localStorage.getItem(INSTALL_RELEASE_KEY) !== "1") {
+        clearDismissal();
+        window.localStorage.setItem(INSTALL_RELEASE_KEY, "1");
+        setInstallCardDismissed(false);
+      } else {
+        setInstallCardDismissed(dismissedRecently());
+      }
+    } catch {
+      setInstallCardDismissed(false);
+    }
     setEmbeddedAndroid((initialEmbedded && initialAndroid) || (env.embedded && env.android));
-    setCanShowManualInstall(isIosSafari() || env.android || initialAndroid);
+    // The branded invitation is available in every supported browser, even when
+    // Chromium has not yet emitted beforeinstallprompt.
+    setCanShowManualInstall(!env.standalone && !embedded);
 
     let registration: ServiceWorkerRegistration | null = null;
     const inspect = () => {
@@ -144,8 +152,8 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
         void install();
         return;
       }
-      // Android and iOS show manual guidance when no native install event is available.
-      if ((current.ios && isIosSafari()) || current.android) {
+      // Show browser-specific installation guidance when no native event is available.
+      if (!current.standalone) {
         setInstallHelpOpen(true);
         setInstallState("native");
       }
@@ -224,8 +232,8 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
   async function install() {
     const prompt = installPromptRef.current;
     if (!prompt) {
-      // Chromium owns install eligibility. Only iOS Safari needs manual guidance.
-      if (isIosSafari() || environment().android) {
+      // Native installation is browser-controlled; offer clear browser-specific guidance.
+      if (!environment().standalone) {
         setInstallHelpOpen(true);
         setInstallState("native");
       }
@@ -286,7 +294,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     <div style={installShellStyle} role="presentation">
       <section className="plugInstallModal" role="dialog" aria-modal="false" aria-labelledby="plug-install-title" aria-describedby="plug-install-message">
         <div className="plugInstallTop"><span className="plugInstallMark">P</span><span className="plugInstallTag">PROSPEC GROUP · PITBULLS OF BRANDING</span><button type="button" className="plugInstallClose" aria-label="Close install guidance" onClick={dismissInstall}>×</button></div>
-        {environment().android ? <><div className="plugInstallKicker">ANDROID · BROWSER INSTALL</div><h2 id="plug-install-title">Install Prospec.</h2><p id="plug-install-message">If Chrome has offered its native install prompt, the Install button opens it directly. If not, open Chrome’s <b>⋮ menu</b> and choose <b>Install app</b> or <b>Add to Home screen</b>, then confirm.</p></> : <><div className="plugInstallKicker">IPHONE &amp; IPAD</div><h2 id="plug-install-title">Add to Home Screen.</h2><p id="plug-install-message">In Safari, tap <b>Share</b>, choose <b>Add to Home Screen</b>, then tap <b>Add</b>. Open the new Home Screen icon to launch the installed app.</p></>}
+        {environment().android ? <><div className="plugInstallKicker">ANDROID · CHROME</div><h2 id="plug-install-title">Install Prospec.</h2><p id="plug-install-message">If Chrome offers its native install prompt, this button opens it. Otherwise open Chrome’s <b>⋮ menu</b> and choose <b>Install app</b> or <b>Add to Home screen</b>, then confirm.</p></> : isIosSafari() ? <><div className="plugInstallKicker">IPHONE &amp; IPAD · SAFARI</div><h2 id="plug-install-title">Add to Home Screen.</h2><p id="plug-install-message">In Safari, tap <b>Share</b>, choose <b>Add to Home Screen</b>, then tap <b>Add</b>. Open the new Home Screen icon to launch the installed app.</p></> : <><div className="plugInstallKicker">BROWSER INSTALL</div><h2 id="plug-install-title">Install Prospec.</h2><p id="plug-install-message">Use your browser’s <b>Install</b> option in the address bar, or open the browser menu and choose <b>Install Prospec</b> / <b>Install app</b> if available. Confirm to add Prospec to your device.</p></>}
         {environment().android ? <div className="plugInstallActions">
           <button type="button" className="plugInstallPrimary" onClick={() => { if (installPromptRef.current) void install(); else openBrowser(); }}>Install with Chrome</button>
           <button type="button" className="plugInstallSecondary" onClick={dismissInstall}>Continue on the website</button>
