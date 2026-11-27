@@ -125,7 +125,6 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
       setCanShowManualInstall(false);
       setInstallHelpOpen(false);
       setInstallState("hidden");
-      clearDismissal();
     };
     window.addEventListener("iteration13-open-install", requestInstall);
     window.addEventListener("appinstalled", appInstalled);
