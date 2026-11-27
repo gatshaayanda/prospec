@@ -59,6 +59,8 @@ export default function ServiceMediaPicker({value,type,online,onChange,onUploadi
     try {
       const uploaded = await startUpload([file]);
       if (!uploaded?.[0]?.ufsUrl && !uploaded?.[0]?.url) {
+        onUploadingChange(false);
+        setUploadProgress(0);
         const saved = await saveOfflineMedia(file);
         attemptedSync.current = saved.id;
         onChange("idb-media://" + saved.id, type);
