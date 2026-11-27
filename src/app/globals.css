@@ -7961,3 +7961,12 @@ h1 em,
 .sd-google-account-button:disabled{opacity:.78;cursor:default}
 .sd-google-account-button:focus-visible{outline:3px solid rgba(0,185,199,.45);outline-offset:3px}
 @media(max-width:520px){.sd-google-account-row{align-items:flex-start;flex-direction:column}.sd-google-account-button{width:100%}}
+
+
+/* Prospec footer owner access sits opposite the mobile guide launcher. */
+.servicePreview.serviceDemo .sd-footer-inner>div.sd-footer-systems{margin-left:auto!important;margin-right:0!important;justify-content:flex-end!important;width:auto!important;}
+.servicePreview.serviceDemo .sd-footer-inner{justify-content:space-between!important;}
+@media(max-width:640px){
+  .servicePreview.serviceDemo .sd-footer-inner{flex-direction:row!important;align-items:center!important;}
+  .servicePreview.serviceDemo .sd-footer-inner>div.sd-footer-systems{margin-left:auto!important;width:auto!important;justify-content:flex-end!important;}
+}
