@@ -239,6 +239,7 @@ export default function Home() {
   const ownerSaveErrorShownRef = useRef(false);
   const [ownerCloudError, setOwnerCloudError] = useState(false);
   const [storeSaveFeedback, setStoreSaveFeedback] = useState<{ tone: "saving" | "saved" | "local" | "error"; message: string } | null>(null);
+  const serviceEditorPendingResetRef = useRef(false);
   const [online, setOnline] = useState(true);
   const [offlineShellReady, setOfflineShellReady] = useState(false);
   const [view, setView] = useState<"shop" | "account" | "login" | "admin">("shop");
@@ -443,6 +444,7 @@ export default function Home() {
           ownerSaveErrorShownRef.current = false;
           setOwnerCloudError(false);
           setStoreSaveFeedback({ tone: "saved", message: "Saved and confirmed in the shared Store." });
+          if (serviceEditorPendingResetRef.current) resetServiceForm();
         }
       };
       storefrontSaveQueueRef.current = storefrontSaveQueueRef.current
@@ -1384,6 +1386,7 @@ export default function Home() {
     window.requestAnimationFrame(() => document.querySelector(selector)?.scrollIntoView({ behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" }));
   }
   function startEdit(service: Service) {
+    serviceEditorPendingResetRef.current = false;
     setEditingId(service.id); setServiceName(service.name); setServiceIndustry(service.industry || ""); setServicePrice(String(service.price)); setServiceDescription(service.description); setServiceMedia(service.media); setServiceMediaType(service.mediaType); setServiceActive(service.active);
     revealStoreEditor("#admin-service-editor");
   }
@@ -1400,10 +1403,15 @@ export default function Home() {
       ? `${service.mediaType === "video" ? "Product video" : "Product image"} ${service.media ? "changed" : "removed"} · ${service.name}`
       : editingId ? `Product / service updated · ${service.name}` : `Product / service added · ${service.name}`;
     if (!commitData(current => ({ ...current, services: editingId ? current.services.map(item => item.id === editingId ? service : item) : [...current.services, service] }), activity)) return;
-    setStoreSaveFeedback(ownerCloudReady ? { tone: "saving", message: "Saved on this device. Confirming the shared Store update…" } : { tone: "local", message: "Saved on this device only. The shared Store is not connected, so customers will not see this change yet." });
-    resetServiceForm();
+    if (ownerCloudReady) {
+      serviceEditorPendingResetRef.current = true;
+      setStoreSaveFeedback({ tone: "saving", message: "Saved on this device. Confirming the shared Store update…" });
+    } else {
+      setStoreSaveFeedback({ tone: "local", message: "Saved on this device only. The shared Store is not connected, so customers will not see this change yet." });
+      resetServiceForm();
+    }
   }
-  function resetServiceForm() { setEditingId(null); setServiceName(""); setServiceIndustry(""); setServicePrice("100"); setServiceDescription(""); setServiceMedia(""); setServiceMediaType("image"); setServiceActive(true); const editor = document.getElementById("admin-service-editor"); if (editor instanceof HTMLDetailsElement) editor.open = false; }
+  function resetServiceForm() { serviceEditorPendingResetRef.current = false; setEditingId(null); setServiceName(""); setServiceIndustry(""); setServicePrice("100"); setServiceDescription(""); setServiceMedia(""); setServiceMediaType("image"); setServiceActive(true); const editor = document.getElementById("admin-service-editor"); if (editor instanceof HTMLDetailsElement) editor.open = false; }
   function updateOrder(id: string, status: string) {
     const order = data.orders.find(item => item.id === id); const now = new Date().toISOString();
     const changed = order && order.status !== status;
