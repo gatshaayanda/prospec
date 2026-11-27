@@ -283,7 +283,7 @@ export default function AccountWorkspace({ businessName, currency, customerUid, 
     {announcementActive && announcement.trim() && <aside className="sd-account-announcement"><span className="sd-kicker">FROM {businessName.toUpperCase()}</span><h3>Business update</h3><p>{announcement}</p></aside>}
     {uploadNotice && <p className="sd-account-feedback" role="status">{uploadNotice}</p>}
 
-    <details className="sd-account-lookup-compact" open={lookupOpen} onToggle={event => setLookupOpen(event.currentTarget.open)}><summary>{normalizedEmail ? "Contact email · " + email : "Add a contact email"} <b>Edit details</b></summary><div><label htmlFor="account-email">Contact email for your requests</label><input id="account-email" type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="Enter your email address" autoComplete="email" /><p>Your requests are linked to your secure customer sign-in. A Google account lets you recover this profile on another device; changing the email alone does not move requests.</p></div></details>
+    {googleConnected && normalizedEmail && <p className="sd-account-verified-email">Google account · {email}</p>}
 
     {children && <details className="sd-account-collapsible sd-account-optional-feature"><summary><span>Optional rewards experience</span><b>Explore</b></summary><div>{children}</div></details>}
     <p className="sd-account-boundary">{googleConnected ? "Your Google-linked customer identity can be used to recover this account on another device." : "Guest access remains linked to this device until you connect Google sign-in."} Firestore keeps an offline cache and syncs supported request and message changes when you are back online; attachments need internet.</p>
