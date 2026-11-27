@@ -7951,3 +7951,13 @@ h1 em,
 .sd-request-review p,.sd-request-review small{margin:0}
 .sd-request-review small{line-height:1.45}
 @media(max-width:480px){.sd-request-progress{gap:5px;font-size:11px}.sd-request-progress>span{gap:4px}.sd-request-step-actions>*{flex:1;min-width:0}.sd-request-step-actions button{padding-inline:10px}}
+
+/* Google-linked customer account access */
+.sd-google-account-row{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 16px;padding:12px 14px;border:1px solid rgba(0,185,199,.28);border-radius:13px;background:linear-gradient(110deg,rgba(0,185,199,.08),rgba(255,255,255,.96))}
+.sd-google-account-row>div{display:grid;gap:3px;min-width:0}
+.sd-google-account-row>div strong{font-size:.82rem;color:#17252a}
+.sd-google-account-row>div small{font-size:.72rem;line-height:1.4;color:#53636a}
+.sd-google-account-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;flex:0 0 auto;min-height:42px;padding:9px 13px;border:1px solid #dadce0;border-radius:9px;background:#fff;color:#3c4043;font:600 .82rem Arial,sans-serif;box-shadow:0 1px 2px rgba(60,64,67,.16);cursor:pointer}
+.sd-google-account-button:disabled{opacity:.78;cursor:default}
+.sd-google-account-button:focus-visible{outline:3px solid rgba(0,185,199,.45);outline-offset:3px}
+@media(max-width:520px){.sd-google-account-row{align-items:flex-start;flex-direction:column}.sd-google-account-button{width:100%}}
