@@ -464,7 +464,7 @@ export default function Home() {
         });
     }, 350);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [ownerCloudReady, adminUnlocked, view, data.services, data.availability, data.announcement, data.announcementActive, data.announcementImage, data.rewardActive, data.rewardTitle, data.rewardDescription, data.rewardImage, data.discountAmount, data.receiptProfile]);
+  }, [ownerCloudReady, adminUnlocked, growthUnlocked, view, selectedDivision, data.services, data.availability, data.announcement, data.announcementActive, data.announcementImage, data.rewardActive, data.rewardTitle, data.rewardDescription, data.rewardImage, data.discountAmount, data.receiptProfile]);
 
   useEffect(() => {
     if (!ownerCloudReady || !adminUnlocked || view !== "admin") return;
@@ -1274,20 +1274,23 @@ export default function Home() {
 
   async function submitAdminLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (adminPassphrase === "75363056") {
-      try {
-        const response = await fetch("/api/growth/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code: adminPassphrase }) });
+    try {
+      const response = await fetch("/api/growth/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code: adminPassphrase }) });
+      if (response.ok) {
+        setGrowthUnlocked(true);
+        setAdminPassphrase("");
+        setSelectedDivision("Prospec AG");
+        setAdminTab("store");
+        setStoreSection("offerings");
+        setView("growth");
+        return;
+      }
+      if (response.status !== 401) {
         const result = await response.json().catch(() => ({})) as { error?: string };
-        if (!response.ok) { setNotice(result.error || "Growth Desk access was not accepted."); return; }
-      } catch { setNotice("Growth Desk access could not be checked. Check your connection and try again."); return; }
-      setGrowthUnlocked(true);
-      setAdminPassphrase("");
-      setSelectedDivision("Prospec AG");
-      setAdminTab("store");
-      setStoreSection("offerings");
-      setView("growth");
-      return;
-    }
+        setNotice(result.error || "Growth Desk access could not be checked.");
+        return;
+      }
+    } catch { setNotice("Workspace access could not be checked. Check your connection and try again."); return; }
     try {
       const response = await fetch("/api/admin/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ password: adminPassphrase }) });
       const result = await response.json().catch(() => ({})) as { error?: string };
