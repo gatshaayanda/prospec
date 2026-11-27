@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { generateReactHelpers } from "@uploadthing/react";
 import type { OurFileRouter } from "@/app/api/uploadthing/core";
 import { deleteOfflineMedia, saveOfflineMedia, syncOfflineMedia } from "@/lib/offline-media";
@@ -11,6 +11,7 @@ type Props = { value:string; type:"image"|"video"; online:boolean; onChange:(url
 
 export default function ServiceMediaPicker({value,type,online,onChange,onUploadingChange,allowVideo=true,adminOnly=false}:Props) {
   const inputRef=useRef<HTMLInputElement>(null);
+  const fileInputId="service-media-file-"+useId().replace(/:/g,"");
   const attemptedSync=useRef("");
   const onChangeRef=useRef(onChange);
   const [message,setMessage]=useState("");
@@ -84,15 +85,15 @@ export default function ServiceMediaPicker({value,type,online,onChange,onUploadi
       {allowVideo&&<button type="button" className={type==="video"?"is-selected":""} onClick={()=>{if(value.startsWith("idb-media://"))void deleteOfflineMedia(value.slice("idb-media://".length));onChange("","video");setUrlDraft("");setMessage("Media type changed to video. Select a video or add its URL.");}}>Video</button>}
     </div>
     {type==="image"?<div className="sd-media-upload">
-      <label className="sd-media-file-label" htmlFor="service-media-file">Choose an image from your device · max 4 MB</label>
-      <input ref={inputRef} id="service-media-file" type="file" accept="image/*" onChange={uploadSelected} disabled={isUploading}/>
+      <label className="sd-media-file-label" htmlFor={fileInputId}>Choose an image from your device · max 4 MB</label>
+      <input ref={inputRef} id={fileInputId} type="file" accept="image/*" onChange={uploadSelected} disabled={isUploading}/>
       <small>Offline selections are stored locally and marked Pending Sync. They are not published until UploadThing confirms the upload.</small>
       {!online&&<p className="sd-media-offline">Offline: selected files are saved on this device and marked Pending Sync.</p>}
       <label className="sd-media-url-label" htmlFor="service-image-url">Or use an existing image URL</label>
       <input id="service-image-url" type="url" value={value.startsWith("idb-media://")?"":value} onChange={event=>{onChange(event.target.value,"image");setMessage("");}} placeholder="https://…/image.jpg"/>
     </div>:<div className="sd-media-upload">
-      <label className="sd-media-file-label" htmlFor="service-media-file">Choose a video from your device · max 16 MB</label>
-      <input ref={inputRef} id="service-media-file" type="file" accept="video/*" onChange={uploadSelected} disabled={isUploading}/>
+      <label className="sd-media-file-label" htmlFor={fileInputId}>Choose a video from your device · max 16 MB</label>
+      <input ref={inputRef} id={fileInputId} type="file" accept="video/*" onChange={uploadSelected} disabled={isUploading}/>
       <small>Offline video files are stored on this device and can be previewed here. Cloud playback requires a completed UploadThing sync.</small>
       {!online&&<p className="sd-media-offline">Offline: selected files are saved on this device and marked Pending Sync.</p>}
       <label className="sd-media-url-label" htmlFor="service-video-url">Video URL</label>
