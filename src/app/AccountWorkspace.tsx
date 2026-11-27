@@ -56,7 +56,6 @@ export default function AccountWorkspace({ businessName, currency, customerUid, 
   const [openThread, setOpenThread] = useState<string | null>(null);
   const [clockNow, setClockNow] = useState(() => Date.now());
   const [basketOpen, setBasketOpen] = useState(false);
-  const [lookupOpen, setLookupOpen] = useState(false);
   const [rewardsOpen, setRewardsOpen] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
   const [googleConnected, setGoogleConnected] = useState(false);
