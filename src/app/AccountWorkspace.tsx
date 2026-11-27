@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { arrayUnion, doc, updateDoc } from "firebase/firestore";
-import { getProspecDb, ensureCustomerAuth } from "@/lib/firebase/client";
+import { GoogleAuthProvider, linkWithPopup, signInWithPopup } from "firebase/auth";
+import { arrayUnion, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { getProspecAuth, getProspecDb, ensureCustomerAuth } from "@/lib/firebase/client";
 import ReceiptDocument, { type ReceiptProfile } from "@/app/ReceiptDocument";
 import { generateReactHelpers } from "@uploadthing/react";
 import type { OurFileRouter } from "@/app/api/uploadthing/core";
@@ -25,7 +26,10 @@ type Props = {
   highlightColor: string;
   availability: "available" | "limited" | "unavailable";
   customerName?: string;
+  setCustomerName: (name: string) => void;
   email: string;
+  whatsapp: string;
+  setWhatsapp: (phone: string) => void;
   customerUid: string;
   setEmail: (email: string) => void;
   online: boolean;
@@ -44,7 +48,7 @@ type Props = {
 
 const prettyDate = (value: string) => { try { return new Date(value).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }); } catch { return value; } };
 
-export default function AccountWorkspace({ businessName, currency, customerUid, orders, discountClaims, receiptProfile, accentColor, secondaryColor, highlightColor, availability, customerName, email, setEmail, online, syncStatus, announcement, announcementActive, onBrowse, onUpdateOrder, children, requestForm, onNewRequest, selectedServices, onRemoveSelected, onContinueRequest }: Props) {
+export default function AccountWorkspace({ businessName, currency, customerUid, orders, discountClaims, receiptProfile, accentColor, secondaryColor, highlightColor, availability, customerName, setCustomerName, email, whatsapp, setWhatsapp, setEmail, online, syncStatus, announcement, announcementActive, onBrowse, onUpdateOrder, children, requestForm, onNewRequest, selectedServices, onRemoveSelected, onContinueRequest }: Props) {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [uploadingOrder, setUploadingOrder] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -54,6 +58,8 @@ export default function AccountWorkspace({ businessName, currency, customerUid, 
   const [basketOpen, setBasketOpen] = useState(false);
   const [lookupOpen, setLookupOpen] = useState(false);
   const [rewardsOpen, setRewardsOpen] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+  const [googleConnected, setGoogleConnected] = useState(false);
   const money = (amount: number) => new Intl.NumberFormat("en", { style: "currency", currency, maximumFractionDigits: 2 }).format(amount);
   useEffect(() => { const timer = window.setInterval(() => setClockNow(Date.now()), 60000); return () => window.clearInterval(timer); }, []);
   const normalizedEmail = email.trim().toLowerCase();
@@ -67,6 +73,79 @@ export default function AccountWorkspace({ businessName, currency, customerUid, 
     ...(order.messages || []).filter(message => message.from === "studio").map(message => ({ id: message.id, title: "Message from " + businessName, detail: message.text || (message.attachment ? "A file was shared with your request." : "A new request message is available."), createdAt: message.createdAt, kind: "message" as const }))
   ]).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()).slice(0, 6), [filteredOrders, businessName]);
   const monogram = businessName.trim().split(/\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase() || "B";
+
+  useEffect(() => {
+    let active = true;
+    if (!customerUid) return;
+    void ensureCustomerAuth().then(async user => {
+      if (!active || user.uid !== customerUid) return;
+      setGoogleConnected(user.providerData.some(item => item.providerId === "google.com"));
+      const profileSnapshot = await getDoc(doc(getProspecDb(), "prospecCustomers", customerUid));
+      if (!active || !profileSnapshot.exists()) return;
+      const profile = profileSnapshot.data();
+      if (typeof profile.name === "string" && profile.name) setCustomerName(profile.name);
+      if (typeof profile.email === "string" && profile.email) setEmail(profile.email);
+      if (typeof profile.phone === "string" && profile.phone) setWhatsapp(profile.phone);
+    }).catch(() => { /* the account remains usable while profile data reconnects */ });
+    return () => { active = false; };
+  }, [customerUid, setCustomerName, setEmail, setWhatsapp]);
+
+  async function connectGoogleAccount() {
+    if (googleBusy || googleConnected) return;
+    setGoogleBusy(true);
+    setUploadNotice("");
+    const auth = getProspecAuth();
+    let accountChanged = false;
+    try {
+      const currentUser = await ensureCustomerAuth();
+      const guestIdToken = currentUser.isAnonymous ? await currentUser.getIdToken() : null;
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      let user = currentUser;
+      if (!currentUser.providerData.some(item => item.providerId === "google.com")) {
+        try {
+          user = (await linkWithPopup(currentUser, provider)).user;
+        } catch (error) {
+          const code = (error as { code?: string }).code;
+          if (code !== "auth/credential-already-in-use" && code !== "auth/email-already-in-use") throw error;
+          user = (await signInWithPopup(auth, provider)).user;
+          accountChanged = user.uid !== currentUser.uid;
+          if (accountChanged && guestIdToken) {
+            const googleIdToken = await user.getIdToken();
+            const response = await fetch("/api/customer/migrate-guest", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ guestIdToken, googleIdToken }),
+            });
+            const result = await response.json().catch(() => ({})) as { error?: string };
+            if (!response.ok) throw new Error(result.error || "Google sign-in worked, but your previous guest requests could not be moved safely. Contact Prospec before continuing on this device.");
+          }
+        }
+      }
+      const profileRef = doc(getProspecDb(), "prospecCustomers", user.uid);
+      const existingSnapshot = await getDoc(profileRef);
+      const existing = existingSnapshot.exists() ? existingSnapshot.data() : {};
+      const profile = {
+        uid: user.uid,
+        name: user.displayName || (typeof existing.name === "string" ? existing.name : customerName || ""),
+        email: user.email || (typeof existing.email === "string" ? existing.email : email),
+        phone: typeof existing.phone === "string" && existing.phone ? existing.phone : whatsapp,
+        updatedAt: new Date().toISOString(),
+      };
+      await setDoc(profileRef, profile, { merge: true });
+      setCustomerName(profile.name);
+      setEmail(profile.email);
+      setWhatsapp(profile.phone);
+      setGoogleConnected(user.providerData.some(item => item.providerId === "google.com"));
+      setUploadNotice("Your Google account is connected. Your contact details can now be restored when you sign in on another device.");
+      if (accountChanged) window.location.reload();
+    } catch (error) {
+      setUploadNotice(error instanceof Error ? error.message : "Google sign-in could not be completed. Check your connection and try again.");
+      if (accountChanged) window.location.reload();
+    } finally {
+      setGoogleBusy(false);
+    }
+  }
 
   const { startUpload, isUploading } = useUploadThing("fileUploader", {
     onUploadProgress: progress => setUploadProgress(Math.max(0, Math.min(100, Math.round(progress)))),
@@ -123,6 +202,14 @@ export default function AccountWorkspace({ businessName, currency, customerUid, 
       </div>
       <span className="sd-account-ready"><span aria-hidden="true">●</span> {syncStatus === "synced" ? "Synced with Prospec" : syncStatus === "offline" ? "Offline · will sync" : syncStatus === "connecting" ? "Connecting account…" : "Sync needs attention"}</span>
     </header>
+
+    <div className="sd-google-account-row">
+      <div><strong>{googleConnected ? "Google account connected" : "Keep your account with you"}</strong><small>{googleConnected ? "Your saved contact details can follow you to another device." : "Sign in once to recover your customer details and requests on another device."}</small></div>
+      <button type="button" className="sd-google-account-button" onClick={connectGoogleAccount} disabled={googleBusy || googleConnected}>
+        <svg viewBox="0 0 48 48" width="19" height="19" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.6 17.74 9.5 24 9.5Z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.9c-.58 2.96-2.25 5.47-4.72 7.16l7.62 5.91c4.45-4.11 7.18-10.16 7.18-17.54Z"/><path fill="#FBBC05" d="M10.53 28.59A14.4 14.4 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.9 23.9 0 0 0 0 24c0 3.87.93 7.53 2.56 10.78l7.97-6.19Z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.9-5.91l-7.62-5.91c-2.12 1.43-4.84 2.27-8.28 2.27-6.26 0-11.57-4.1-13.47-9.72l-7.98 6.19C6.51 42.62 14.62 48 24 48Z"/></svg>
+        {googleBusy ? "Connecting…" : googleConnected ? "Connected" : "Continue with Google"}
+      </button>
+    </div>
 
     <div className="sd-account-compact-intro">
       <div><span className="sd-kicker">YOUR SPACE WITH {businessName.toUpperCase()}</span><h1>Dumela, {customerGreeting}.</h1><p>Your Prospec enquiries, in one place.</p></div>
@@ -196,9 +283,9 @@ export default function AccountWorkspace({ businessName, currency, customerUid, 
     {announcementActive && announcement.trim() && <aside className="sd-account-announcement"><span className="sd-kicker">FROM {businessName.toUpperCase()}</span><h3>Business update</h3><p>{announcement}</p></aside>}
     {uploadNotice && <p className="sd-account-feedback" role="status">{uploadNotice}</p>}
 
-    <details className="sd-account-lookup-compact" open={lookupOpen} onToggle={event => setLookupOpen(event.currentTarget.open)}><summary>{normalizedEmail ? "Contact email · " + email : "Add a contact email"} <b>Edit details</b></summary><div><label htmlFor="account-email">Contact email for your requests</label><input id="account-email" type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="Enter your email address" autoComplete="email" /><p>Your requests are linked to this browser’s secure customer session. Changing this contact email does not move requests to another account.</p></div></details>
+    <details className="sd-account-lookup-compact" open={lookupOpen} onToggle={event => setLookupOpen(event.currentTarget.open)}><summary>{normalizedEmail ? "Contact email · " + email : "Add a contact email"} <b>Edit details</b></summary><div><label htmlFor="account-email">Contact email for your requests</label><input id="account-email" type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="Enter your email address" autoComplete="email" /><p>Your requests are linked to your secure customer sign-in. A Google account lets you recover this profile on another device; changing the email alone does not move requests.</p></div></details>
 
     {children && <details className="sd-account-collapsible sd-account-optional-feature"><summary><span>Optional rewards experience</span><b>Explore</b></summary><div>{children}</div></details>}
-    <p className="sd-account-boundary">Your Prospec customer session stays linked to this device. Firestore keeps an offline cache and syncs supported request and message changes when you are back online; attachments need internet.</p>
+    <p className="sd-account-boundary">{googleConnected ? "Your Google-linked customer identity can be used to recover this account on another device." : "Guest access remains linked to this device until you connect Google sign-in."} Firestore keeps an offline cache and syncs supported request and message changes when you are back online; attachments need internet.</p>
   </section>;
 }
