@@ -7971,22 +7971,3 @@ h1 em,
   .servicePreview.serviceDemo .sd-footer-inner{flex-direction:row!important;align-items:center!important;}
   .servicePreview.serviceDemo .sd-footer-inner>div.sd-footer-systems{margin-left:auto!important;width:auto!important;justify-content:flex-end!important;}
 }
-
-
-/* Division switcher: persistent context while browsing the Store catalogue. */
-.prospec-division-tabs{position:sticky;top:76px;z-index:18;display:flex;gap:7px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;padding:9px 0 10px;margin:0;background:rgba(23,29,34,.97);border-bottom:1px solid #34434a;backdrop-filter:blur(14px)}
-.prospec-division-tabs button{display:grid;align-content:center;gap:4px;flex:1 0 150px;min-width:0;min-height:54px;padding:8px 11px;border:1px solid #3a4a50;border-radius:8px;background:#20292f;color:#dce7e9;text-align:left;cursor:pointer;transition:background .16s ease,border-color .16s ease}
-.prospec-division-tabs button:first-child{flex:0 0 auto;min-width:104px;text-align:center}
-.prospec-division-tabs button strong{font-size:.68rem;line-height:1.15;letter-spacing:.025em;white-space:nowrap}
-.prospec-division-tabs button small{color:#a9b9bd;font-size:.62rem;line-height:1.2;white-space:nowrap}
-.prospec-division-tabs button.active,.prospec-division-tabs button[aria-selected=true]{background:#00b9c7;border-color:#00b9c7;color:#10191d}
-.prospec-division-tabs button.active small,.prospec-division-tabs button[aria-selected=true] small{color:#17383b}
-.prospec-division-tabs button:focus-visible{outline:2px solid #fff;outline-offset:2px}
-.prospec-active-division{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 0 13px;border-bottom:1px solid #34434a}
-.prospec-active-division>div{min-width:0}
-.prospec-active-division .prospec-eyebrow{font-size:.6rem}
-.prospec-active-division h3{margin:4px 0;color:#fff;font-size:clamp(1.05rem,2.4vw,1.45rem);line-height:1.15}
-.prospec-active-division p{margin:0;color:#afc0c4;font-size:.75rem;line-height:1.45}
-.prospec-active-division .prospec-catalogue-count{white-space:nowrap}
-@media(max-width:800px){.prospec-division-tabs{top:76px}.prospec-division-tabs button{flex:0 0 168px}.prospec-active-division{align-items:flex-start}}
-@media(max-width:560px){.prospec-division-tabs{top:76px;gap:6px;padding:7px 0 8px}.prospec-division-tabs button{flex-basis:158px;min-height:50px;padding:7px 9px}.prospec-division-tabs button strong{font-size:.64rem}.prospec-division-tabs button small{font-size:.59rem}.prospec-active-division{gap:8px;padding:12px 0}.prospec-active-division p{font-size:.7rem}.prospec-active-division .prospec-catalogue-count{padding:6px 7px;font-size:.62rem}}
