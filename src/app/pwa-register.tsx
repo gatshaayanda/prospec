@@ -148,8 +148,9 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
         return;
       }
       if (installPromptRef.current) {
-        // Invoke the browser's native prompt directly from the customer's click.
-        void install();
+        // Reuse the explicit click handler so the retained native prompt is
+        // invoked synchronously within this user activation.
+        handleInstallClick();
         return;
       }
       // Show browser-specific installation guidance when no native event is available.
