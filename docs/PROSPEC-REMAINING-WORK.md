@@ -38,6 +38,14 @@ In the owner Briefcase, selecting **Choose an image from your device** in the pr
 
 The code correction is pushed, but these browser/device and live UploadThing checks are not yet verified.
 
+
+
+### Follow-up finding: Save blocked at the price field
+- The Briefcase product/service editor's price input declared `step="1"`, which makes the browser reject valid decimal prices (for example, `125.50`) before the form's `onSubmit` handler runs. The browser therefore focuses/scrolls to Price and the save handler never executes.
+- The save handler accepts finite non-negative decimal numbers, and the initial setup price input already uses `step="0.01"`; the Briefcase editor was inconsistent with both.
+- Corrected the Briefcase editor to `step="0.01"` so cents are valid and native form validation no longer blocks those prices.
+- This directly addresses the observed Price-field validation symptom. It does not yet prove the live browser save or Firestore sync path; test both after the updated build is deployed.
+
 ## 2. Currency consistency
 
 ### Observed mismatch
