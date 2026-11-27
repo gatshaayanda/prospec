@@ -8003,3 +8003,39 @@ h1 em,
 }
 
 .serviceDemo .sd-admin .sd-division-analytics-note{margin:0 0 12px;padding:9px 11px;border-left:3px solid #00b9c7;border-radius:0 7px 7px 0;background:#edf7f7;color:#29464a;font-size:13px;line-height:1.5}
+
+
+/* Prospec Growth Desk: role-scoped presentation over the shared Store editor. */
+.sd-growth-heading{display:none}
+.sd-growth-workspace .sd-os-heading>div:first-child,
+.sd-growth-workspace .sd-os-heading>.sd-os-status{display:none!important}
+.sd-growth-workspace .sd-growth-heading{display:grid;gap:8px;align-content:start}
+.sd-growth-workspace .sd-growth-heading h1{font-size:clamp(1.65rem,4vw,2.35rem);margin:2px 0}
+.sd-growth-workspace .sd-growth-heading p{margin:0;color:var(--sd-muted,#aaa)}
+.sd-growth-workspace .sd-growth-heading .sd-button{justify-self:start;margin-top:8px}
+.sd-growth-workspace .sd-division-switcher-heading>button,
+.sd-growth-workspace .sd-os-nav,
+.sd-growth-workspace .sd-admin-head,
+.sd-growth-workspace .sd-owner-shift-panel,
+.sd-growth-workspace .sd-availability-control,
+.sd-growth-workspace .sd-store-design-nav button:first-child,
+.sd-growth-workspace #store-identity,
+.sd-growth-workspace .sd-showcase-preview,
+.sd-growth-workspace [data-admin-tab]:not([data-admin-tab="store"]){display:none!important}
+.sd-growth-workspace .sd-division-switcher{position:sticky;top:8px;z-index:18;box-shadow:0 12px 28px rgba(0,0,0,.24)}
+.sd-growth-workspace .sd-division-switcher-heading{align-items:center}
+.sd-growth-workspace .sd-division-switcher-heading .sd-kicker:after{content:" · GROWTH DESK";color:var(--sd-accent,#d6b56d)}
+.sd-growth-workspace .sd-store-design-nav{display:flex}
+.sd-growth-workspace .sd-admin-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.sd-growth-workspace #admin-service-tools,
+.sd-growth-workspace #admin-announcement-tools{display:block!important}
+.sd-growth-workspace #admin-service-tools .sd-panel-head,
+.sd-growth-workspace #admin-announcement-tools .sd-panel-head{align-items:center}
+.sd-growth-workspace .sd-admin-panel{scroll-margin-top:150px}
+.sd-growth-workspace .sd-store-design-nav{position:sticky;top:132px;z-index:16}
+.sd-growth-workspace .sd-division-scope{font-weight:650}
+@media(max-width:680px){
+ .sd-growth-workspace .sd-division-switcher{top:4px}
+ .sd-growth-workspace .sd-store-design-nav{top:118px;overflow-x:auto}
+ .sd-growth-workspace .sd-growth-heading .sd-button{min-height:40px}
+}
