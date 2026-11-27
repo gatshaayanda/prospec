@@ -254,6 +254,12 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     }
   }
 
+  function closeInstallHelp() {
+    // Closing browser guidance must not dismiss the persistent install invitation.
+    setInstallHelpOpen(false);
+    setInstallState("hidden");
+  }
+
   function dismissInstall() {
     rememberDismissal();
     setInstallCardDismissed(true);
@@ -293,12 +299,12 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
   const installCard = installState === "native" && installHelpOpen && !environment().embedded ? (
     <div style={installShellStyle} role="presentation">
       <section className="plugInstallModal" role="dialog" aria-modal="false" aria-labelledby="plug-install-title" aria-describedby="plug-install-message">
-        <div className="plugInstallTop"><span className="plugInstallMark">P</span><span className="plugInstallTag">PROSPEC GROUP · PITBULLS OF BRANDING</span><button type="button" className="plugInstallClose" aria-label="Close install guidance" onClick={dismissInstall}>×</button></div>
+        <div className="plugInstallTop"><span className="plugInstallMark">P</span><span className="plugInstallTag">PROSPEC GROUP · PITBULLS OF BRANDING</span><button type="button" className="plugInstallClose" aria-label="Close install guidance" onClick={closeInstallHelp}>×</button></div>
         {environment().android ? <><div className="plugInstallKicker">ANDROID INSTALL</div><h2 id="plug-install-title">Install Prospec.</h2><p id="plug-install-message">If Chrome offers its native install prompt, this button opens it. Otherwise open Chrome’s <b>⋮ menu</b> and choose <b>Install app</b> or <b>Add to Home screen</b>, then confirm.</p></> : isIosSafari() ? <><div className="plugInstallKicker">IPHONE &amp; IPAD · SAFARI</div><h2 id="plug-install-title">Add to Home Screen.</h2><p id="plug-install-message">In Safari, tap <b>Share</b>, choose <b>Add to Home Screen</b>, then tap <b>Add</b>. Open the new Home Screen icon to launch the installed app.</p></> : <><div className="plugInstallKicker">BROWSER INSTALL</div><h2 id="plug-install-title">Install Prospec.</h2><p id="plug-install-message">Use your browser’s <b>Install</b> option in the address bar, or open the browser menu and choose <b>Install Prospec</b> / <b>Install app</b> if available. Confirm to add Prospec to your device.</p></>}
         {environment().android ? <div className="plugInstallActions">
           <button type="button" className="plugInstallPrimary" onClick={() => { if (installPromptRef.current) void install(); else openBrowser(); }}>Install with Chrome</button>
           <button type="button" className="plugInstallSecondary" onClick={dismissInstall}>Continue on the website</button>
-        </div> : <button type="button" className="plugInstallPrimary" onClick={dismissInstall}>Continue on the website</button>}
+        </div> : <button type="button" className="plugInstallPrimary" onClick={closeInstallHelp}>Continue on the website</button>}
       </section>
     </div>
 ) : installState === "embedded" ? (
