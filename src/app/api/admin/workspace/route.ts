@@ -52,10 +52,15 @@ export async function PUT(request: NextRequest) {
         } : null,
         updatedAt: new Date().toISOString(),
       };
-      await adminDb.collection("prospecPublic").doc("storefront").set(savedStorefront, { merge: true });
-      // Echo the exact saved catalogue back to the owner so the UI can confirm
-      // that media URLs survived the shared Firestore write.
-      return NextResponse.json({ ok: true, storefront: savedStorefront });
+      const storefrontRef = adminDb.collection("prospecPublic").doc("storefront");
+      await storefrontRef.set(savedStorefront, { merge: true });
+      // Read the document back from Firestore. The owner UI only confirms a
+      // publish after the persisted record (including media URLs) is verified.
+      const persistedSnapshot = await storefrontRef.get();
+      if (!persistedSnapshot.exists) {
+        return NextResponse.json({ error: "The Store write completed but the saved document could not be read back." }, { status: 503 });
+      }
+      return NextResponse.json({ ok: true, storefront: persistedSnapshot.data() });
     }
     if (body.action === "enquiry" && typeof body.id === "string" && body.patch && typeof body.patch === "object") {
       const patch = body.patch as Record<string, unknown>;
