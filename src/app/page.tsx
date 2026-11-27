@@ -86,6 +86,17 @@ function getStorageKey(key: string): string {
   if (restore === ":explore" || /^:visitor:[a-z0-9-]{6,80}:(example|own)$/i.test(restore)) return `${key}${restore}`;
   return key;
 }
+function stableSerialize(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(item => stableSerialize(item)).join(",")}]`;
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, item]) => item !== undefined)
+      .sort(([left], [right]) => left.localeCompare(right));
+    return `{${entries.map(([key, item]) => JSON.stringify(key) + ":" + stableSerialize(item)).join(",")}}`;
+  }
+  return JSON.stringify(value) ?? "undefined";
+}
+
 function encodeSharedExample(value: SharedExample): string {
   const bytes = new TextEncoder().encode(JSON.stringify(value));
   let binary = "";
@@ -410,7 +421,7 @@ export default function Home() {
         const result = await response.json().catch(() => ({})) as { error?: string; storefront?: { services?: Service[] } };
         if (!response.ok) throw new Error(result.error || "The shared Store rejected this update.");
         const savedServices = Array.isArray(result.storefront?.services) ? result.storefront.services : null;
-        if (!savedServices || JSON.stringify(savedServices) !== JSON.stringify(storefront.services)) {
+        if (!savedServices || stableSerialize(savedServices) !== stableSerialize(storefront.services)) {
           throw new Error("Firestore readback did not match the published catalogue and media URLs.");
         }
         if (!cancelled) ownerSaveErrorShownRef.current = false;
