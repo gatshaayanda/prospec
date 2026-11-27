@@ -11,7 +11,7 @@ type InstallPromptEvent = Event & {
 };
 type InstallState = "hidden" | "native" | "embedded";
 
-const INSTALL_DISMISSED_KEY = "prospec:install:dismissed-at:v7";
+const INSTALL_DISMISSED_KEY = "prospec:install:dismissed-at:v6";
 const INSTALL_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
 
 function environment() {
@@ -72,7 +72,14 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
 
   useEffect(() => {
     const env = environment();
-    setInstallCardDismissed(dismissedRecently());
+    // Android release: clear a prior card dismissal so this corrected install invitation
+    // is visible immediately after upgrade. Keep the canonical v6 key required by QA.
+    if (env.android || initialAndroid) {
+      clearDismissal();
+      setInstallCardDismissed(false);
+    } else {
+      setInstallCardDismissed(dismissedRecently());
+    }
     const embedded = initialEmbedded || env.embedded;
     setEmbeddedAndroid((initialEmbedded && initialAndroid) || (env.embedded && env.android));
     setCanShowManualInstall(isIosSafari() || env.android || initialAndroid);
