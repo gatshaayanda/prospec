@@ -70,6 +70,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
   const [canInstall, setCanInstall] = useState(false);
   const [canShowManualInstall, setCanShowManualInstall] = useState(false);
   const [installCardDismissed, setInstallCardDismissed] = useState(false);
+  const [installCardCollapsed, setInstallCardCollapsed] = useState(false);
   const embeddedActionRef = useRef<HTMLButtonElement | null>(null);
   const reloadForUpdate = useRef(false);
 
@@ -126,6 +127,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
       const prompt = event as InstallPromptEvent;
       installPromptRef.current = prompt;
       setInstallCardDismissed(dismissedRecently());
+      setInstallCardCollapsed(false);
       setCanInstall(installInvitationEligible);
       // Retain the one-shot native event for the user's explicit Install click.
       // Do not interrupt page load with a second, custom install screen.
