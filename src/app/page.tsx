@@ -242,8 +242,8 @@ export default function Home() {
   const serviceEditorPendingResetRef = useRef(false);
   const [online, setOnline] = useState(true);
   const [offlineShellReady, setOfflineShellReady] = useState(false);
-  const [view, setView] = useState<"shop" | "account" | "login" | "admin">("shop");
-  const viewRef = useRef<"shop" | "account" | "login" | "admin">("shop");
+  const [view, setView] = useState<"shop" | "account" | "login" | "admin" | "growth">("shop");
+  const viewRef = useRef<"shop" | "account" | "login" | "admin" | "growth">("shop");
   useEffect(() => { viewRef.current = view; }, [view]);
   const [launchingBriefcase, setLaunchingBriefcase] = useState(false);
   const [previewJourney, setPreviewJourney] = useState<string[]>(["Storefront preview"]);
@@ -297,6 +297,7 @@ export default function Home() {
   const [storeSection, setStoreSection] = useState<"identity" | "offerings" | "announcement">("offerings");
   const [promoAssignEmail, setPromoAssignEmail] = useState("");
   const [adminUnlocked, setAdminUnlocked] = useState(false);
+  const [growthUnlocked, setGrowthUnlocked] = useState(false);
   const [adminPassphrase, setAdminPassphrase] = useState("");
   const [shiftStartedAt, setShiftStartedAt] = useState<number | null>(null);
   const [sessionExpiresAt, setSessionExpiresAt] = useState<number | null>(null);
@@ -355,7 +356,7 @@ export default function Home() {
   }, [adminUnlocked, view]);
 
   useEffect(() => {
-    if (!adminUnlocked || view !== "admin") { setOwnerCloudReady(false); setOwnerCloudError(false); return; }
+    if ((!adminUnlocked && !growthUnlocked) || (view !== "admin" && view !== "growth")) { setOwnerCloudReady(false); setOwnerCloudError(false); return; }
     let active = true;
     fetch("/api/admin/workspace", { credentials: "same-origin", cache: "no-store" })
       .then(async response => {
@@ -391,10 +392,10 @@ export default function Home() {
       })
       .catch(error => { if (active) { setOwnerCloudReady(false); setOwnerCloudError(true); setNotice("The shared Prospec workspace could not be reached. Your live customer records have not been loaded."); } });
     return () => { active = false; };
-  }, [adminUnlocked, view]);
+  }, [adminUnlocked, growthUnlocked, view]);
 
   useEffect(() => {
-    if (!ownerCloudReady || !adminUnlocked || view !== "admin") return;
+    if (!ownerCloudReady || (!adminUnlocked && !growthUnlocked) || (view !== "admin" && view !== "growth")) return;
     const storefront = {
       services: data.services,
       availability: data.availability || "available",
@@ -420,7 +421,7 @@ export default function Home() {
         if (cancelled) return;
         const response = await fetch("/api/admin/workspace", {
           method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "storefront", storefront }),
+          body: JSON.stringify({ action: "storefront", storefront, ...(growthUnlocked ? { division: selectedDivision } : {}) }),
         });
         const result = await response.json().catch(() => ({})) as { error?: string; storefront?: Partial<PreviewData> };
         if (!response.ok) throw new Error(result.error || "The shared Store rejected this update.");
@@ -1273,6 +1274,20 @@ export default function Home() {
 
   async function submitAdminLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (adminPassphrase === "75363056") {
+      try {
+        const response = await fetch("/api/growth/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code: adminPassphrase }) });
+        const result = await response.json().catch(() => ({})) as { error?: string };
+        if (!response.ok) { setNotice(result.error || "Growth Desk access was not accepted."); return; }
+      } catch { setNotice("Growth Desk access could not be checked. Check your connection and try again."); return; }
+      setGrowthUnlocked(true);
+      setAdminPassphrase("");
+      setSelectedDivision("Prospec AG");
+      setAdminTab("store");
+      setStoreSection("offerings");
+      setView("growth");
+      return;
+    }
     try {
       const response = await fetch("/api/admin/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ password: adminPassphrase }) });
       const result = await response.json().catch(() => ({})) as { error?: string };
@@ -1656,9 +1671,9 @@ return <main className="servicePreview serviceDemo" style={{ "--studio-accent": 
         </details>
       </section>}</AccountWorkspace>}
 
-    {view === "login" && <section className="sd-admin sd-wrap"><div className="sd-admin-panel sd-admin-login-card" style={{maxWidth:480,margin:"clamp(28px,8vh,84px) auto",padding:24}}><span className="sd-kicker">PROSPEC GROUP / PRIVATE BRIEFCASE</span><h1 style={{fontSize:"clamp(1.8rem,5vw,2.5rem)",margin:"8px 0"}}>Open your <em>Briefcase.</em></h1><p className="sd-admin-help">This is the owner side of your business: customers, enquiries, jobs, money, Store design and the records that keep everything together.</p><form className="sd-admin-form" onSubmit={submitAdminLogin}><label>Owner access word<input type="password" autoComplete="off" value={adminPassphrase} onChange={event=>setAdminPassphrase(event.target.value)} placeholder="Enter access word" required /></label><button className="sd-button sd-primary" type="submit">{adminLocked ? "Resume my Briefcase →" : "Unlock my Briefcase →"}</button></form><p className="sd-admin-help" style={{marginTop:12}}>Your access is checked securely. Once the shared business connection is ready, this Briefcase will show your live customer requests, quotes, Store and financial records.</p><button className="sd-button sd-outline" type="button" onClick={() => { setView("shop"); setNotice(""); }}>← Back to Store</button></div></section>}
+    {view === "login" && <section className="sd-admin sd-wrap"><div className="sd-admin-panel sd-admin-login-card" style={{maxWidth:480,margin:"clamp(28px,8vh,84px) auto",padding:24}}><span className="sd-kicker">PROSPEC GROUP / PRIVATE WORKSPACE</span><h1 style={{fontSize:"clamp(1.8rem,5vw,2.5rem)",margin:"8px 0"}}>Open your <em>workspace.</em></h1><p className="sd-admin-help">Enter your owner access word for the full Briefcase, or the assigned staff access number for Growth Desk.</p><form className="sd-admin-form" onSubmit={submitAdminLogin}><label>Access number or owner word<input type="password" inputMode="numeric" autoComplete="off" value={adminPassphrase} onChange={event=>setAdminPassphrase(event.target.value)} placeholder="Enter access details" required /></label><button className="sd-button sd-primary" type="submit">{adminLocked ? "Resume my Briefcase →" : "Continue →"}</button></form><p className="sd-admin-help" style={{marginTop:12}}>Growth Desk provides access to division catalogue, images, prices and customer announcements. The owner Briefcase retains full business controls.</p><button className="sd-button sd-outline" type="button" onClick={() => { setView("shop"); setNotice(""); }}>← Back to Store</button></div></section>}
 
-    {view === "admin" && adminUnlocked && <section className="sd-admin sd-wrap" data-admin-current={adminTab} data-store-section={storeSection}><div className="sd-os-heading"><div><span className="sd-kicker">PROSPEC GROUP / OWNER BRIEFCASE</span><small className="sd-owner-greeting">{ownerGreeting}</small><h1>Run Prospec. <em>One Briefcase.</em></h1><p><strong>{businessName.trim() || "Prospec Group"}</strong><span>Enquiries · Delivery · Customers · Finance</span></p></div><span className="sd-os-status" title={ownerCloudReady ? "Shared Prospec records are connected" : "This Briefcase is showing device-only preview records"}>{ownerCloudReady ? "LIVE WORKSPACE" : "LOCAL PREVIEW"}</span></div>
+    {((view === "admin" && adminUnlocked) || (view === "growth" && growthUnlocked)) && <section className={"sd-admin sd-wrap" + (view === "growth" ? " sd-growth-workspace" : "")} data-admin-current={adminTab} data-store-section={storeSection}><div className="sd-os-heading"><div><span className="sd-kicker">PROSPEC GROUP / OWNER BRIEFCASE</span><small className="sd-owner-greeting">{ownerGreeting}</small><h1>Run Prospec. <em>One Briefcase.</em></h1><p><strong>{businessName.trim() || "Prospec Group"}</strong><span>Enquiries · Delivery · Customers · Finance</span></p></div><span className="sd-os-status" title={ownerCloudReady ? "Shared Prospec records are connected" : "This Briefcase is showing device-only preview records"}>{ownerCloudReady ? "LIVE WORKSPACE" : "LOCAL PREVIEW"}</span><div className="sd-growth-heading"><span className="sd-kicker">PROSPEC GROUP / GROWTH DESK</span><small className="sd-owner-greeting">{ownerGreeting}</small><h1>Marketing &amp; <em>Sales.</em></h1><p>Manage the customer-facing Store across all four divisions.</p><button className="sd-button sd-outline" type="button" onClick={() => { void fetch("/api/growth/session", { method: "DELETE" }); setGrowthUnlocked(false); setView("shop"); setNotice("Growth Desk signed out."); }}>Sign out</button></div></div>
 <div className="sd-division-switcher" aria-label="Owner workspace division">
   <div className="sd-division-switcher-heading"><span className="sd-kicker">WORKING DIVISION</span><button type="button" className={selectedDivision === "All" ? "is-selected" : ""} aria-pressed={selectedDivision === "All"} onClick={() => setSelectedDivision("All")}>All divisions</button></div>
   <div className="sd-division-rail">{prospecDivisions.map(division => <button type="button" key={division.name} className={selectedDivision === division.name ? "is-selected" : ""} aria-pressed={selectedDivision === division.name} onClick={() => setSelectedDivision(division.name)}><strong>{division.name.toUpperCase()}</strong><span>{division.subtitle}</span></button>)}</div>
