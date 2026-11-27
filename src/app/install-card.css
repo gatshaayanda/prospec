@@ -53,3 +53,35 @@
 .plugInstallActions .plugInstallPrimary{width:100%}
 .plugInstallSecondary{justify-self:center;min-height:38px;padding:7px 12px;border:1px solid #cbd5d8;border-radius:9px;background:#fff;color:#34464a;font:inherit;font-size:.78rem;font-weight:750;cursor:pointer}
 .plugInstallSecondary:focus-visible{outline:3px solid #00b9c7;outline-offset:3px}
+
+
+/* Customer account primary-action arrow: draw a high-contrast arrow independently
+   of the text glyph so inherited span rules or font fallback cannot hide it. */
+.sd-care-empty-action .sd-care-action-arrow{
+  display:grid!important;
+  place-items:center!important;
+  width:36px!important;
+  height:36px!important;
+  min-width:36px!important;
+  flex:0 0 36px!important;
+  position:relative!important;
+  overflow:visible!important;
+  border:2px solid #00e3eb!important;
+  border-radius:50%!important;
+  background:#00b9c7!important;
+  color:#10272a!important;
+  font-size:0!important;
+  line-height:1!important;
+  opacity:1!important;
+  visibility:visible!important;
+  box-shadow:0 0 0 3px rgba(0,185,199,.22)!important;
+}
+.sd-care-empty-action .sd-care-action-arrow::after{
+  content:""!important;
+  display:block!important;
+  width:11px!important;
+  height:11px!important;
+  border-top:3px solid #10272a!important;
+  border-right:3px solid #10272a!important;
+  transform:translateX(-2px) rotate(45deg)!important;
+}
