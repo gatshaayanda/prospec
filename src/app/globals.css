@@ -7976,7 +7976,7 @@ h1 em,
 .serviceDemo .sd-admin .sd-division-switcher{position:sticky;top:0;z-index:12;margin:0 0 14px;padding:10px 0 9px;background:#111b27;border-bottom:1px solid #344654;box-shadow:0 8px 18px rgba(7,15,23,.18)}
 .serviceDemo .sd-admin .sd-division-switcher-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 8px;padding:0 2px}
 .serviceDemo .sd-admin .sd-division-switcher-heading .sd-kicker{color:#b7c6d0;font-size:12px;letter-spacing:.1em}
-.serviceDemo .sd-admin .sd-division-switcher-heading>button{min-height:36px;padding:7px 12px;border:1px solid #71838e;border-radius:8px;background:#243441;color:#f4fbfc;font-size:13px;font-weight:750;cursor:pointer}
+.serviceDemo .sd-admin .sd-division-switcher-heading>button{min-height:44px;padding:7px 12px;border:1px solid #71838e;border-radius:8px;background:#243441;color:#f4fbfc;font-size:13px;font-weight:750;cursor:pointer}
 .serviceDemo .sd-admin .sd-division-switcher-heading>button.is-selected{background:#d5f5f4;border-color:#d5f5f4;color:#142c31}
 .serviceDemo .sd-admin .sd-division-rail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0}
 .serviceDemo .sd-admin .sd-division-rail>button{display:grid;align-content:center;gap:4px;min-width:0;min-height:64px;padding:9px 12px;border:1px solid #536675;border-radius:9px;background:#1c2b38;color:#f5f8fa;text-align:left;cursor:pointer;transition:border-color .16s ease,background-color .16s ease,box-shadow .16s ease}
@@ -7996,7 +7996,7 @@ h1 em,
  .serviceDemo .sd-admin .sd-division-rail>button.is-selected{padding:8px 9px}
  .serviceDemo .sd-admin .sd-division-switcher-heading .sd-kicker{font-size:12px}
  .serviceDemo .sd-admin .sd-division-scope{font-size:12px}
- .serviceDemo .sd-admin .sd-os-nav{top:196px}
+ .serviceDemo .sd-admin .sd-os-nav{top:222px}
 }
 @media(prefers-reduced-motion:reduce){
  .serviceDemo .sd-admin .sd-division-rail>button{transition:none}
