@@ -46,3 +46,10 @@
 .plugInstallPrimary{background:#00b9c7;color:#10272a;box-shadow:0 8px 20px rgba(0,145,155,.2)}
 .plugInstallPrimary:hover{background:#009aa5}
 .plugInstallClose:focus-visible{outline:3px solid #00b9c7;outline-offset:3px}
+
+
+/* Android install fallback exposes a deliberate Chrome handoff and a quieter secondary action. */
+.plugInstallActions{display:grid;gap:8px}
+.plugInstallActions .plugInstallPrimary{width:100%}
+.plugInstallSecondary{justify-self:center;min-height:38px;padding:7px 12px;border:1px solid #cbd5d8;border-radius:9px;background:#fff;color:#34464a;font:inherit;font-size:.78rem;font-weight:750;cursor:pointer}
+.plugInstallSecondary:focus-visible{outline:3px solid #00b9c7;outline-offset:3px}
