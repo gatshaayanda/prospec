@@ -1419,7 +1419,7 @@ export default function Home() {
       resetServiceForm();
     }
   }
-  function resetServiceForm() { serviceEditorPendingResetRef.current = false; setEditingId(null); setServiceName(""); setServiceIndustry(""); setServicePrice("100"); setServiceDescription(""); setServiceMedia(""); setServiceMediaType("image"); setServiceActive(true); const editor = document.getElementById("admin-service-editor"); if (editor instanceof HTMLDetailsElement) editor.open = false; }
+  function resetServiceForm() { serviceEditorPendingResetRef.current = false; setEditingId(null); setServiceName(""); setServiceIndustry(selectedDivision === "All" ? "" : selectedDivision); setServicePrice("100"); setServiceDescription(""); setServiceMedia(""); setServiceMediaType("image"); setServiceActive(true); const editor = document.getElementById("admin-service-editor"); if (editor instanceof HTMLDetailsElement) editor.open = false; }
   function updateOrder(id: string, status: string) {
     const order = data.orders.find(item => item.id === id); const now = new Date().toISOString();
     const changed = order && order.status !== status;
