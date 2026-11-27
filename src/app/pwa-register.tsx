@@ -90,11 +90,11 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     } catch {
       visitCount = INSTALL_VISIT_THRESHOLD;
     }
-    const installInvitationEligible = visitCount >= INSTALL_VISIT_THRESHOLD;
     try {
       if (window.localStorage.getItem(INSTALL_RELEASE_KEY) !== "1") {
         window.localStorage.removeItem(INSTALL_DISMISSED_KEY);
         window.localStorage.setItem(INSTALL_VISIT_COUNT_KEY, String(INSTALL_VISIT_THRESHOLD));
+        visitCount = INSTALL_VISIT_THRESHOLD;
         window.localStorage.setItem(INSTALL_RELEASE_KEY, "1");
         setInstallCardDismissed(false);
       } else {
@@ -103,6 +103,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     } catch {
       setInstallCardDismissed(false);
     }
+    const installInvitationEligible = visitCount >= INSTALL_VISIT_THRESHOLD;
     setCanShowManualInstall(!env.standalone && !embedded && isIosSafari());
 
     let registration: ServiceWorkerRegistration | null = null;
@@ -257,7 +258,6 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     try {
       await prompt.prompt();
       const choice = await prompt.userChoice;
-      if (choice.outcome === "dismissed") rememberDismissal();
     } catch {
       // The event is one-shot and browser-controlled. Do not replace it with
       // generic Chrome-menu instructions when the native prompt fails.
