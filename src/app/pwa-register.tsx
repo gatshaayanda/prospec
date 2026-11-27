@@ -107,9 +107,9 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
       setInstallCardDismissed(false);
     }
     setEmbeddedAndroid((initialEmbedded && initialAndroid) || (env.embedded && env.android));
-    // Match Iteration 13: Chromium/desktop invitations appear only when the
-    // browser supplies its retained native prompt. Only iOS Safari uses guidance.
-    setCanShowManualInstall(!env.standalone && !embedded && installInvitationEligible && isIosSafari());
+    // Keep the branded invitation visible after three separate visits on all
+    // supported browsers. Chromium uses its retained native prompt when available.
+    setCanShowManualInstall(!env.standalone && !embedded && installInvitationEligible);
 
     let registration: ServiceWorkerRegistration | null = null;
     const inspect = () => {
