@@ -55,33 +55,26 @@
 .plugInstallSecondary:focus-visible{outline:3px solid #00b9c7;outline-offset:3px}
 
 
-/* Customer account primary-action arrow: draw a high-contrast arrow independently
-   of the text glyph so inherited span rules or font fallback cannot hide it. */
+/* Customer account action: a restrained, clean arrow aligned to the copy. */
 .sd-care-empty-action .sd-care-action-arrow{
   display:grid!important;
   place-items:center!important;
-  width:36px!important;
-  height:36px!important;
-  min-width:36px!important;
-  flex:0 0 36px!important;
-  position:relative!important;
-  overflow:visible!important;
-  border:2px solid #00e3eb!important;
-  border-radius:50%!important;
-  background:#00b9c7!important;
-  color:#10272a!important;
-  font-size:0!important;
+  width:24px!important;
+  height:28px!important;
+  min-width:24px!important;
+  flex:0 0 24px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#00d4df!important;
+  font-family:Arial,Helvetica,sans-serif!important;
+  font-size:1.65rem!important;
+  font-weight:500!important;
   line-height:1!important;
   opacity:1!important;
   visibility:visible!important;
-  box-shadow:0 0 0 3px rgba(0,185,199,.22)!important;
+  box-shadow:none!important;
+  text-shadow:none!important;
+  animation:none!important;
 }
-.sd-care-empty-action .sd-care-action-arrow::after{
-  content:""!important;
-  display:block!important;
-  width:11px!important;
-  height:11px!important;
-  border-top:3px solid #10272a!important;
-  border-right:3px solid #10272a!important;
-  transform:translateX(-2px) rotate(45deg)!important;
-}
+.sd-care-empty-action .sd-care-action-arrow::after{content:none!important;display:none!important}
