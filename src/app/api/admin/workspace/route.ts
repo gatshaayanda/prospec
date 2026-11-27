@@ -15,11 +15,27 @@ export async function GET(request: NextRequest) {
     const storefrontRef = adminDb.collection("prospecPublic").doc("storefront");
     const [storefront, enquiries] = await Promise.all([
       storefrontRef.get(),
-      owner ? adminDb.collection("prospecEnquiries").orderBy("createdAt", "desc").limit(500).get() : Promise.resolve(null),
+      adminDb.collection("prospecEnquiries").orderBy("createdAt", "desc").limit(500).get(),
     ]);
     return NextResponse.json({
       storefront: storefront.exists ? storefront.data() : null,
-      enquiries: enquiries?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [],
+      enquiries: enquiries.docs.map(doc => {
+        const record = doc.data();
+        if (owner) return { id: doc.id, ...record };
+        const items = Array.isArray(record.serviceItems) ? record.serviceItems.map((item: Record<string, unknown>) => ({ id: item.id, name: item.name })) : [];
+        return {
+          id: doc.id,
+          serviceId: typeof record.serviceId === "string" ? record.serviceId : "",
+          serviceName: typeof record.serviceName === "string" ? record.serviceName : "",
+          serviceItems: items,
+          status: typeof record.status === "string" ? record.status : "New request",
+          createdAt: typeof record.createdAt === "string" ? record.createdAt : "",
+          customerName: "Customer",
+          email: "growth-desk@restricted.invalid",
+          price: 0,
+          paidAmount: 0,
+        };
+      }),
     });
   } catch {
     return NextResponse.json({ error: "Owner workspace data is temporarily unavailable. Check Firebase Admin configuration." }, { status: 503 });
