@@ -727,7 +727,9 @@ export default function Home() {
         setCloudSyncStatus(!navigator.onLine ? "offline" : snapshot.metadata.hasPendingWrites || snapshot.metadata.fromCache ? "connecting" : "synced");
       }, () => { if (active) setCloudSyncStatus("error"); });
       stopStorefront = onSnapshot(doc(db, "prospecPublic", "storefront"), snapshot => {
-        if (!active || !snapshot.exists()) return;
+        // The owner Briefcase edits from its authenticated GET/readback path.
+        // Do not let an older listener snapshot overwrite an in-progress owner edit.
+        if (!active || !snapshot.exists() || viewRef.current === "admin") return;
         const remote = snapshot.data();
         setData(current => ({
           ...current,
