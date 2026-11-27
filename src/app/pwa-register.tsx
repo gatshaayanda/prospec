@@ -14,6 +14,9 @@ type InstallState = "hidden" | "native" | "embedded";
 const INSTALL_DISMISSED_KEY = "prospec:install:dismissed-at:v6";
 const INSTALL_DISMISS_MS = 7 * 24 * 60 * 60 * 1000;
 const INSTALL_RELEASE_KEY = "prospec:install:invitation-release:v3";
+const INSTALL_VISIT_COUNT_KEY = "prospec:install:visits:v1";
+const INSTALL_VISIT_SESSION_KEY = "prospec:install:visit-session:v1";
+const INSTALL_VISIT_THRESHOLD = 3;
 
 function environment() {
   if (typeof window === "undefined") return { standalone: true, ios: false, android: false, embedded: false };
@@ -74,6 +77,22 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
   useEffect(() => {
     const env = environment();
     const embedded = initialEmbedded || env.embedded;
+    // Invite visitors after three separate visits, not on their first landing.
+    // sessionStorage prevents route changes/reloads in the same visit from inflating the count.
+    let visitCount = 0;
+    try {
+      if (window.sessionStorage.getItem(INSTALL_VISIT_SESSION_KEY) !== "1") {
+        visitCount = Number(window.localStorage.getItem(INSTALL_VISIT_COUNT_KEY) || "0") + 1;
+        window.localStorage.setItem(INSTALL_VISIT_COUNT_KEY, String(visitCount));
+        window.sessionStorage.setItem(INSTALL_VISIT_SESSION_KEY, "1");
+      } else {
+        visitCount = Number(window.localStorage.getItem(INSTALL_VISIT_COUNT_KEY) || "0");
+      }
+    } catch {
+      // If browser storage is unavailable, do not block the install invitation.
+      visitCount = INSTALL_VISIT_THRESHOLD;
+    }
+    const installInvitationEligible = visitCount >= INSTALL_VISIT_THRESHOLD;
     // One-time release migration: clear stale dismissals created when dismissing
     // Chrome's native prompt also hid the branded invitation.
     try {
@@ -90,7 +109,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     setEmbeddedAndroid((initialEmbedded && initialAndroid) || (env.embedded && env.android));
     // The branded invitation is available in every supported browser, even when
     // Chromium has not yet emitted beforeinstallprompt.
-    setCanShowManualInstall(!env.standalone && !embedded);
+    setCanShowManualInstall(!env.standalone && !embedded && installInvitationEligible);
 
     let registration: ServiceWorkerRegistration | null = null;
     const inspect = () => {
@@ -115,7 +134,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
       installPromptRef.current = prompt;
       setInstallCardDismissed(dismissedRecently());
       setInstallCardCollapsed(false);
-      setCanInstall(true);
+      setCanInstall(installInvitationEligible);
       // Retain the one-shot native event for the user's explicit Install click.
       // Do not interrupt page load with a second, custom install screen.
     };
