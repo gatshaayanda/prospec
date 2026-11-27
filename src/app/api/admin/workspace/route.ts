@@ -10,16 +10,19 @@ async function authorised(request?: Request) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!(await authorised(request))) return NextResponse.json({ error: "Owner session required." }, { status: 401 });
+  const owner = await hasProspecAdminSession(request);
+  const growth = !owner && await hasProspecGrowthSession(request);
+  if (!owner && !growth) return NextResponse.json({ error: "Authorised workspace session required." }, { status: 401 });
   try {
     const adminDb = getProspecAdminDb();
+    const storefrontRef = adminDb.collection("prospecPublic").doc("storefront");
     const [storefront, enquiries] = await Promise.all([
-      adminDb.collection("prospecPublic").doc("storefront").get(),
-      adminDb.collection("prospecEnquiries").orderBy("createdAt", "desc").limit(500).get(),
+      storefrontRef.get(),
+      owner ? adminDb.collection("prospecEnquiries").orderBy("createdAt", "desc").limit(500).get() : Promise.resolve(null),
     ]);
     return NextResponse.json({
       storefront: storefront.exists ? storefront.data() : null,
-      enquiries: enquiries.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+      enquiries: enquiries?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [],
     });
   } catch {
     return NextResponse.json({ error: "Owner workspace data is temporarily unavailable. Check Firebase Admin configuration." }, { status: 503 });
@@ -38,21 +41,20 @@ export async function PUT(request: NextRequest) {
       const value = body.storefront as Record<string, unknown>;
       const services = Array.isArray(value.services) ? value.services.slice(0, 200) : [];
       const existingSnapshot = growth ? await adminDb.collection("prospecPublic").doc("storefront").get() : null;
-      const existingServices = Array.isArray(existingSnapshot?.data()?.services) ? existingSnapshot!.data()!.services as Record<string, unknown>[] : [];
+      const existingData = existingSnapshot?.data() || {};
+      const existingServices = Array.isArray(existingData.services) ? existingData.services as Record<string, unknown>[] : [];
       const division = typeof body.division === "string" ? body.division : "";
       const allowedDivisions = ["Prospec AG", "Prospec Supplies", "Prospec NFC", "Prospec AG Printing"];
       if (growth && !allowedDivisions.includes(division)) return NextResponse.json({ error: "That division is not available to Growth Desk." }, { status: 403 });
       if (growth) {
-        const submittedById = new Map(services.filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object" && typeof (item as Record<string, unknown>).id === "string")).map(item => [String(item.id), item]));
         const existingOutsideDivision = existingServices.filter(item => item.industry !== division);
         const submittedOutsideDivision = services.filter(item => item.industry !== division);
         if (JSON.stringify(existingOutsideDivision) !== JSON.stringify(submittedOutsideDivision)) return NextResponse.json({ error: "Growth Desk can only change catalogue items in the selected division." }, { status: 403 });
         if (services.some(item => item.industry === division && (!item || typeof item !== "object"))) return NextResponse.json({ error: "Invalid catalogue item." }, { status: 400 });
-        void submittedById;
       }
       const savedStorefront = {
         services,
-        availability: ["available", "limited", "unavailable"].includes(String(value.availability)) ? value.availability : "available",
+        availability: growth ? (existingData.availability === "limited" || existingData.availability === "unavailable" ? existingData.availability : "available") : ["available", "limited", "unavailable"].includes(String(value.availability)) ? value.availability : "available",
         announcement: typeof value.announcement === "string" ? value.announcement.slice(0, 2000) : "",
         announcementActive: value.announcementActive === true,
         announcementImage: typeof value.announcementImage === "string" ? value.announcementImage.slice(0, 2000) : "",
@@ -61,7 +63,7 @@ export async function PUT(request: NextRequest) {
         rewardDescription: typeof value.rewardDescription === "string" ? value.rewardDescription.slice(0, 500) : "",
         rewardImage: typeof value.rewardImage === "string" && /^https:\/\//i.test(value.rewardImage) ? value.rewardImage.slice(0, 2000) : "",
         discountAmount: typeof value.discountAmount === "number" && Number.isFinite(value.discountAmount) && value.discountAmount >= 0 && value.discountAmount <= 5000 ? value.discountAmount : 0,
-        receiptProfile: value.receiptProfile && typeof value.receiptProfile === "object" ? {
+        receiptProfile: growth ? (existingData.receiptProfile || null) : value.receiptProfile && typeof value.receiptProfile === "object" ? {
           legalName: typeof (value.receiptProfile as Record<string, unknown>).legalName === "string" ? String((value.receiptProfile as Record<string, unknown>).legalName).slice(0, 120) : "Prospec Group",
           registration: typeof (value.receiptProfile as Record<string, unknown>).registration === "string" ? String((value.receiptProfile as Record<string, unknown>).registration).slice(0, 80) : "",
           address: typeof (value.receiptProfile as Record<string, unknown>).address === "string" ? String((value.receiptProfile as Record<string, unknown>).address).slice(0, 300) : "",
