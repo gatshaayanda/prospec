@@ -5,9 +5,6 @@ import { getProspecAdminDb } from "@/lib/firebase/admin";
 
 export const runtime = "nodejs";
 
-async function authorised(request?: Request) {
-  return (await hasProspecAdminSession(request)) || (await hasProspecGrowthSession(request));
-}
 
 export async function GET(request: NextRequest) {
   const owner = await hasProspecAdminSession(request);
