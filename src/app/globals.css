@@ -7970,3 +7970,7 @@ h1 em,
   .servicePreview.serviceDemo .sd-footer-inner{flex-direction:row!important;align-items:center!important;}
   .servicePreview.serviceDemo .sd-footer-inner>div.sd-footer-systems{margin-left:auto!important;width:auto!important;justify-content:flex-end!important;}
 }
+
+
+/* Keep the floating service guide on the left so it never covers the footer Briefcase. */
+.servicePreview.serviceDemo .sd-guide-launcher{left:clamp(14px,3vw,26px)!important;right:auto!important;}
