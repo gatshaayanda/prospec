@@ -1055,6 +1055,7 @@ button.plugProductAction{width:100%;align-items:center;background:transparent;bo
 .sd-media-upload small{color:#667085;font-size:.75rem;line-height:1.45}
 .sd-media-url-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}
 .sd-media-url-row button{padding:0 12px}
+.sd-store-save-feedback{margin:10px 0;padding:10px 12px;border:1px solid #cbd5e1;border-radius:9px;background:#f8fafc;color:#263445;font-size:.8rem;font-weight:700;line-height:1.45}.sd-store-save-feedback.is-saving{border-color:#b8c8dd;background:#f1f6fb}.sd-store-save-feedback.is-saved{border-color:#a9d6bd;background:#effaf3;color:#205c3b}.sd-store-save-feedback.is-local{border-color:#e5d4a8;background:#fff9e9;color:#755018}.sd-store-save-feedback.is-error{border-color:#e5b7b7;background:#fff1f1;color:#8a2424}
 .sd-media-status,.sd-media-offline{margin:0;padding:10px 11px;border-radius:9px;background:#eef4ff;color:#244b92;font-size:.8rem;line-height:1.45;overflow-wrap:anywhere}
 .sd-media-offline{background:#fff4df;color:#854d0e}
 .sd-media-preview{display:grid;gap:8px;padding-top:10px;border-top:1px solid #dce2eb}
