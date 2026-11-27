@@ -16,7 +16,7 @@ import { getProspecDb, ensureCustomerAuth } from "@/lib/firebase/client";
 
 type Service = { id: string; name: string; industry?: string; price: number; description: string; media: string; mediaType: "image" | "video"; active: boolean; custom?: boolean };
 type PreviewOrder = { id: string; customerId?: string; serviceId: string; serviceName: string; serviceItems?: { id: string; name: string; price: number; custom?: boolean }[]; quoteRequired?: boolean; price: number; dueDate: string; customerName: string; email: string; whatsapp?: string; notificationOptIn?: boolean; brief: string; status: string; createdAt: string; statusUpdatedAt?: string; messages?: AccountMessage[]; paymentStatus?: "Unpaid" | "Partially paid (preview)" | "Paid (preview)"; originalPrice?: number; quotedPrice?: number; discountAmount?: number; discountCode?: string; paidAmount?: number; paidAt?: string; receiptNo?: string; isTest?: boolean; completedAt?: string };
-type PreviewEvent = { id: string; kind: "visit" | "service" | "account" | "request" | "completed" | "payment" | "reward" | "shift-start" | "shift-end" | "session-expired"; label: string; at: string; test?: boolean };
+type PreviewEvent = { id: string; kind: "visit" | "service" | "account" | "request" | "completed" | "payment" | "reward" | "owner-action" | "shift-start" | "shift-end" | "session-expired"; label: string; at: string; test?: boolean };
 type DiscountClaim = { id: string; email: string; code: string; amount: number; lapTime: number; createdAt: string; status: "Available" | "Redeemed" };
 type JourneyEvent = { id: string; event: string; screen: string; at: string; sessionId: string; serviceId?: string; serviceName?: string; orderId?: string; source: "page" | "guide" };
 type PreviewData = { services: Service[]; orders: PreviewOrder[]; journeyEvents?: JourneyEvent[]; availability?: "available" | "limited" | "unavailable"; announcement: string; announcementActive?: boolean; announcementImage?: string; views: number; events?: PreviewEvent[]; discountAmount?: number; rewardTitle?: string; rewardDescription?: string; rewardImage?: string; rewardActive?: boolean; discountClaims?: DiscountClaim[]; receiptProfile?: { legalName: string; registration: string; address: string; phone: string; footer: string } };
@@ -224,6 +224,8 @@ export default function Home() {
   const [cloudSyncStatus, setCloudSyncStatus] = useState<"connecting" | "synced" | "offline" | "error">("connecting");
   const [ownerCloudReady, setOwnerCloudReady] = useState(false);
   const syncedOwnerOrdersRef = useRef<Record<string, string>>({});
+  const storefrontSaveQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const ownerSaveErrorShownRef = useRef(false);
   const [ownerCloudError, setOwnerCloudError] = useState(false);
   const [online, setOnline] = useState(true);
   const [offlineShellReady, setOfflineShellReady] = useState(false);
@@ -397,18 +399,36 @@ export default function Home() {
         footer: data.receiptProfile?.footer || "Thank you for your business.",
       },
     };
-    void fetch("/api/admin/workspace", {
-      method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "storefront", storefront }),
-    }).then(async response => {
-      const result = await response.json().catch(() => ({})) as { error?: string; storefront?: { services?: Service[] } };
-      if (!response.ok) throw new Error(result.error || "The shared Store rejected this update.");
-      const savedServices = Array.isArray(result.storefront?.services) ? result.storefront.services : null;
-      if (!savedServices || JSON.stringify(savedServices) !== JSON.stringify(storefront.services)) {
-        throw new Error("The shared Store did not confirm the exact product images and catalogue details. Your local preview is unchanged; retry the save.");
-      }
-      setNotice("Changes confirmed in the shared Prospec Store.");
-    }).catch(error => setNotice(error instanceof Error ? error.message : "Store changes could not reach the Prospec database. Keep the Briefcase open and retry when connected."));
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      const save = async () => {
+        if (cancelled) return;
+        const response = await fetch("/api/admin/workspace", {
+          method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "storefront", storefront }),
+        });
+        const result = await response.json().catch(() => ({})) as { error?: string; storefront?: { services?: Service[] } };
+        if (!response.ok) throw new Error(result.error || "The shared Store rejected this update.");
+        const savedServices = Array.isArray(result.storefront?.services) ? result.storefront.services : null;
+        if (!savedServices || JSON.stringify(savedServices) !== JSON.stringify(storefront.services)) {
+          throw new Error("Firestore readback did not match the published catalogue and media URLs.");
+        }
+        if (!cancelled) ownerSaveErrorShownRef.current = false;
+      };
+      storefrontSaveQueueRef.current = storefrontSaveQueueRef.current
+        .catch(() => {})
+        .then(save)
+        .catch(error => {
+          if (cancelled) return;
+          setOwnerCloudError(true);
+          setCloudSyncStatus("error");
+          if (!ownerSaveErrorShownRef.current) {
+            ownerSaveErrorShownRef.current = true;
+            setNotice(error instanceof Error ? error.message : "The Store update could not be confirmed. Keep the Briefcase open and retry.");
+          }
+        });
+    }, 350);
+    return () => { cancelled = true; window.clearTimeout(timer); };
   }, [ownerCloudReady, adminUnlocked, view, data.services, data.availability, data.announcement, data.announcementActive, data.announcementImage, data.rewardActive, data.rewardTitle, data.rewardDescription, data.rewardImage, data.discountAmount, data.receiptProfile]);
 
   useEffect(() => {
@@ -425,7 +445,14 @@ export default function Home() {
       return [id, JSON.stringify(order)] as const;
     })).then(saved => {
       saved.forEach(([id, signature]) => { syncedOwnerOrdersRef.current[id] = signature; });
-    }).catch(() => setNotice("A request update could not sync to the Prospec database. Keep the Briefcase open and retry the change when connected."));
+    }).catch(() => {
+      setOwnerCloudError(true);
+      setCloudSyncStatus("error");
+      if (!ownerSaveErrorShownRef.current) {
+        ownerSaveErrorShownRef.current = true;
+        setNotice("A request update could not sync to the Prospec database. Keep the Briefcase open and retry.");
+      }
+    });
   }, [ownerCloudReady, adminUnlocked, view, data.orders]);
 
   const [selected, setSelected] = useState<string | null>(null);
@@ -810,7 +837,18 @@ export default function Home() {
   }, [view, ready]);
 
   function commitData(update: (current: PreviewData) => PreviewData, successMessage: string) {
-    const next = update(data);
+    let next = update(data);
+    if (adminUnlocked && view === "admin" && successMessage.trim()) {
+      const now = new Date();
+      const latest = next.events?.[0];
+      const duplicate = latest?.kind === "owner-action" && latest.label === successMessage && now.getTime() - new Date(latest.at).getTime() < 2500;
+      if (!duplicate) {
+        next = {
+          ...next,
+          events: [{ id: "EV-" + now.getTime().toString(36), kind: "owner-action", label: successMessage.slice(0, 180), at: now.toISOString() }, ...(next.events || [])].slice(0, 250),
+        };
+      }
+    }
     try {
       window.localStorage.setItem(getStorageKey(STORAGE_KEY), JSON.stringify(next));
     } catch {
@@ -818,7 +856,7 @@ export default function Home() {
       return false;
     }
     setData(next);
-    setNotice(successMessage);
+    if (view !== "admin") setNotice(successMessage);
     return true;
   }
 
@@ -1318,7 +1356,12 @@ export default function Home() {
     if (serviceMediaUploading) { setNotice("Wait for the media upload to finish before saving the product / service."); return; }
     if (serviceMedia.trim()) { try { const parsedMedia = new URL(serviceMedia.trim()); if (parsedMedia.protocol !== "https:" && parsedMedia.protocol !== "http:") throw new Error("Unsupported protocol"); } catch { setNotice("Enter a valid http:// or https:// media URL, or upload the file first."); return; } }
     const service: Service = { id: editingId || "service-" + Date.now().toString(36), name: serviceName.trim(), industry: serviceIndustry.trim(), price, description: serviceDescription.trim(), media: serviceMedia.trim(), mediaType: serviceMediaType, active: serviceActive };
-    if (!commitData(current => ({ ...current, services: editingId ? current.services.map(item => item.id === editingId ? service : item) : [...current.services, service] }), editingId ? "Product / service updated and saved on this device." : "Product / service added and saved on this device.")) return;
+    const previous = editingId ? data.services.find(item => item.id === editingId) : undefined;
+    const mediaChanged = Boolean(previous && previous.media !== service.media);
+    const activity = mediaChanged
+      ? `${service.mediaType === "video" ? "Product video" : "Product image"} ${service.media ? "changed" : "removed"} · ${service.name}`
+      : editingId ? `Product / service updated · ${service.name}` : `Product / service added · ${service.name}`;
+    if (!commitData(current => ({ ...current, services: editingId ? current.services.map(item => item.id === editingId ? service : item) : [...current.services, service] }), activity)) return;
     resetServiceForm();
   }
   function resetServiceForm() { setEditingId(null); setServiceName(""); setServiceIndustry(""); setServicePrice("100"); setServiceDescription(""); setServiceMedia(""); setServiceMediaType("image"); setServiceActive(true); }
@@ -1464,8 +1507,8 @@ return <main className="servicePreview serviceDemo" style={{ "--studio-accent": 
       </>}
     {pendingConfirm?.kind === "overwrite-business" && <div className="sd-confirm-backdrop" onClick={() => setPendingConfirm(null)}><section className="sd-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="sd-onboarding-overwrite-title" aria-describedby="sd-onboarding-overwrite-description" onClick={event => event.stopPropagation()}><span className="sd-kicker">CONFIRM ACTION</span><h2 id="sd-onboarding-overwrite-title">Replace the saved business?</h2><p id="sd-onboarding-overwrite-description">This replaces the current business name, colours, currency and products / services. Its saved customer requests, messages and owner notes on this device will also be cleared. This cannot be undone.</p><div className="sd-confirm-actions"><button type="button" className="sd-button sd-outline" autoFocus onClick={() => setPendingConfirm(null)}>Keep existing setup</button><button type="button" className="sd-button sd-primary" onClick={() => { setPendingConfirm(null); completeBusinessIdentity(true); }}>Replace and create</button></div></section></div>}</section> : <>
     <div className="sd-topline"><div className="sd-wrap"><details className="sd-connect-details"><summary className={(online ? "sd-connect" : "sd-connect is-offline") + (offlineShellReady ? " is-offline-ready" : "")} aria-label={offlineShellReady ? "Offline ready on this device; open details" : online ? "Connected to Prospec cloud; open details" : "Offline sync; open details"}><i />{offlineShellReady ? "Offline ready" : online ? "Prospec cloud" : "Offline · sync queued"}<span className="sd-connect-chevron" aria-hidden="true">⌄</span></summary><div className="sd-connect-popover"><strong>{offlineShellReady ? "The Store is ready to reopen on this device without internet." : "Your Prospec workspace is online."}</strong><span>{offlineShellReady ? "When an app update is ready, tap Refresh to switch to the latest version." : "Customer requests and messages are saved to the shared Prospec workspace when you are connected."}</span><span>Requests and messages you send while offline are saved on this device and sent when your connection returns. File uploads need internet.</span></div></details></div></div>
-    <header className="sd-header"><div className="sd-wrap sd-nav"><button className="sd-brand" onClick={() => { setView("shop"); setNotice(""); window.scrollTo({top:0,behavior:"smooth"}); }} aria-label="Back to Store"><img className="prospec-header-wordmark" src="/prospec-wordmark.svg" alt="Prospec Group" /></button><nav className="prospec-primary-nav" aria-label="Account"><button type="button" className={view === "account" ? "is-active" : ""} aria-label={`Account, ${data.orders.length} requests`} title="Account" aria-current={view === "account" ? "page" : undefined} onClick={() => { recordPreviewJourney("Customer account opened"); recordActivity("account", "Customer account opened"); setView("account"); setNotice(""); }}><svg className="prospec-account-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.7-3.4 3.1-5.2 7-5.2s6.3 1.8 7 5.2"/></svg><span className="sd-count">{data.orders.length}</span></button></nav>
-</div></header>
+    {view !== "admin" && <header className="sd-header"><div className="sd-wrap sd-nav"><button className="sd-brand" onClick={() => { setView("shop"); setNotice(""); window.scrollTo({top:0,behavior:"smooth"}); }} aria-label="Back to Store"><img className="prospec-header-wordmark" src="/prospec-wordmark.svg" alt="Prospec Group" /></button><nav className="prospec-primary-nav" aria-label="Account"><button type="button" className={view === "account" ? "is-active" : ""} aria-label={`Account, ${data.orders.length} requests`} title="Account" aria-current={view === "account" ? "page" : undefined} onClick={() => { recordPreviewJourney("Customer account opened"); recordActivity("account", "Customer account opened"); setView("account"); setNotice(""); }}><svg className="prospec-account-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.7-3.4 3.1-5.2 7-5.2s6.3 1.8 7 5.2"/></svg><span className="sd-count">{data.orders.length}</span></button></nav>
+</div></header>}
 
     {view !== "login" && <ServiceGuide
       view={view === "admin" ? "admin" : view === "account" ? "account" : "shop"}
