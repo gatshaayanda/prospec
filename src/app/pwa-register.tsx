@@ -259,9 +259,9 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     <div style={installShellStyle} role="presentation">
       <section className="plugInstallModal" role="dialog" aria-modal="false" aria-labelledby="plug-install-title" aria-describedby="plug-install-message">
         <div className="plugInstallTop"><span className="plugInstallMark">P</span><span className="plugInstallTag">PROSPEC GROUP · PITBULLS OF BRANDING</span><button type="button" className="plugInstallClose" aria-label="Close install guidance" onClick={dismissInstall}>×</button></div>
-        <div className="plugInstallKicker">{isIosSafari() ? "IPHONE & IPAD" : "CHROME INSTALL"}</div>
-        <h2 id="plug-install-title">{isIosSafari() ? "Add to Home Screen." : "Install Prospec Group."}</h2>
-        <p id="plug-install-message">{isIosSafari() ? <>In Safari, tap <b>Share</b>, choose <b>Add to Home Screen</b>, then tap <b>Add</b>. Open the new Home Screen icon to launch the installed app.</> }</p>
+        <div className="plugInstallKicker">IPHONE &amp; IPAD</div>
+        <h2 id="plug-install-title">Add to Home Screen.</h2>
+        <p id="plug-install-message">In Safari, tap <b>Share</b>, choose <b>Add to Home Screen</b>, then tap <b>Add</b>. Open the new Home Screen icon to launch the installed app.</p>
         <button type="button" className="plugInstallPrimary" onClick={dismissInstall}>Continue on the website</button>
       </section>
     </div>
