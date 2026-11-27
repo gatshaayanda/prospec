@@ -229,29 +229,44 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
     };
   }, [installState, installHelpOpen]);
 
-  async function install() {
+  function handleInstallClick() {
     const prompt = installPromptRef.current;
     if (!prompt) {
-      // Native installation is browser-controlled; offer clear browser-specific guidance.
+      // Chrome only exposes its native install sheet after beforeinstallprompt.
+      // Without that browser-owned event, show the supported browser instructions.
       if (!environment().standalone) {
         setInstallHelpOpen(true);
         setInstallState("native");
       }
       return;
     }
+
+    // Invoke prompt() synchronously in the actual button click handler. Do not put
+    // an await, timer, state transition, or other asynchronous boundary before it:
+    // Chromium requires the retained event to be used during this user activation.
+    installPromptRef.current = null;
+    setCanInstall(false);
+    let promptResult: Promise<void>;
     try {
-      // Call the retained beforeinstallprompt event directly from the user's click.
-      await prompt.prompt();
-      const choice = await prompt.userChoice;
-      if (choice.outcome === "dismissed") rememberDismissal();
+      promptResult = prompt.prompt();
     } catch {
-      // The event is one-shot and browser-controlled. Never fake a Chrome prompt.
-    } finally {
-      installPromptRef.current = null;
-      setCanInstall(false);
-      setInstallHelpOpen(false);
-      setInstallState("hidden");
+      setInstallHelpOpen(true);
+      setInstallState("native");
+      return;
     }
+
+    void promptResult
+      .then(() => prompt.userChoice)
+      .then(choice => {
+        if (choice.outcome === "dismissed") rememberDismissal();
+      })
+      .catch(() => {
+        // The browser owns this one-shot prompt; never simulate its confirmation UI.
+      })
+      .finally(() => {
+        setInstallHelpOpen(false);
+        setInstallState("hidden");
+      });
   }
 
   function closeInstallHelp() {
@@ -302,7 +317,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
         <div className="plugInstallTop"><span className="plugInstallMark">P</span><span className="plugInstallTag">PROSPEC GROUP · PITBULLS OF BRANDING</span><button type="button" className="plugInstallClose" aria-label="Close install guidance" onClick={closeInstallHelp}>×</button></div>
         {environment().android ? <><div className="plugInstallKicker">ANDROID INSTALL</div><h2 id="plug-install-title">Install Prospec.</h2><p id="plug-install-message">If Chrome offers its native install prompt, this button opens it. Otherwise open Chrome’s <b>⋮ menu</b> and choose <b>Install app</b> or <b>Add to Home screen</b>, then confirm.</p></> : isIosSafari() ? <><div className="plugInstallKicker">IPHONE &amp; IPAD · SAFARI</div><h2 id="plug-install-title">Add to Home Screen.</h2><p id="plug-install-message">In Safari, tap <b>Share</b>, choose <b>Add to Home Screen</b>, then tap <b>Add</b>. Open the new Home Screen icon to launch the installed app.</p></> : <><div className="plugInstallKicker">BROWSER INSTALL</div><h2 id="plug-install-title">Install Prospec.</h2><p id="plug-install-message">Use your browser’s <b>Install</b> option in the address bar, or open the browser menu and choose <b>Install Prospec</b> / <b>Install app</b> if available. Confirm to add Prospec to your device.</p></>}
         {environment().android ? <div className="plugInstallActions">
-          <button type="button" className="plugInstallPrimary" onClick={() => { if (installPromptRef.current) void install(); else openBrowser(); }}>Install with Chrome</button>
+          <button type="button" className="plugInstallPrimary" onClick={() => { if (installPromptRef.current) handleInstallClick(); else openBrowser(); }}>Install with Chrome</button>
           <button type="button" className="plugInstallSecondary" onClick={dismissInstall}>Continue on the website</button>
         </div> : <button type="button" className="plugInstallPrimary" onClick={closeInstallHelp}>Continue on the website</button>}
       </section>
@@ -330,7 +345,7 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
         </div>
         <button className="i13-install-collapse" type="button" aria-label={installCardCollapsed ? "Expand install options" : "Collapse install options"} aria-expanded={!installCardCollapsed} onClick={() => setInstallCardCollapsed(value => !value)}>{installCardCollapsed ? "＋" : "−"}</button>
         <button className="i13-install-close" type="button" aria-label="Dismiss install prompt for seven days" onClick={dismissInstall}>×</button>
-        <button className="i13-install-action" type="button" onClick={() => { void install(); }}>{installCardCollapsed ? "Install" : "Install Prospec Group"} <span aria-hidden="true">↗</span></button>
+        <button className="i13-install-action" type="button" onClick={handleInstallClick}>{installCardCollapsed ? "Install" : "Install Prospec Group"} <span aria-hidden="true">↗</span></button>
       </aside>
     )}
     {installCard}
