@@ -330,22 +330,14 @@ export default function PwaRegister({ initialEmbedded = false, initialAndroid = 
 
   return <>
     {!environment().standalone && installState !== "embedded" && (canInstall || canShowManualInstall) && !installCardDismissed && !(installState === "native" && installHelpOpen) && (
-      <aside className="i13-install-card" aria-label="Install Prospec Group">
+      <aside className={`i13-install-card${installCardCollapsed ? " is-collapsed" : ""}`} aria-label="Install Prospec Group">
         <div className="i13-install-brand">
           <span className="i13-install-mark" aria-hidden="true">P</span>
           <span><strong>PROSPEC GROUP</strong><small>PITBULLS OF BRANDING</small></span>
         </div>
-        <button className="i13-install-close" type="button" aria-label="Dismiss install prompt" onClick={() => setInstallCardDismissed(true)}>×</button>
-        <button className="i13-install-action" type="button" onClick={() => {
-          if (installPromptRef.current) {
-            void install();
-            return;
-          }
-          if (isIosSafari()) {
-            setInstallHelpOpen(true);
-            setInstallState("native");
-          }
-        }}>{canInstall ? "Install Prospec Group" : "Add to Home Screen"} <span aria-hidden="true">↗</span></button>
+        <button className="i13-install-close" type="button" aria-label="Dismiss install prompt" onClick={dismissInstall}>×</button>
+        <button className="i13-install-collapse" type="button" aria-label={installCardCollapsed ? "Expand install invitation" : "Collapse install invitation"} aria-expanded={!installCardCollapsed} onClick={() => setInstallCardCollapsed((value) => !value)}>{installCardCollapsed ? "＋" : "−"}</button>
+        {!installCardCollapsed && <button className="i13-install-action" type="button" onClick={install}>{canInstall ? "Install Prospec Group" : "Add to Home Screen"} <span aria-hidden="true">↗</span></button>}
       </aside>
     )}
     {installCard}
