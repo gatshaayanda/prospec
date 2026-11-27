@@ -38,7 +38,7 @@ if (!pwaRegister.includes('className={`i13-install-card') || !pwaRegister.includ
 if (!pwaRegister.includes("PROSPEC GROUP")) failures.push("PWA install: Prospec branding missing");
 if (!pwaRegister.includes("installCardCollapsed") || !pwaRegister.includes("aria-expanded={!installCardCollapsed}")) failures.push("PWA install: accessible collapsible card state missing");
 if (!pwaRegister.includes("onClick={dismissInstall}") || !pwaRegister.includes("setInstallCardDismissed(true)")) failures.push("PWA install: cancellable user dismissal missing");
-if (!pwaRegister.includes("const installInvitationEligible = true;")) failures.push("PWA install: invitation must not require repeat visits");
+if (pwaRegister.includes("INSTALL_VISIT_THRESHOLD") || pwaRegister.includes("visitCount")) failures.push("PWA install: invitation must not require repeat visits");
 if (!pwaRegister.includes("setCanShowManualInstall(!env.standalone && !embedded && isIosSafari())") || pwaRegister.includes("function isChromeBrowser()") || pwaRegister.includes("isChromeBrowser()")) failures.push("PWA install: manual invitation must be iOS Safari only; Chromium requires a retained native event");
 if (!pwaRegister.includes("installPromptRef.current = prompt;") || !pwaRegister.includes("setCanInstall(true)") || pwaRegister.indexOf("installPromptRef.current = prompt;") > pwaRegister.indexOf("setCanInstall(true)")) failures.push("PWA install: Chrome card must only become visible after the native event is retained");
 if (/INSTALL_VISIT|INSTALL_RELEASE|INSTALL_DISMISS_MS|dismissedRecently|rememberDismissal/.test(pwaRegister)) failures.push("PWA install: obsolete visit or persistent dismissal cooldown remains");
