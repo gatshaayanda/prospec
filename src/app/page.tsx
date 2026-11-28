@@ -1518,7 +1518,7 @@ export default function Home() {
   const setupReady = setupCompletedCount === setupChecklist.length;
   const noticeIsError = /^(choose|add |enter |the browser|local preview storage|could not save)|could not|did not|rejected|mismatch|failed|denied|invalid|cannot|not confirmed|not available|wait for|enter a valid|choose at least|choose today|choose a future|add your|complete your|unsupported|not accepted|not connected|not be confirmed/i.test(notice);
 return <main className="servicePreview serviceDemo" style={{ "--studio-accent": themeColor, "--studio-accent-secondary": secondaryColor, "--studio-accent-highlight": highlightColor, "--studio-accent-ink": accentInk(themeColor), "--studio-accent-text": accentText(themeColor) } as React.CSSProperties}>
-    {!identityReady || !ready || !businessNameReady ? <section className="sd-identity-loading" aria-live="polite">Preparing your business identity…</section> : !identityComplete ? <section className="sd-identity-onboarding">
+    {!identityReady || !ready || !businessNameReady ? <section className="sd-identity-loading" aria-live="polite">Getting Prospec ready for you…</section> : !identityComplete ? <section className="sd-identity-onboarding">
       <div className="sd-identity-onboarding-top"><span>PROSPEC / BUSINESS OS</span><span>{identityEditing ? "BUSINESS IDENTITY" : "SETUP · STORE · ACCOUNT · BRIEFCASE"}</span></div>
       {!setupPathChosen && !identityEditing ? <section className="sd-identity-entry" aria-labelledby="sd-identity-entry-title">
         <span className="sd-kicker">YOUR BUSINESS · ONE CONNECTED SYSTEM</span>
